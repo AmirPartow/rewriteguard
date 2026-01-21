@@ -3,6 +3,13 @@ uvicorn[standard]==0.30.6
 pydantic==2.9.2
 pydantic-settings==2.5.2
 python-dotenv==1.0.1
-torch
-transformers
+ruff>=0.6.0
+mypy>=1.10.0
+pytest>=8.0.0
+redis>=5.0.0
+transformers>=4.30.0
+torch>=2.0.0
+scipy>=1.10.0
 sentencepiece
+protobuf
+anyio>=4.0.0

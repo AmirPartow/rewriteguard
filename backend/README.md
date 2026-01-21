@@ -72,6 +72,23 @@ The server will start at `http://localhost:8000`
 - **GET /docs** - Interactive API documentation (Swagger UI)
 - **GET /redoc** - Alternative API documentation (ReDoc)
 
+### Detection API
+
+- **POST /v1/detect** - Analyze text for AI generation
+  **Request Body:**
+  ```json
+  {
+    "text": "Text to analyze..."
+  }
+  ```
+  **Response:**
+  ```json
+  {
+    "label": "ai",
+    "probability": 0.98
+  }
+  ```
+
 ## Development
 
 ### Running in Development Mode
@@ -84,11 +101,13 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Using curl:
 ```bash
-# Test root endpoint
-curl http://localhost:8000/
-
 # Test health check
 curl http://localhost:8000/health
+
+# Test AI detection
+curl -X POST http://localhost:8000/v1/detect \
+  -H "Content-Type: application/json" \
+  -d '{"text": "This is a sample text to analyze for AI generation."}'
 ```
 
 Or visit in your browser:

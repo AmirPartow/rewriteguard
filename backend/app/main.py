@@ -1,28 +1,16 @@
-from fastapi import FastAPI, Depends
-from app.core.config import settings
 from app.core.logging import setup_logging
-from app.api.health import router as health_router
-from app.api.detect import router as detect_router
-from app.ml.model import load_model
-from app.rate_limit import rate_limiter
+from app.api.v1.detect import router as detect_router
+from .rate_limit import rate_limiter
 
-setup_logging(settings.LOG_LEVEL)
+setup_logging()
 
-app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.APP_VERSION,
-)
+app = FastAPI(title="rewriteguard-backend")
 
-app.include_router(health_router)
-app.include_router(detect_router)
+app.include_router(detect_router, prefix="/v1", tags=["Detection"])
 
-@app.on_event("startup")
-def startup_event():
-    load_model()
-
-@app.get("/")
-def root():
-    return {"service": settings.APP_NAME, "version": settings.APP_VERSION}
+@app.get("/health")
+def health():
+    return {"ok": True}
 
 @app.get("/protected")
 def protected(_: None = Depends(rate_limiter)):

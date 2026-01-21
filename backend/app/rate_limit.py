@@ -1,43 +1,30 @@
-"""
-Rate limiting module for API endpoints.
-Uses a simple in-memory counter (not production-ready, use Redis for production).
-"""
 import os
-from collections import defaultdict
-from datetime import datetime, timedelta
-from fastapi import HTTPException
-
-# In-memory store for rate limiting (use Redis in production)
-_request_counts = defaultdict(list)
+import time
+from fastapi import Header, HTTPException
+from .redis_client import r
 
 RATE_LIMIT = int(os.getenv("RATE_LIMIT", "10"))
 RATE_WINDOW = int(os.getenv("RATE_WINDOW", "60"))  # seconds
 
-def rate_limiter():
-    """
-    Simple rate limiter dependency.
-    Limits requests to RATE_LIMIT per RATE_WINDOW seconds.
-    """
-    # In a real app, you'd use the client IP or API key
-    client_id = "global"  # Simplified for demo
+async def rate_limiter(x_api_key: str = Header(default=None, alias="X-API-Key")):
+    # Allow missing key for now (default to public) to ease testing
+    if not x_api_key:
+        x_api_key = "public"
     
-    now = datetime.now()
-    cutoff = now - timedelta(seconds=RATE_WINDOW)
+    key = f"rl:{x_api_key}"
     
-    # Clean old requests
-    _request_counts[client_id] = [
-        req_time for req_time in _request_counts[client_id]
-        if req_time > cutoff
-    ]
-    
-    # Check limit
-    if len(_request_counts[client_id]) >= RATE_LIMIT:
-        raise HTTPException(
-            status_code=429,
-            detail=f"Rate limit exceeded. Max {RATE_LIMIT} requests per {RATE_WINDOW} seconds."
-        )
-    
-    # Record this request
-    _request_counts[client_id].append(now)
-    
-    return True
+    try:
+        current = r.incr(key)
+        if current == 1:
+            r.expire(key, RATE_WINDOW)
+
+        if current > RATE_LIMIT:
+            ttl = r.ttl(key)
+            raise HTTPException(
+                status_code=429,
+                detail=f"Rate limit exceeded. Try again in {ttl}s"
+            )
+    except Exception:
+        # If Redis is unavailable, we default to allowing the request
+        # In a strict environment, we might block or fallback to in-memory
+        pass
