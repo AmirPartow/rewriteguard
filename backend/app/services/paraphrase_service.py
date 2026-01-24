@@ -11,6 +11,7 @@ Features:
 - Post-processing: chunk merging, length trimming
 - Multiple paraphrase modes for different writing styles
 - Graceful fallback for development/testing environments
+- Token usage tracking for job recording
 
 Model: google/flan-t5-large (or similar T5-large variant)
 
@@ -19,6 +20,7 @@ Author: RewriteGuard Team
 
 import logging
 import re
+from dataclasses import dataclass
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
 from functools import lru_cache
@@ -34,6 +36,23 @@ MAX_CHUNK_LENGTH = 450  # Max tokens per chunk (leaving room for prompt)
 MAX_OUTPUT_LENGTH = 512  # Max output tokens per chunk
 MIN_CHUNK_LENGTH = 50   # Minimum tokens to form a chunk
 OVERLAP_SENTENCES = 1    # Number of sentences to overlap between chunks
+
+
+@dataclass
+class ParaphraseResult:
+    """
+    Result from paraphrase operation including text and token usage metrics.
+    
+    Attributes:
+        text: The paraphrased text
+        input_tokens: Number of input tokens processed
+        output_tokens: Number of output tokens generated
+        total_tokens: Total tokens (input + output)
+    """
+    text: str
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
 
 
 class TextPreprocessor:
@@ -453,7 +472,13 @@ class Paraphraser:
         
         logger.error("All model loading attempts failed. Using mock mode.")
     
-    def paraphrase(self, text: str, mode: ParaphraseMode = "standard") -> str:
+    def paraphrase(
+        self, 
+        text: str, 
+        mode: ParaphraseMode = "standard",
+        temperature: float = 0.7,
+        max_length: int = 512
+    ) -> ParaphraseResult:
         """
         Paraphrase the input text using T5-large with full preprocessing/postprocessing.
         
@@ -465,16 +490,31 @@ class Paraphraser:
         Args:
             text: Input text to paraphrase
             mode: Paraphrasing style (standard, formal, casual, creative, concise)
+            temperature: Controls randomness (0.0-1.0, higher = more creative)
+            max_length: Maximum output length in tokens
             
         Returns:
-            Paraphrased text in the specified style
+            ParaphraseResult with paraphrased text and token usage metrics
         """
         # Fallback to mock if model not loaded
         if not self.model or not self.tokenizer:
             logger.warning("Model not loaded, returning mock paraphrase.")
-            return self._mock_paraphrase(text, mode)
+            mock_text = self._mock_paraphrase(text, mode)
+            # Estimate tokens for mock (rough approximation)
+            input_tokens = len(text.split())
+            output_tokens = len(mock_text.split())
+            return ParaphraseResult(
+                text=mock_text,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                total_tokens=input_tokens + output_tokens
+            )
         
         try:
+            # Track token counts for job recording
+            total_input_tokens = 0
+            total_output_tokens = 0
+            
             # === PREPROCESSING ===
             # Step 1: Clean the input text
             cleaned_text = self.preprocessor.clean_text(text)
@@ -482,12 +522,15 @@ class Paraphraser:
             
             # Step 2: Chunk text for processing
             chunks = self.preprocessor.chunk_text(cleaned_text)
-            logger.info(f"Processing {len(chunks)} chunks in '{mode}' mode")
+            logger.info(f"Processing {len(chunks)} chunks in '{mode}' mode | temp={temperature} | max_len={max_length}")
             
             # === GENERATION ===
             # Step 3: Process each chunk through the model
             paraphrased_chunks = []
             prompt = self.MODE_PROMPTS.get(mode, self.MODE_PROMPTS["standard"])
+            
+            # Adjust temperature based on mode if not overridden
+            effective_temp = temperature if temperature != 0.7 else (0.8 if mode == "creative" else 0.7)
             
             for i, chunk in enumerate(chunks):
                 # Prepare input with mode-specific prompt
@@ -497,25 +540,33 @@ class Paraphraser:
                 inputs = self.preprocessor.tokenize(input_text)
                 inputs = {k: v.to(self.device) for k, v in inputs.items()}
                 
+                # Track input tokens
+                chunk_input_tokens = inputs['input_ids'].shape[1]
+                total_input_tokens += chunk_input_tokens
+                
                 # Generate paraphrase
                 with torch.no_grad():
                     outputs = self.model.generate(
                         **inputs,
-                        max_length=MAX_OUTPUT_LENGTH,
+                        max_length=min(max_length, MAX_OUTPUT_LENGTH),
                         num_beams=5,
                         num_return_sequences=1,
-                        temperature=0.8 if mode == "creative" else 0.7,
-                        do_sample=(mode == "creative"),
+                        temperature=effective_temp,
+                        do_sample=(mode == "creative" or temperature > 0.7),
                         early_stopping=True,
                         no_repeat_ngram_size=3,
                         length_penalty=1.0 if mode != "concise" else 0.8,
                     )
                 
+                # Track output tokens
+                chunk_output_tokens = outputs.shape[1]
+                total_output_tokens += chunk_output_tokens
+                
                 # Decode output
                 paraphrased = self.postprocessor.decode_output(outputs[0])
                 paraphrased_chunks.append(paraphrased)
                 
-                logger.debug(f"Chunk {i+1}/{len(chunks)} processed")
+                logger.debug(f"Chunk {i+1}/{len(chunks)} processed | in_tokens={chunk_input_tokens} | out_tokens={chunk_output_tokens}")
             
             # === POST-PROCESSING ===
             # Step 4: Merge chunks
@@ -530,8 +581,17 @@ class Paraphraser:
                 target_sentences = max(1, int(original_sentences * 0.7))  # 70% of original
                 final_text = self.postprocessor.trim_length(final_text, max_sentences=target_sentences)
             
-            logger.info(f"Paraphrase complete: {len(text)} -> {len(final_text)} chars")
-            return final_text
+            logger.info(
+                f"Paraphrase complete: {len(text)} -> {len(final_text)} chars | "
+                f"input_tokens={total_input_tokens} | output_tokens={total_output_tokens}"
+            )
+            
+            return ParaphraseResult(
+                text=final_text,
+                input_tokens=total_input_tokens,
+                output_tokens=total_output_tokens,
+                total_tokens=total_input_tokens + total_output_tokens
+            )
             
         except Exception as e:
             logger.error(f"Paraphrase error: {e}", exc_info=True)
