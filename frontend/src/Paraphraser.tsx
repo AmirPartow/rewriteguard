@@ -1,5 +1,24 @@
+/**
+ * Paraphraser Component
+ * =====================
+ * 
+ * A feature-rich text paraphrasing UI that allows users to rewrite their text
+ * in different styles. Integrates with the /v1/paraphrase backend API.
+ * 
+ * Features:
+ * - Input/Output text editors (side-by-side on desktop)
+ * - 5 paraphrasing modes: Standard, Formal, Casual, Creative, Concise
+ * - Copy to clipboard functionality with visual feedback
+ * - Processing time display for performance monitoring
+ * - Loading states and error handling
+ * - Responsive design with beautiful animations
+ * 
+ * @author RewriteGuard Team
+ */
+
 import { useState } from 'react';
 
+// Available paraphrasing modes - must match backend ParaphraseMode type
 type ParaphraseMode = 'standard' | 'formal' | 'casual' | 'creative' | 'concise';
 
 interface ParaphraseResponse {

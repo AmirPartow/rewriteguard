@@ -1,3 +1,20 @@
+"""
+Paraphrase API Endpoint Module
+==============================
+
+This module provides the /v1/paraphrase REST API endpoint for text paraphrasing.
+It supports multiple paraphrasing modes (standard, formal, casual, creative, concise)
+and returns the paraphrased text along with processing time metrics.
+
+Features:
+- Async processing with thread pool for CPU-bound ML operations
+- 30-second timeout protection to prevent long-running requests
+- Comprehensive logging for monitoring and debugging
+- Graceful error handling with appropriate HTTP status codes
+
+Author: RewriteGuard Team
+"""
+
 from fastapi import APIRouter, HTTPException, Depends
 from app.schemas import ParaphraseRequest, ParaphraseResponse
 from app.services.paraphrase_service import get_paraphraser, Paraphraser
@@ -6,7 +23,10 @@ import time
 import asyncio
 import anyio
 
+# Create router instance for paraphrase endpoints
 router = APIRouter()
+
+# Logger for this module - logs to configured handlers
 logger = logging.getLogger(__name__)
 
 @router.post("/paraphrase", response_model=ParaphraseResponse)
