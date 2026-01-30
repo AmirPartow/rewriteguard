@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     APP_VERSION: str = "0.1.0"
     LOG_LEVEL: str = "INFO"
 
+    # Redis configuration for caching
+    REDIS_URL: str = "redis://localhost:6379/0"
+    PARAPHRASE_CACHE_TTL: int = 3600  # 1 hour in seconds
+
     # Add later when you need them:
     # DATABASE_URL: str | None = None
     # OPENAI_API_KEY: str | None = None

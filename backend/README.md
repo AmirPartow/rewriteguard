@@ -122,6 +122,41 @@ Or visit in your browser:
 | `APP_NAME` | `rewriteguard-backend` | Application name |
 | `APP_VERSION` | `0.1.0` | Application version |
 | `LOG_LEVEL` | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) |
+| `REDIS_URL` | `redis://localhost:6379/0` | Redis connection URL for caching |
+| `PARAPHRASE_CACHE_TTL` | `3600` | Cache TTL in seconds (default: 1 hour) |
+
+## Redis Caching
+
+The paraphrase endpoint supports Redis caching for improved performance on repeat requests.
+
+### Features
+
+- **Cache Key**: Generated from SHA256 hash of `text + mode + temperature + max_length`
+- **TTL Configuration**: Configurable via `PARAPHRASE_CACHE_TTL` environment variable
+- **Cache-Hit Logging**: All cache hits/misses are logged for monitoring
+- **Speed Improvement**: Cache hits return in <10ms vs 1-30s for ML processing
+
+### Cache Stats Endpoint
+
+- **GET /cache-stats** - Get Redis cache statistics
+  ```json
+  {
+    "status": "connected",
+    "keys": 42,
+    "used_memory": "1.5M",
+    "ttl_seconds": 3600
+  }
+  ```
+
+### Running Redis Locally
+
+```bash
+# Using Docker
+docker run -d --name redis -p 6379:6379 redis:latest
+
+# Or via Docker Compose (included in project)
+docker-compose up redis
+```
 
 ## Next Steps
 
@@ -130,3 +165,4 @@ Or visit in your browser:
 - Add API endpoints for core functionality
 - Set up testing framework
 - Configure CORS for frontend integration
+
