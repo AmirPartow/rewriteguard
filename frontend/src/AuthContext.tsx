@@ -3,6 +3,7 @@
  */
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { API } from './config';
 
 // Types
 interface User {
@@ -27,7 +28,7 @@ interface AuthContextType extends AuthState {
     clearError: () => void;
 }
 
-const API_BASE = 'http://localhost:8000/v1/auth';
+const API_BASE = API.AUTH;
 
 // Create context
 const AuthContext = createContext<AuthContextType | null>(null);

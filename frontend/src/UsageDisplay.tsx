@@ -3,6 +3,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { API } from './config';
 
 interface UsageStats {
     user_id: number;
@@ -16,7 +17,7 @@ interface UsageStats {
     percentage_used: number;
 }
 
-const API_BASE = 'http://localhost:8000/v1/quota';
+const API_BASE = API.QUOTA;
 
 export default function UsageDisplay() {
     const { token, isAuthenticated } = useAuth();
@@ -114,8 +115,8 @@ export default function UsageDisplay() {
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     <div className={`px-2 py-1 rounded-lg text-xs font-semibold ${usage.plan_type === 'premium'
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                            : 'bg-slate-700 text-gray-300'
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                        : 'bg-slate-700 text-gray-300'
                         }`}>
                         {usage.plan_type === 'premium' ? '⭐ Premium' : 'Free'}
                     </div>

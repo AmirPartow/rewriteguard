@@ -3,6 +3,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { API_BASE_URL } from './config';
 
 interface UsageStats {
     user_id: number;
@@ -40,7 +41,7 @@ interface Plan {
     features: string[];
 }
 
-const API_BASE = 'http://localhost:8000/v1';
+const API_BASE = `${API_BASE_URL}/v1`;
 
 export default function Dashboard() {
     const { token, user } = useAuth();
@@ -206,8 +207,8 @@ export default function Dashboard() {
                     {/* Plan Badge */}
                     <div className="flex items-center justify-between mb-4">
                         <div className={`px-3 py-1.5 rounded-lg text-sm font-semibold ${usage?.plan_type === 'premium'
-                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                                : 'bg-slate-700 text-gray-300'
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                            : 'bg-slate-700 text-gray-300'
                             }`}>
                             {usage?.plan_type === 'premium' ? '⭐ Premium Plan' : '🆓 Free Plan'}
                         </div>
@@ -263,8 +264,8 @@ export default function Dashboard() {
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${job.job_type === 'detect'
-                                                ? 'bg-blue-500/20 text-blue-400'
-                                                : 'bg-emerald-500/20 text-emerald-400'
+                                            ? 'bg-blue-500/20 text-blue-400'
+                                            : 'bg-emerald-500/20 text-emerald-400'
                                             }`}>
                                             {job.job_type === 'detect' ? '🔍 Detect' : '✍️ Paraphrase'}
                                         </span>
@@ -293,8 +294,8 @@ export default function Dashboard() {
                             <div
                                 key={plan.name}
                                 className={`rounded-xl p-5 border ${plan.name === 'premium'
-                                        ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/30'
-                                        : 'bg-slate-800/50 border-slate-700/50'
+                                    ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/30'
+                                    : 'bg-slate-800/50 border-slate-700/50'
                                     }`}
                             >
                                 <div className="flex items-center justify-between mb-3">

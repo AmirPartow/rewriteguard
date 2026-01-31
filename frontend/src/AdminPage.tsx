@@ -4,6 +4,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { API } from './config';
 
 interface MetricsSummary {
     total_requests: number;
@@ -46,7 +47,7 @@ interface AdminDashboard {
     generated_at: string;
 }
 
-const API_BASE = 'http://localhost:8000/v1/admin';
+const API_BASE = API.ADMIN;
 
 export default function AdminPage() {
     const { token } = useAuth();
@@ -293,7 +294,7 @@ export default function AdminPage() {
                             <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
                                 <div
                                     className={`h-full rounded-full ${(dashboard?.summary.error_rate || 0) > 10 ? 'bg-red-500' :
-                                            (dashboard?.summary.error_rate || 0) > 5 ? 'bg-amber-500' : 'bg-emerald-500'
+                                        (dashboard?.summary.error_rate || 0) > 5 ? 'bg-amber-500' : 'bg-emerald-500'
                                         }`}
                                     style={{ width: `${Math.min(100, (dashboard?.summary.error_rate || 0) * 10)}%` }}
                                 />
@@ -330,13 +331,13 @@ export default function AdminPage() {
                             <div
                                 key={i}
                                 className={`flex items-start gap-3 p-2 rounded-lg text-sm font-mono ${log.level === 'error' ? 'bg-red-500/10 text-red-300' :
-                                        log.level === 'warning' ? 'bg-amber-500/10 text-amber-300' :
-                                            'bg-slate-700/50 text-gray-300'
+                                    log.level === 'warning' ? 'bg-amber-500/10 text-amber-300' :
+                                        'bg-slate-700/50 text-gray-300'
                                     }`}
                             >
                                 <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${log.level === 'error' ? 'bg-red-500/20 text-red-400' :
-                                        log.level === 'warning' ? 'bg-amber-500/20 text-amber-400' :
-                                            'bg-blue-500/20 text-blue-400'
+                                    log.level === 'warning' ? 'bg-amber-500/20 text-amber-400' :
+                                        'bg-blue-500/20 text-blue-400'
                                     }`}>
                                     {log.level.toUpperCase()}
                                 </span>
