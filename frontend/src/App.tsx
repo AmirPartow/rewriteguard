@@ -2,15 +2,15 @@ import { useState } from 'react';
 import { useAuth } from './AuthContext';
 import AuthForm from './AuthForm';
 import UserMenu from './UserMenu';
-import UsageDisplay from './UsageDisplay';
+import Dashboard from './Dashboard';
 import Detector from './Detector';
 import Paraphraser from './Paraphraser';
 
-type ActivePage = 'detector' | 'paraphraser';
+type ActivePage = 'dashboard' | 'detector' | 'paraphraser';
 
 function App() {
   const { isAuthenticated, isLoading } = useAuth();
-  const [activePage, setActivePage] = useState<ActivePage>('detector');
+  const [activePage, setActivePage] = useState<ActivePage>('dashboard');
 
   // Show loading spinner while checking auth state
   if (isLoading) {
@@ -56,9 +56,24 @@ function App() {
         <nav className="mb-8 flex justify-center">
           <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-1.5 inline-flex gap-1 shadow-xl">
             <button
+              onClick={() => setActivePage('dashboard')}
+              className={`
+                px-5 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2
+                ${activePage === 'dashboard'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20'
+                  : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
+                }
+              `}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+              </svg>
+              Dashboard
+            </button>
+            <button
               onClick={() => setActivePage('detector')}
               className={`
-                px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2.5
+                px-5 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2
                 ${activePage === 'detector'
                   ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/20'
                   : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
@@ -73,7 +88,7 @@ function App() {
             <button
               onClick={() => setActivePage('paraphraser')}
               className={`
-                px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2.5
+                px-5 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2
                 ${activePage === 'paraphraser'
                   ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 text-white shadow-lg shadow-emerald-500/20'
                   : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
@@ -88,12 +103,11 @@ function App() {
           </div>
         </nav>
 
-        {/* Usage Stats */}
-        <UsageDisplay />
-
         {/* Page Content */}
         <main className="animate-fade-in">
-          {activePage === 'detector' ? <Detector /> : <Paraphraser />}
+          {activePage === 'dashboard' && <Dashboard />}
+          {activePage === 'detector' && <Detector />}
+          {activePage === 'paraphraser' && <Paraphraser />}
         </main>
 
       </div>

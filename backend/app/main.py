@@ -5,6 +5,7 @@ from app.api.v1.detect import router as detect_router
 from app.api.v1.paraphrase import router as paraphrase_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.quota import router as quota_router
+from app.api.v1.jobs import router as jobs_router
 from app.redis_client import get_cache_stats
 from .rate_limit import rate_limiter
 
@@ -23,6 +24,7 @@ app.add_middleware(
 
 app.include_router(auth_router, prefix="/v1/auth", tags=["Authentication"])
 app.include_router(quota_router, prefix="/v1/quota", tags=["Quota"])
+app.include_router(jobs_router, prefix="/v1/jobs", tags=["Jobs"])
 app.include_router(detect_router, prefix="/v1", tags=["Detection"])
 app.include_router(paraphrase_router, prefix="/v1", tags=["Paraphrase"])
 
