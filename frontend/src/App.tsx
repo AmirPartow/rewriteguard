@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from './AuthContext';
 import AuthForm from './AuthForm';
 import UserMenu from './UserMenu';
+import UsageDisplay from './UsageDisplay';
 import Detector from './Detector';
 import Paraphraser from './Paraphraser';
 
@@ -86,6 +87,9 @@ function App() {
             </button>
           </div>
         </nav>
+
+        {/* Usage Stats */}
+        <UsageDisplay />
 
         {/* Page Content */}
         <main className="animate-fade-in">
