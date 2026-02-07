@@ -15,6 +15,7 @@ export const API = {
     QUOTA: `${API_BASE_URL}/v1/quota`,
     JOBS: `${API_BASE_URL}/v1/jobs`,
     ADMIN: `${API_BASE_URL}/v1/admin`,
+    SUBSCRIPTIONS: `${API_BASE_URL}/v1/subscriptions`,
     DETECT: `${API_BASE_URL}/v1/detect`,
     PARAPHRASE: `${API_BASE_URL}/v1/paraphrase`,
 };
