@@ -28,6 +28,7 @@ env/
 .env
 .env.*
 !.env.example
+!.env.production
 
 # Testing
 .pytest_cache/
@@ -47,3 +48,10 @@ Thumbs.db
 # Build outputs
 dist/
 *.build/
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.backup
+infra/terraform/tfplan
+infra/terraform/*.pem

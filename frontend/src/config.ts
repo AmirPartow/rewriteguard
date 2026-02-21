@@ -1,13 +1,16 @@
 /**
  * API Configuration
- * 
- * Change API_BASE_URL to point to your backend server.
- * - For local development: http://localhost:8000
- * - For AWS production: https://your-aws-api-url.com
+ *
+ * Environment-based URL resolution:
+ * - Local development: http://localhost:8000 (default)
+ * - Production: https://api.rewritguard.com (set via VITE_API_URL)
+ *
+ * Set VITE_API_URL in Vercel environment variables for production deployment.
  */
 
-// Set this to your AWS backend URL
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// API Base URL — reads from Vercel/Vite env, falls back to localhost
+export const API_BASE_URL =
+    import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // API endpoints
 export const API = {
@@ -18,4 +21,5 @@ export const API = {
     SUBSCRIPTIONS: `${API_BASE_URL}/v1/subscriptions`,
     DETECT: `${API_BASE_URL}/v1/detect`,
     PARAPHRASE: `${API_BASE_URL}/v1/paraphrase`,
+    HEALTH: `${API_BASE_URL}/health`,
 };
