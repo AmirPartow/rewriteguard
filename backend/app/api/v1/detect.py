@@ -94,14 +94,14 @@ async def detect_text(
             async with _ml_semaphore:
                 return await anyio.to_thread.run_sync(detector.predict, request.text)
         
-        # Apply 15 second timeout (includes potential queue wait)
+        # Apply 30 second timeout (includes potential queue wait)
         try:
-            label, score = await asyncio.wait_for(run_prediction(), timeout=15.0)
+            label, score = await asyncio.wait_for(run_prediction(), timeout=30.0)
         except asyncio.TimeoutError:
-            logger.error(f"Prediction timeout after 15s | text_length={text_length}")
+            logger.error(f"Prediction timeout after 30s | text_length={text_length}")
             raise HTTPException(
                 status_code=504,
-                detail="Request timeout: Detection took too long to complete"
+                detail="Request timeout: Detection took too long to complete. Try shorter text or wait a moment."
             )
         
         duration_ms = (time.perf_counter() - start_time) * 1000

@@ -12,6 +12,12 @@ class DebertaDetector:
         Initializes the DeBERTa model and tokenizer.
         """
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
+        # Optimize for single-core CPU (t3.micro)
+        if self.device.type == "cpu":
+            torch.set_num_threads(1)
+            torch.set_num_interop_threads(1)
+            
         self.model_name = model_name
         self.model = None
         self.tokenizer = None
@@ -40,7 +46,8 @@ class DebertaDetector:
             return "human", 0.99
 
         try:
-            inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=512).to(self.device)
+            # Reduce max_length to 256 for significantly faster CPU inference
+            inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=256).to(self.device)
             with torch.no_grad():
                 outputs = self.model(**inputs)
                 logits = outputs.logits
@@ -56,11 +63,14 @@ class DebertaDetector:
                 raw_label = self.model.config.id2label.get(prediction_idx, str(prediction_idx))
                 
                 # Normalize to ai/human (this is a placeholder mapping)
-                # In production, this would be based on actual model training
-                if raw_label.lower() in ["ai", "fake", "generated", "1"]:
+                # For most fine-tuned models: 0 = human, 1 = ai
+                # If we use a generic model, we'll assume index 1 is 'positive/fake/ai' and index 0 is 'human'
+                if prediction_idx == 1:
                     normalized_label = "ai"
+                    # For AI, score is already probs[0][1]
                 else:
                     normalized_label = "human"
+                    # For Human, score is probs[0][0]
                 
                 return normalized_label, score
 
