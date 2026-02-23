@@ -14,12 +14,12 @@ const isLocalhost = typeof window !== 'undefined' &&
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
 // API Base URL
-// - VITE_API_URL env var overrides everything (e.g., for Vercel)
-// - localhost: use http://localhost:8000 (local backend)
-// - production: empty string = same origin (Nginx serves both frontend + API)
+// - VITE_API_URL env var overrides everything
+// - localhost: use http://localhost:8000
+// - production: use the AWS EC2 IP address
 export const API_BASE_URL =
     import.meta.env.VITE_API_URL ||
-    (isLocalhost ? 'http://localhost:8000' : '');
+    (isLocalhost ? 'http://localhost:8000' : 'http://52.32.253.222');
 
 // API endpoints
 export const API = {
