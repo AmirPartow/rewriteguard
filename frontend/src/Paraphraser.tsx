@@ -234,13 +234,15 @@ function Paraphraser() {
                         <label className="block text-sm font-medium text-gray-400 mb-2">
                             Original Text
                         </label>
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-cyan-600 rounded-xl opacity-0 group-focus-within:opacity-20 transition duration-500 top-6"></div>
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-cyan-600 rounded-xl opacity-0 group-focus-within:opacity-20 transition duration-500 top-6 pointer-events-none"></div>
                         <textarea
-                            className="w-full h-64 bg-slate-900/50 border border-slate-700 rounded-xl p-5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-0 resize-none text-base leading-relaxed transition-all"
+                            id="original-text"
+                            className="w-full h-64 bg-slate-900/50 border border-slate-700 rounded-xl p-5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-0 resize-none text-base leading-relaxed transition-all cursor-text"
                             placeholder="Enter the text you want to paraphrase..."
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
                             disabled={loading}
+                            spellCheck={false}
                         />
                         <div className="mt-2 flex justify-between text-sm text-gray-500">
                             <span>{inputText.length} characters</span>

@@ -72,13 +72,15 @@ function Detector() {
 
                 {/* Input Area */}
                 <div className="relative group">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-0 group-focus-within:opacity-20 transition duration-500"></div>
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-0 group-focus-within:opacity-20 transition duration-500 pointer-events-none"></div>
                     <textarea
-                        className="w-full h-64 bg-slate-900/50 border border-slate-700 rounded-xl p-6 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-0 resize-none text-lg leading-relaxed transition-all"
+                        id="detector-text"
+                        className="w-full h-64 bg-slate-900/50 border border-slate-700 rounded-xl p-6 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-0 resize-none text-lg leading-relaxed transition-all cursor-text"
                         placeholder="Paste your text here to analyze..."
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         disabled={loading}
+                        spellCheck={false}
                     />
                 </div>
 
