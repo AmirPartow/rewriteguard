@@ -411,9 +411,9 @@ class Paraphraser:
         "concise": "paraphrase concisely: ",
     }
     
-    # T5-large model configuration
-    MODEL_NAME = "google/flan-t5-large"  # High-quality T5-large variant
-    FALLBACK_MODEL = "google/flan-t5-base"  # Smaller fallback if large fails
+    # T5-small model configuration (optimized for t3.micro / low-resource servers)
+    MODEL_NAME = "google/flan-t5-small"  # 77M params, fast inference on CPU
+    FALLBACK_MODEL = "google/flan-t5-small"  # Same — no fallback to larger model
     
     def __init__(self, model_name: Optional[str] = None):
         """
@@ -549,7 +549,7 @@ class Paraphraser:
                     outputs = self.model.generate(
                         **inputs,
                         max_length=min(max_length, MAX_OUTPUT_LENGTH),
-                        num_beams=5,
+                        num_beams=2,            # reduced from 5 → 2 for CPU speed
                         num_return_sequences=1,
                         temperature=effective_temp,
                         do_sample=(mode == "creative" or temperature > 0.7),

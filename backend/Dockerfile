@@ -8,7 +8,7 @@ WORKDIR /app
 
 # --- System dependencies ---
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl \
+  build-essential curl \
   && rm -rf /var/lib/apt/lists/*
 
 # --- Install Python dependencies ---
@@ -35,9 +35,9 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 # --- Run with production settings ---
 # Workers auto-calculated: 2 * CPU cores + 1 (override with WEB_CONCURRENCY env)
 CMD ["uvicorn", "app.main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8000", \
-     "--workers", "2", \
-     "--access-log", \
-     "--proxy-headers", \
-     "--forwarded-allow-ips", "*"]
+  "--host", "0.0.0.0", \
+  "--port", "8000", \
+  "--workers", "1", \
+  "--access-log", \
+  "--proxy-headers", \
+  "--forwarded-allow-ips", "*"]

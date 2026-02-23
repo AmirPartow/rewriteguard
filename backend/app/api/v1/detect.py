@@ -12,6 +12,11 @@ import anyio
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# Semaphore to serialize ML inference — on t3.micro (1 vCPU), concurrent
+# inference causes thread contention that explodes latency. Queuing requests
+# ensures each gets full CPU and finishes in ~1s instead of all fighting for 25s.
+_ml_semaphore = asyncio.Semaphore(1)
+
 
 def count_words(text: str) -> int:
     """Count words in text."""
@@ -84,14 +89,16 @@ async def detect_text(
     
     try:
         # Run CPU-bound prediction in thread pool with timeout
+        # Semaphore serializes inference to avoid thread contention on single vCPU
         async def run_prediction():
-            return await anyio.to_thread.run_sync(detector.predict, request.text)
+            async with _ml_semaphore:
+                return await anyio.to_thread.run_sync(detector.predict, request.text)
         
-        # Apply 10 second timeout
+        # Apply 15 second timeout (includes potential queue wait)
         try:
-            label, score = await asyncio.wait_for(run_prediction(), timeout=10.0)
+            label, score = await asyncio.wait_for(run_prediction(), timeout=15.0)
         except asyncio.TimeoutError:
-            logger.error(f"Prediction timeout after 10s | text_length={text_length}")
+            logger.error(f"Prediction timeout after 15s | text_length={text_length}")
             raise HTTPException(
                 status_code=504,
                 detail="Request timeout: Detection took too long to complete"

@@ -43,6 +43,9 @@ router = APIRouter()
 # Logger for this module - logs to configured handlers
 logger = logging.getLogger(__name__)
 
+# Semaphore to serialize ML inference — prevents CPU contention on t3.micro
+_ml_semaphore = asyncio.Semaphore(1)
+
 
 def count_words(text: str) -> int:
     """Count words in text."""
@@ -224,15 +227,17 @@ async def paraphrase_text(
     # === CACHE MISS - Run ML Paraphrase ===
     try:
         # Run paraphrase in thread pool with timeout
+        # Semaphore serializes inference to avoid thread contention on single vCPU
         async def run_paraphrase():
-            return await anyio.to_thread.run_sync(
-                lambda: paraphraser.paraphrase(
-                    request.text, 
-                    request.mode,
-                    request.temperature,
-                    request.max_length
+            async with _ml_semaphore:
+                return await anyio.to_thread.run_sync(
+                    lambda: paraphraser.paraphrase(
+                        request.text, 
+                        request.mode,
+                        request.temperature,
+                        request.max_length
+                    )
                 )
-            )
         
         # Apply 30 second timeout for paraphrase (longer than detection)
         try:
