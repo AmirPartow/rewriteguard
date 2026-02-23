@@ -42,7 +42,7 @@ export default function LandingPage({ }: LandingPageProps) {
                         </svg>
                     </div>
                     <span className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent tracking-tight">
-                        RewriteGuard v1.0.1
+                        RewriteGuard
                     </span>
                 </div>
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
