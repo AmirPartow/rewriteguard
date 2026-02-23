@@ -7,7 +7,7 @@ from functools import lru_cache
 logger = logging.getLogger(__name__)
 
 class DebertaDetector:
-    def __init__(self, model_name: str = "microsoft/deberta-v3-small"):
+    def __init__(self, model_name: str = "DmitryUlow/deberta-v3-small-ai-content-detector"):
         """
         Initializes the DeBERTa model and tokenizer.
         """
