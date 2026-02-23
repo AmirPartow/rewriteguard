@@ -41,7 +41,7 @@ function App() {
               </svg>
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-              RewriteGuard v1.0.1
+              RewriteGuard
             </span>
           </div>
 
