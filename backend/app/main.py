@@ -27,8 +27,15 @@ app = FastAPI(
 # CORS — allow frontend origins (local dev + production domain)
 # ---------------------------------------------------------------------------
 ALLOWED_ORIGINS = [
+    # Local development
     "http://localhost:5173",
     "http://localhost:3000",
+    "http://localhost:8000",
+    # Production domain (rewriteguard.com — with 'e')
+    "https://rewriteguard.com",
+    "https://www.rewriteguard.com",
+    "https://app.rewriteguard.com",
+    # Legacy domain spelling (rewritguard.com — without 'e')
     "https://rewritguard.com",
     "https://www.rewritguard.com",
     "https://app.rewritguard.com",

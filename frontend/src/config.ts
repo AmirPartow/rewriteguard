@@ -1,16 +1,22 @@
 /**
  * API Configuration
  *
- * Environment-based URL resolution:
- * - Local development: http://localhost:8000 (default)
- * - Production: https://api.rewritguard.com (set via VITE_API_URL)
+ * URL resolution priority:
+ * 1. VITE_API_URL env var (set in Vercel for production)
+ * 2. Auto-detect: localhost → http://localhost:8000 (local dev)
+ * 3. Fallback: http://52.32.253.222 (production EC2)
  *
- * Set VITE_API_URL in Vercel environment variables for production deployment.
+ * This means BOTH local dev AND production work automatically.
  */
 
-// API Base URL — reads from Vercel/Vite env, falls back to production EC2
+// Auto-detect environment
+const isLocalhost = typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+// API Base URL — env var → auto-detect → production fallback
 export const API_BASE_URL =
-    import.meta.env.VITE_API_URL || 'http://52.32.253.222';
+    import.meta.env.VITE_API_URL ||
+    (isLocalhost ? 'http://localhost:8000' : 'http://52.32.253.222');
 
 // API endpoints
 export const API = {
