@@ -9,17 +9,7 @@
  * This means BOTH local dev AND production work automatically.
  */
 
-// Auto-detect environment
-const isLocalhost = typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-// API Base URL
-// - VITE_API_URL env var overrides everything
-// - localhost: use http://localhost:8000
-// - production: use relative path (proxied via Vercel or Nginx)
-export const API_BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    (isLocalhost ? 'http://localhost:8000' : '');
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // API endpoints
 export const API = {

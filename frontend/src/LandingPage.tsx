@@ -93,24 +93,74 @@ export default function LandingPage({ }: LandingPageProps) {
                         {/* Dashboard Preview Mockup */}
                         <div className="mt-24 relative max-w-5xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                             <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-[2rem] blur-2xl opacity-50"></div>
-                            <div className="relative bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden aspect-video flex items-center justify-center p-8 lg:p-12 group">
-                                <div className="w-full h-full rounded-xl bg-slate-900/50 border border-white/5 p-6 flex flex-col gap-4">
-                                    <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                                        <div className="flex gap-2">
-                                            <div className="w-3 h-3 rounded-full bg-red-500/50"></div>
-                                            <div className="w-3 h-3 rounded-full bg-amber-500/50"></div>
-                                            <div className="w-3 h-3 rounded-full bg-emerald-500/50"></div>
+                            <div className="relative bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden aspect-video flex flex-col p-4 lg:p-6 group">
+                                {/* Browser Chrome */}
+                                <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
+                                    <div className="flex gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-red-500/50"></div>
+                                        <div className="w-3 h-3 rounded-full bg-amber-500/50"></div>
+                                        <div className="w-3 h-3 rounded-full bg-emerald-500/50"></div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-2 w-24 bg-white/5 rounded-full"></div>
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600"></div>
+                                    </div>
+                                </div>
+
+                                {/* Mock Dashboard Content */}
+                                <div className="flex-1 flex gap-6 overflow-hidden">
+                                    {/* Sidebar Mockup */}
+                                    <div className="hidden md:flex flex-col gap-4 w-48 border-r border-white/5 pr-6">
+                                        <div className="h-8 w-full bg-blue-500/20 rounded-lg flex items-center px-3 gap-2">
+                                            <div className="w-3 h-3 bg-blue-400 rounded-sm"></div>
+                                            <div className="h-2 w-16 bg-blue-400/50 rounded"></div>
                                         </div>
-                                        <div className="h-4 w-32 bg-white/5 rounded"></div>
+                                        {[1, 2, 3, 4].map(i => (
+                                            <div key={i} className="h-8 w-full bg-white/5 rounded-lg flex items-center px-3 gap-2">
+                                                <div className="w-3 h-3 bg-white/20 rounded-sm"></div>
+                                                <div className="h-2 w-20 bg-white/10 rounded"></div>
+                                            </div>
+                                        ))}
                                     </div>
-                                    <div className="grid grid-cols-3 gap-4 mt-2">
-                                        <div className="h-24 bg-white/5 rounded-xl animate-pulse"></div>
-                                        <div className="h-24 bg-white/5 rounded-xl animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                                        <div className="h-24 bg-white/5 rounded-xl animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                                    </div>
-                                    <div className="flex-1 bg-white/5 rounded-xl flex items-center justify-center relative overflow-hidden">
-                                        <span className="text-white/20 font-bold text-4xl select-none group-hover:scale-110 transition-transform duration-700">PREVIEW</span>
-                                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-blue-500/10 to-transparent"></div>
+
+                                    {/* Main Area Mockup */}
+                                    <div className="flex-1 flex flex-col gap-6">
+                                        {/* Stats */}
+                                        <div className="grid grid-cols-3 gap-4">
+                                            <div className="p-4 bg-white/5 border border-white/5 rounded-2xl group/card hover:bg-white/[0.08] transition-colors">
+                                                <div className="text-xl mb-1">📝</div>
+                                                <div className="text-2xl font-bold text-white">1,420</div>
+                                                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Words Today</div>
+                                            </div>
+                                            <div className="p-4 bg-white/5 border border-white/5 rounded-2xl group/card hover:bg-white/[0.08] transition-colors">
+                                                <div className="text-xl mb-1">✨</div>
+                                                <div className="text-2xl font-bold text-emerald-400">99.4%</div>
+                                                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Accuracy</div>
+                                            </div>
+                                            <div className="p-4 bg-white/5 border border-white/5 rounded-2xl group/card hover:bg-white/[0.08] transition-colors">
+                                                <div className="text-xl mb-1">⚡</div>
+                                                <div className="text-2xl font-bold text-blue-400">0.8s</div>
+                                                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Speed</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Activity Chart Mockup */}
+                                        <div className="flex-1 bg-white/5 border border-white/5 rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group-hover:scale-[1.01] transition-transform duration-700">
+                                            <div className="flex justify-between items-center">
+                                                <div className="h-3 w-32 bg-white/10 rounded"></div>
+                                                <div className="h-3 w-16 bg-white/5 rounded text-[10px] flex items-center justify-center text-gray-400">7 Days</div>
+                                            </div>
+                                            <div className="flex-1 flex items-end gap-2 px-2">
+                                                {[40, 70, 45, 90, 65, 80, 55, 75, 50, 85].map((h, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="flex-1 bg-gradient-to-t from-blue-600/40 to-blue-400/60 rounded-t-sm animate-fade-in-up"
+                                                        style={{ height: `${h}%`, animationDelay: `${i * 0.05}s` }}
+                                                    ></div>
+                                                ))}
+                                            </div>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 to-transparent pointer-events-none"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -311,9 +311,6 @@ export default function AuthForm() {
                         </>
                     )}
                 </p>
-                <p className="text-center text-gray-600 text-xs mt-4">
-                    RewriteGuard v1.0.1
-                </p>
             </div>
         </div>
     );
