@@ -32,6 +32,9 @@ ALLOWED_ORIGINS = [
     "https://rewritguard.com",
     "https://www.rewritguard.com",
     "https://app.rewritguard.com",
+    # Vercel deployments
+    "https://rewriteguard.vercel.app",
+    "https://rewritguard.vercel.app",
 ]
 
 # Allow override via env var (comma-separated list)
@@ -42,6 +45,8 @@ if extra_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    # Also allow Vercel preview deploys (rewriteguard-*.vercel.app)
+    allow_origin_regex=r"https://rewrite[e]?guard.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
