@@ -32,6 +32,14 @@
   ],
   "rewrites": [
     {
+      "source": "/v1/:path*",
+      "destination": "http://52.32.253.222/v1/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "http://52.32.253.222/health"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

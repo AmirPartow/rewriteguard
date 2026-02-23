@@ -16,10 +16,10 @@ const isLocalhost = typeof window !== 'undefined' &&
 // API Base URL
 // - VITE_API_URL env var overrides everything
 // - localhost: use http://localhost:8000
-// - production: use the AWS EC2 IP address
+// - production: use relative path (proxied via Vercel or Nginx)
 export const API_BASE_URL =
     import.meta.env.VITE_API_URL ||
-    (isLocalhost ? 'http://localhost:8000' : 'http://52.32.253.222');
+    (isLocalhost ? 'http://localhost:8000' : '');
 
 // API endpoints
 export const API = {
