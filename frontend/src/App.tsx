@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useAuth } from './AuthContext';
-import AuthForm from './AuthForm';
 import UserMenu from './UserMenu';
 import Dashboard from './Dashboard';
 import Detector from './Detector';
 import Paraphraser from './Paraphraser';
 import AdminPage from './AdminPage';
+import LandingPage from './LandingPage';
 
 type ActivePage = 'dashboard' | 'detector' | 'paraphraser' | 'admin';
 
@@ -16,19 +16,15 @@ function App() {
   // Show loading spinner while checking auth state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0f172a]">
         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  // Show login form if not authenticated
+  // Show Landing Page if not authenticated
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <AuthForm />
-      </div>
-    );
+    return <LandingPage />;
   }
 
   return (
