@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_BASE_URL } from './config';
 
 interface ContactSupportProps {
     onBack: () => void;
@@ -33,7 +34,7 @@ export default function ContactSupport({ onBack }: ContactSupportProps) {
                 formData.append('attachment', selectedFile);
             }
 
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/v1/support/submit`, {
+            const response = await fetch(`${API_BASE_URL}/v1/support/submit`, {
                 method: 'POST',
                 body: formData,
             });
