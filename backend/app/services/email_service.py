@@ -141,3 +141,49 @@ The RewriteGuard Team
     # server.send_message(msg)
     # server.quit()
     return True
+
+async def send_auto_reply_confirmation(user_email: str, user_name: str, subject: str) -> bool:
+    """
+    Sends an automatic confirmation email to the user who submitted the support form.
+    """
+    email_subject = f"We've received your request: {subject}"
+    body = f"""Hi {user_name},
+
+Thank you for reaching out to RewriteGuard support!
+
+We have received your request regarding "{subject}". Our team is currently reviewing the details, and we will get back to you at this email address as soon as possible.
+
+If you have additional information to add, simply reply to this email.
+
+Best regards,
+The RewriteGuard Team
+https://www.rewriteguard.com
+"""
+
+    msg = EmailMessage()
+    msg.set_content(body)
+    msg["Subject"] = email_subject
+    msg["From"] = f"RewriteGuard Support <{GMAIL_USER}>"
+    msg["To"] = user_email
+
+    if MOCK_EMAIL_DELIVERY:
+        logger.info("\n=== MOCK AUTO-REPLY DELIVERY ===")
+        logger.info(f"To: {user_email}")
+        logger.info(f"Subject: {email_subject}")
+        logger.info(f"Body:\n{body}")
+        logger.info("==================================\n")
+        return True
+
+    try:
+        if not GMAIL_APP_PASSWORD:
+            logger.error("GMAIL_APP_PASSWORD not set. Cannot send auto-reply.")
+            return False
+            
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send auto-reply email: {e}")
+        return False

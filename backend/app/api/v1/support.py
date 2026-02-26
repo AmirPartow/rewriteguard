@@ -1,11 +1,12 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, BackgroundTasks
 from typing import Optional
-from app.services.email_service import send_contact_request_email
+from app.services.email_service import send_contact_request_email, send_auto_reply_confirmation
 
 router = APIRouter()
 
 @router.post("/submit")
 async def submit_contact_form(
+    background_tasks: BackgroundTasks,
     name: str = Form("Anonymous"),
     email: str = Form(...),
     category: str = Form(...),
@@ -37,5 +38,8 @@ async def submit_contact_form(
     
     if not success:
         raise HTTPException(status_code=500, detail="Failed to send support request.")
+    
+    # Send auto-reply in background so the user doesn't wait
+    background_tasks.add_task(send_auto_reply_confirmation, email, name, subject)
     
     return {"status": "success", "message": "Support request submitted successfully."}
