@@ -8,6 +8,7 @@ class ContactRequest(BaseModel):
     name: str = "Anonymous"
     email: EmailStr
     category: str
+    sub_category: str = ""
     subject: str
     description: str
 
@@ -20,6 +21,7 @@ async def submit_contact_form(request: ContactRequest):
         name=request.name,
         email=request.email,
         category=request.category,
+        sub_category=request.sub_category,
         subject=request.subject,
         description=request.description
     )

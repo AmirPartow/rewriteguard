@@ -1,6 +1,7 @@
 """
 Email service to send transactional emails and trigger Trustpilot AFS.
 """
+import os
 import logging
 from email.message import EmailMessage
 
@@ -9,20 +10,22 @@ logger = logging.getLogger(__name__)
 # Trustpilot AFS Email
 TRUSTPILOT_AFS_BCC = "rewriteguard.com+f575b5dd9c@invite.trustpilot.com"
 
-# Set to False when real SMTP credentials are provided in the future
-MOCK_EMAIL_DELIVERY = True
+# Set to False in production environment
+MOCK_EMAIL_DELIVERY = os.getenv("MOCK_EMAIL_DELIVERY", "true").lower() == "true"
 
-async def send_contact_request_email(name: str, email: str, category: str, subject: str, description: str) -> bool:
+async def send_contact_request_email(name: str, email: str, category: str, sub_category: str, subject: str, description: str) -> bool:
     """
     Sends a contact/support request email to rewriteguard@gmail.com.
     """
     target_email = "rewriteguard@gmail.com"
-    email_subject = f"Contact Form: {category} - {subject}"
+    category_display = f"{category} ({sub_category})" if sub_category else category
+    email_subject = f"Contact Form: {category_display} - {subject}"
     body = f"""New Support Request:
 
 Name: {name}
 Email: {email}
 Category: {category}
+{f"Sub-Category: {sub_category}" if sub_category else ""}
 Subject: {subject}
 
 Description:
