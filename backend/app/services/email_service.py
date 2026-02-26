@@ -1,6 +1,8 @@
 """
 Email service to send transactional emails and trigger Trustpilot AFS.
 """
+import os
+import logging
 import smtplib
 from email.message import EmailMessage
 from typing import Optional
