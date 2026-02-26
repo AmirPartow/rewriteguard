@@ -1,12 +1,30 @@
 import { useState } from 'react';
 import AuthForm from './AuthForm';
+import ContactSupport from './ContactSupport';
 
 interface LandingPageProps {
     // No props needed for now
 }
 
 export default function LandingPage({ }: LandingPageProps) {
-    const [view, setView] = useState<'home' | 'pricing' | 'auth'>('home');
+    const [view, setView] = useState<'home' | 'pricing' | 'auth' | 'contact'>('home');
+
+    if (view === 'contact') {
+        return (
+            <div className="min-h-screen flex flex-col items-center py-20 px-4 animate-fade-in bg-[#0f172a]">
+                <button
+                    onClick={() => setView('home')}
+                    className="mb-12 text-gray-400 hover:text-white flex items-center gap-2 transition-colors group self-start max-w-7xl mx-auto w-full px-6"
+                >
+                    <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Home
+                </button>
+                <ContactSupport onBack={() => setView('home')} />
+            </div>
+        );
+    }
 
     if (view === 'auth') {
         return (
@@ -360,7 +378,7 @@ export default function LandingPage({ }: LandingPageProps) {
                             <li><button onClick={() => setView('auth')} className="text-gray-400 hover:text-white transition-colors text-sm">Trust Center</button></li>
                             <li><button onClick={() => setView('auth')} className="text-gray-400 hover:text-white transition-colors text-sm">Careers</button></li>
                             <li><button onClick={() => setView('auth')} className="text-gray-400 hover:text-white transition-colors text-sm">Help Center</button></li>
-                            <li><button onClick={() => setView('auth')} className="text-gray-400 hover:text-white transition-colors text-sm">Contact Us</button></li>
+                            <li><button onClick={() => setView('contact')} className="text-gray-400 hover:text-white transition-colors text-sm">Contact Us</button></li>
                         </ul>
                     </div>
                     {/* Socials */}
