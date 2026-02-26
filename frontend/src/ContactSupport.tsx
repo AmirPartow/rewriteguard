@@ -157,7 +157,6 @@ export default function ContactSupport({ onBack }: ContactSupportProps) {
                                 <option value="Plagiarism Checker">Plagiarism Checker</option>
                                 <option value="RewriteGuard Flow">RewriteGuard Flow</option>
                                 <option value="Citation Generator">Citation Generator</option>
-                                <option value="Chrome extension">Chrome extension</option>
                                 <option value="AI Detector">AI Detector</option>
                             </select>
                             <p className="text-xs text-gray-500 ml-1">Select the product you are facing an issue with.</p>
