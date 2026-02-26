@@ -225,3 +225,22 @@ async def handle_webhook(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+
+@router.post("/test-trustpilot-email")
+async def test_trustpilot_email(
+    authorization: Annotated[str | None, Header()] = None,
+):
+    """
+    Test endpoint for Trustpilot AFS email.
+    Sends a sample subscription receipt so the Trustpilot BCC logic can be tested locally.
+    """
+    user_id, email = await _get_current_user(authorization)
+    from app.services.email_service import send_subscription_receipt_email
+    
+    await send_subscription_receipt_email(
+        user_email=email,
+        subscription_id="test_sub_" + str(user_id) + "_local",
+        plan_name="Premium"
+    )
+    
+    return {"status": "success", "message": "Test AFS email dispatched to console."}

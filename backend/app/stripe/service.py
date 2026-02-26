@@ -291,6 +291,30 @@ async def _handle_checkout_completed(session: Any):
     })
     
     logger.info(f"Checkout completed for user {user_id}, subscription: {subscription_id}")
+    
+    # Try to send a welcome email and BCC Trustpilot AFS
+    try:
+        from app.services.email_service import send_subscription_receipt_email
+        from app.auth.service import _users_db
+        user_email = ""
+        for email, u_data in _users_db.items():
+            if u_data.get("id") == user_id:
+                user_email = email
+                break
+        
+        if user_email:
+            import asyncio
+            asyncio.create_task(
+                send_subscription_receipt_email(
+                    user_email=user_email,
+                    subscription_id=subscription_id,
+                    plan_name="Premium"
+                )
+            )
+        else:
+            logger.warning(f"Could not find email for user {user_id} to send receipt.")
+    except Exception as e:
+        logger.error(f"Failed to trigger Trustpilot AFS email: {e}")
 
 
 async def _handle_subscription_created(subscription: Any):

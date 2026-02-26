@@ -119,6 +119,28 @@ export default function Dashboard() {
         }
     };
 
+    // Test Trustpilot AFS Email integration locally
+    const [testEmailStatus, setTestEmailStatus] = useState<string | null>(null);
+    const handleTestTrustpilot = async () => {
+        if (!token) return;
+        try {
+            setTestEmailStatus('Sending test email...');
+            const res = await fetch(`${API_BASE}/subscriptions/test-trustpilot-email`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setTestEmailStatus(data.message || 'Success! Check backend console for mock email.');
+            } else {
+                setTestEmailStatus(`Failed to send email. ${data.detail || ''}`);
+            }
+        } catch (err) {
+            setTestEmailStatus('Error: Could not connect to server.');
+        }
+        setTimeout(() => setTestEmailStatus(null), 5000);
+    };
+
     useEffect(() => {
         fetchData();
     }, [token]);
@@ -158,13 +180,30 @@ export default function Dashboard() {
     return (
         <div className="space-y-6">
             {/* Welcome Header */}
-            <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/20 rounded-2xl p-6">
-                <h1 className="text-2xl font-bold text-white mb-2">
-                    Welcome back, {user?.full_name || 'User'}! 👋
-                </h1>
-                <p className="text-gray-400">
-                    Here's your usage overview for today
-                </p>
+            <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/20 rounded-2xl p-6 relative">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h1 className="text-2xl font-bold text-white mb-2">
+                            Welcome back, {user?.full_name || 'User'}! 👋
+                        </h1>
+                        <p className="text-gray-400">
+                            Here's your usage overview for today
+                        </p>
+                    </div>
+
+                    {/* Trustpilot Local Test Trigger */}
+                    <div className="text-right flex flex-col items-end">
+                        <button
+                            onClick={handleTestTrustpilot}
+                            className="px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 rounded-lg text-sm border border-indigo-500/30 transition-colors"
+                        >
+                            Test Trustpilot AFS
+                        </button>
+                        {testEmailStatus && (
+                            <span className="text-xs text-indigo-400 mt-2 block">{testEmailStatus}</span>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Stats Grid */}
