@@ -183,6 +183,7 @@ https://www.rewriteguard.com
             server.starttls()
             server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
             server.send_message(msg)
+        logger.info(f"Auto-reply confirmation sent successfully to {user_email}")
         return True
     except Exception as e:
         logger.error(f"Failed to send auto-reply email: {e}")
