@@ -158,9 +158,6 @@ export default function ContactSupport({ onBack }: ContactSupportProps) {
                                 <option value="RewriteGuard Flow">RewriteGuard Flow</option>
                                 <option value="Citation Generator">Citation Generator</option>
                                 <option value="Chrome extension">Chrome extension</option>
-                                <option value="Word extension">Word extension</option>
-                                <option value="Mac OS Application">Mac OS Application</option>
-                                <option value="Mobile Application">Mobile Application</option>
                                 <option value="AI Detector">AI Detector</option>
                             </select>
                             <p className="text-xs text-gray-500 ml-1">Select the product you are facing an issue with.</p>
