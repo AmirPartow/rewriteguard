@@ -1,9 +1,9 @@
 """
 Email service to send transactional emails and trigger Trustpilot AFS.
 """
-import os
-import logging
+import smtplib
 from email.message import EmailMessage
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +13,29 @@ TRUSTPILOT_AFS_BCC = "rewriteguard.com+f575b5dd9c@invite.trustpilot.com"
 # Set to False in production environment
 MOCK_EMAIL_DELIVERY = os.getenv("MOCK_EMAIL_DELIVERY", "true").lower() == "true"
 
-async def send_contact_request_email(name: str, email: str, category: str, sub_category: str, subject: str, description: str) -> bool:
+# SMTP Settings
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+GMAIL_USER = os.getenv("GMAIL_USER", "emailrewriteguard@gmail.com")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
+
+async def send_contact_request_email(
+    name: str, 
+    email: str, 
+    category: str, 
+    sub_category: str, 
+    subject: str, 
+    description: str,
+    attachment_content: Optional[bytes] = None,
+    attachment_filename: Optional[str] = None
+) -> bool:
     """
     Sends a contact/support request email to rewriteguard@gmail.com.
     """
     target_email = "rewriteguard@gmail.com"
     category_display = f"{category} ({sub_category})" if sub_category else category
     email_subject = f"Contact Form: {category_display} - {subject}"
+    
     body = f"""New Support Request:
 
 Name: {name}
@@ -39,17 +55,46 @@ The RewriteGuard System
     msg = EmailMessage()
     msg.set_content(body)
     msg["Subject"] = email_subject
-    msg["From"] = "support@rewriteguard.com"
+    msg["From"] = f"RewriteGuard Support <{GMAIL_USER}>"
     msg["To"] = target_email
+    msg["Reply-To"] = email  # So you can reply directly to the user
+    
+    if attachment_content and attachment_filename:
+        # Simple detection of maintype/subtype from filename
+        maintype, subtype = "application", "octet-stream"
+        if attachment_filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+            maintype, subtype = "image", attachment_filename.split('.')[-1]
+        
+        msg.add_attachment(
+            attachment_content,
+            maintype=maintype,
+            subtype=subtype,
+            filename=attachment_filename
+        )
     
     if MOCK_EMAIL_DELIVERY:
         logger.info("\n=== MOCK SUPPORT EMAIL DELIVERY ===")
         logger.info(f"To: {target_email}")
         logger.info(f"From: {email} (User)")
         logger.info(f"Subject: {email_subject}")
+        logger.info(f"Has Attachment: {attachment_filename if attachment_filename else 'No'}")
         logger.info(f"Body:\n{body}")
         logger.info("========================================\n")
         return True
+    
+    try:
+        if not GMAIL_APP_PASSWORD:
+            logger.error("GMAIL_APP_PASSWORD not set. Cannot send real email.")
+            return False
+            
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send support email: {e}")
+        return False
     
     # In production, use smtplib or a service provider
     return True

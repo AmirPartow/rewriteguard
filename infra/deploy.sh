@@ -18,7 +18,7 @@ set -euo pipefail
 
 # ---- CONFIGURATION ----
 EC2_HOST="ec2-user@52.32.253.222"
-SSH_KEY="~/.ssh/rewriteguard-key.pem"
+SSH_KEY="../infra/terraform/rewriteguard-key.pem"
 REMOTE_DIR="/home/ec2-user/rewriteguard"
 # ------------------------
 

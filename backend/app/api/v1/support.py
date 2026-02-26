@@ -1,29 +1,38 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from typing import Optional
 from app.services.email_service import send_contact_request_email
 
 router = APIRouter()
 
-class ContactRequest(BaseModel):
-    name: str = "Anonymous"
-    email: EmailStr
-    category: str
-    sub_category: str = ""
-    subject: str
-    description: str
-
 @router.post("/submit")
-async def submit_contact_form(request: ContactRequest):
+async def submit_contact_form(
+    name: str = Form("Anonymous"),
+    email: str = Form(...),
+    category: str = Form(...),
+    sub_category: str = Form(""),
+    subject: str = Form(...),
+    description: str = Form(...),
+    attachment: Optional[UploadFile] = File(None)
+):
     """
-    Submits a contact form and sends it to the support email.
+    Submits a contact form with an optional attachment and sends it to the support email.
     """
+    # Read attachment content if provided
+    file_content = None
+    filename = None
+    if attachment:
+        file_content = await attachment.read()
+        filename = attachment.filename
+
     success = await send_contact_request_email(
-        name=request.name,
-        email=request.email,
-        category=request.category,
-        sub_category=request.sub_category,
-        subject=request.subject,
-        description=request.description
+        name=name,
+        email=email,
+        category=category,
+        sub_category=sub_category,
+        subject=subject,
+        description=description,
+        attachment_content=file_content,
+        attachment_filename=filename
     )
     
     if not success:

@@ -11,7 +11,7 @@ export default function ContactSupport({ onBack }: ContactSupportProps) {
     const [subCategory, setSubCategory] = useState('');
     const [subject, setSubject] = useState('');
     const [description, setDescription] = useState('');
-    const [fileName, setFileName] = useState<string | null>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -22,18 +22,20 @@ export default function ContactSupport({ onBack }: ContactSupportProps) {
         setError(null);
 
         try {
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('email', email);
+            formData.append('category', category);
+            formData.append('sub_category', subCategory);
+            formData.append('subject', subject);
+            formData.append('description', description);
+            if (selectedFile) {
+                formData.append('attachment', selectedFile);
+            }
+
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/v1/support/submit`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name,
-                    email,
-                    category,
-                    sub_category: subCategory,
-                    subject,
-                    description,
-                    attachment: fileName // Simulating sending the name for now
-                }),
+                body: formData,
             });
 
             if (!response.ok) throw new Error('Failed to submit request');
@@ -186,27 +188,27 @@ export default function ContactSupport({ onBack }: ContactSupportProps) {
                             className="hidden"
                             onChange={(e) => {
                                 const file = e.target.files?.[0];
-                                if (file) setFileName(file.name);
+                                if (file) setSelectedFile(file);
                             }}
                         />
                         <div
-                            onClick={() => !fileName && document.getElementById('file-upload')?.click()}
-                            className={`w-full border-2 border-dashed rounded-2xl p-4 flex items-center justify-center transition-all ${fileName
-                                    ? 'border-emerald-500/50 bg-emerald-500/10'
-                                    : 'border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 cursor-pointer group'
+                            onClick={() => !selectedFile && document.getElementById('file-upload')?.click()}
+                            className={`w-full border-2 border-dashed rounded-2xl p-4 flex items-center justify-center transition-all ${selectedFile
+                                ? 'border-emerald-500/50 bg-emerald-500/10'
+                                : 'border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 cursor-pointer group'
                                 }`}
                         >
                             <div className="text-sm text-gray-400 flex items-center gap-3">
-                                {fileName ? (
+                                {selectedFile ? (
                                     <>
                                         <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <span className="text-white font-medium">{fileName}</span>
+                                        <span className="text-white font-medium">{selectedFile.name}</span>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                setFileName(null);
+                                                setSelectedFile(null);
                                             }}
                                             className="text-red-400 hover:text-red-300 ml-2 underline underline-offset-4"
                                         >
