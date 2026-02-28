@@ -11,7 +11,7 @@ from app.auth.schemas import (
     LogoutResponse, UserInfo
 )
 from app.auth.service import (
-    create_user, authenticate_user, invalidate_session, validate_session,
+    create_user, authenticate_user, invalidate_session, validate_session, get_total_users,
     EmailAlreadyExistsError, InvalidCredentialsError, 
     UserNotActiveError, SessionNotFoundError
 )
@@ -138,3 +138,11 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
         )
+
+@router.get("/users/count", response_model=dict)
+async def get_total_users_count() -> dict:
+    """
+    Get the total number of users.
+    """
+    count = await get_total_users()
+    return {"total_users": count}

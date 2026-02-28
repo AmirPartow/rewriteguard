@@ -278,7 +278,7 @@ export default function ContactSupport({ onBack }: ContactSupportProps) {
                     <h3 className="text-lg font-bold mb-2">RewriteGuard Office</h3>
                     <p className="text-sm text-gray-300 font-semibold mb-1">Vancouver</p>
                     <p className="text-sm text-gray-400 leading-relaxed">143 21st stree East north vancouver</p>
-                    <p className="text-sm text-gray-400">Canada V7L 3B5</p>
+                    <p className="text-sm text-gray-400">Canada, BC, V7L 3B5</p>
                 </div>
             </div>
         </div>

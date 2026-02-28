@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import UserMenu from './UserMenu';
 import Dashboard from './Dashboard';
@@ -6,12 +6,48 @@ import Detector from './Detector';
 import Paraphraser from './Paraphraser';
 import AdminPage from './AdminPage';
 import LandingPage from './LandingPage';
+import CookieConsent from './components/CookieConsent';
+import CookiesPolicy from './CookiesPolicy';
+import PrivacyPolicy from './PrivacyPolicy';
+import TermsOfService from './TermsOfService';
+import LegalCenter from './LegalCenter';
+import Footer from './components/Footer';
+import ContactSupport from './ContactSupport';
 
-type ActivePage = 'dashboard' | 'detector' | 'paraphraser' | 'admin';
+type ActivePage = 'dashboard' | 'detector' | 'paraphraser' | 'admin' | 'contact';
 
 function App() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [activePage, setActivePage] = useState<ActivePage>('dashboard');
+  const [isGuest, setIsGuest] = useState(false);
+  const [showCookiesPolicy, setShowCookiesPolicy] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
+  const [showLegalCenter, setShowLegalCenter] = useState(false);
+
+  // Listen for hash change or custom events to show policy
+  useEffect(() => {
+    const handlePopState = () => {
+      setShowCookiesPolicy(window.location.pathname === '/cookies-policy');
+      setShowPrivacyPolicy(window.location.pathname === '/privacy-policy');
+      setShowTermsOfService(window.location.pathname === '/terms-of-service');
+      setShowLegalCenter(window.location.pathname === '/legal-center');
+    };
+
+    // Allow guest mode to trigger auth flow
+    const handleGuestAuth = () => {
+      setIsGuest(false);
+      setTimeout(() => window.dispatchEvent(new Event('open-auth')), 50);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('open-auth-from-guest', handleGuestAuth);
+    handlePopState();
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('open-auth-from-guest', handleGuestAuth);
+    };
+  }, []);
 
   // Show loading spinner while checking auth state
   if (isLoading) {
@@ -22,14 +58,94 @@ function App() {
     );
   }
 
-  // Show Landing Page if not authenticated
-  if (!isAuthenticated) {
-    return <LandingPage />;
+  const handlePolicyNav = (path: string, setter: (val: boolean) => void) => {
+    setShowCookiesPolicy(false);
+    setShowPrivacyPolicy(false);
+    setShowTermsOfService(false);
+    setShowLegalCenter(false);
+    window.history.pushState({}, '', path);
+    setter(true);
+    window.scrollTo(0, 0);
+  };
+
+  const footerProps = {
+    onShowPolicy: () => handlePolicyNav('/cookies-policy', setShowCookiesPolicy),
+    onPrivacyClick: () => handlePolicyNav('/privacy-policy', setShowPrivacyPolicy),
+    onTermsClick: () => handlePolicyNav('/terms-of-service', setShowTermsOfService),
+    onLegalClick: () => handlePolicyNav('/legal-center', setShowLegalCenter),
+    onContactClick: () => {
+      setShowCookiesPolicy(false);
+      setShowPrivacyPolicy(false);
+      setShowTermsOfService(false);
+      setShowLegalCenter(false);
+      window.history.pushState({}, '', '/');
+      window.scrollTo(0, 0);
+      setTimeout(() => {
+        if (isAuthenticated) {
+          setActivePage('contact');
+        } else {
+          window.dispatchEvent(new Event('open-contact'));
+        }
+      }, 50);
+    }
+  };
+
+  // Handle Cookies Policy View
+  if (showCookiesPolicy) {
+    return (
+      <>
+        <CookiesPolicy {...footerProps} />
+        <CookieConsent />
+      </>
+    );
+  }
+
+  // Handle Privacy Policy View
+  if (showPrivacyPolicy) {
+    return (
+      <>
+        <PrivacyPolicy {...footerProps} />
+        <CookieConsent />
+      </>
+    );
+  }
+
+  // Handle Terms of Service View
+  if (showTermsOfService) {
+    return (
+      <>
+        <TermsOfService {...footerProps} />
+        <CookieConsent />
+      </>
+    );
+  }
+
+  // Handle Legal Center View
+  if (showLegalCenter) {
+    return (
+      <>
+        <LegalCenter {...footerProps} />
+        <CookieConsent />
+      </>
+    );
+  }
+
+  // Show Landing Page if not authenticated AND not in guest mode
+  if (!isAuthenticated && !isGuest) {
+    return (
+      <>
+        <LandingPage
+          onGuestEntry={() => { setIsGuest(true); setActivePage('detector'); }}
+          {...footerProps}
+        />
+        <CookieConsent />
+      </>
+    );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start p-4 pt-8">
-      <div className="w-full max-w-4xl">
+    <div className="min-h-screen flex flex-col items-center justify-start p-4 pt-8 bg-[#0f172a] text-white">
+      <div className="w-full max-w-4xl flex flex-col min-h-screen">
 
         {/* Header with User Menu */}
         <header className="flex justify-between items-center mb-8">
@@ -48,28 +164,40 @@ function App() {
             </span>
           </div>
 
-          {/* User Menu */}
-          <UserMenu />
+          {/* User Menu or Sign In */}
+          {user ? <UserMenu /> : (
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-gray-400 hidden sm:block">Guest Mode</span>
+              <button
+                onClick={() => window.dispatchEvent(new Event('open-auth-from-guest'))}
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-blue-500/25 hover:scale-105 active:scale-95 text-white font-bold text-sm rounded-xl transition-all"
+              >
+                Sign In / Sign Up
+              </button>
+            </div>
+          )}
         </header>
 
         {/* Navigation Tabs */}
         <nav className="mb-8 flex justify-center">
           <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-1.5 inline-flex gap-1 shadow-xl flex-wrap justify-center">
-            <button
-              onClick={() => setActivePage('dashboard')}
-              className={`
-                px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 text-sm
-                ${activePage === 'dashboard'
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20'
-                  : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
-                }
-              `}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-              </svg>
-              Dashboard
-            </button>
+            {user && (
+              <button
+                onClick={() => setActivePage('dashboard')}
+                className={`
+                  px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 text-sm
+                  ${activePage === 'dashboard'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20'
+                    : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
+                  }
+                `}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                </svg>
+                Dashboard
+              </button>
+            )}
             <button
               onClick={() => setActivePage('detector')}
               className={`
@@ -104,12 +232,12 @@ function App() {
               <button
                 onClick={() => setActivePage('admin')}
                 className={`
-                  px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 text-sm
-                  ${activePage === 'admin'
+                px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 text-sm
+                ${activePage === 'admin'
                     ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-lg shadow-rose-500/20'
                     : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
                   }
-                `}
+              `}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -121,14 +249,19 @@ function App() {
           </div>
         </nav>
 
-        {/* Page Content */}
-        <main className="animate-fade-in">
+        <main className="animate-fade-in flex-grow">
           {activePage === 'dashboard' && <Dashboard />}
           {activePage === 'detector' && <Detector />}
           {activePage === 'paraphraser' && <Paraphraser />}
           {activePage === 'admin' && <AdminPage />}
+          {activePage === 'contact' && <ContactSupport onBack={() => setActivePage('dashboard')} />}
         </main>
 
+        <Footer
+          {...footerProps}
+          className="mt-20 -mx-4 sm:-mx-8 rounded-t-3xl border-white/5 opacity-80"
+        />
+        <CookieConsent />
       </div>
     </div>
   );
