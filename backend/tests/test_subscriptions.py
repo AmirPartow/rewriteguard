@@ -1,8 +1,73 @@
 """
 Tests for Stripe subscription endpoints.
+Uses an in-memory SQLite database for test isolation.
 """
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
+from sqlalchemy import create_engine, text
+
+
+@pytest.fixture(autouse=True)
+def setup_test_db(monkeypatch):
+    """Set up an in-memory SQLite database for each test."""
+    import db as db_module
+
+    test_engine = create_engine("sqlite:///:memory:")
+
+    # Create tables that match the PostgreSQL schema
+    with test_engine.connect() as conn:
+        conn.execute(text("""
+            CREATE TABLE users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL UNIQUE,
+                full_name TEXT,
+                password_hash TEXT NOT NULL DEFAULT '',
+                is_active BOOLEAN NOT NULL DEFAULT 1,
+                email_verified BOOLEAN NOT NULL DEFAULT 0,
+                last_login TIMESTAMP,
+                plan_type TEXT NOT NULL DEFAULT 'free',
+                daily_word_limit INTEGER NOT NULL DEFAULT 1000,
+                stripe_customer_id TEXT,
+                stripe_subscription_id TEXT,
+                subscription_status TEXT DEFAULT 'inactive',
+                subscription_current_period_end TIMESTAMP,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE sessions (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                token_hash TEXT NOT NULL UNIQUE,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                ip_address TEXT,
+                user_agent TEXT
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE subscription_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                stripe_event_id TEXT NOT NULL UNIQUE,
+                event_type TEXT NOT NULL,
+                subscription_id TEXT,
+                customer_id TEXT,
+                plan_type TEXT,
+                amount_cents INTEGER,
+                currency TEXT DEFAULT 'usd',
+                event_data TEXT,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.commit()
+
+    # Patch the db module's engine to use our test engine
+    monkeypatch.setattr(db_module, "engine", test_engine)
+
+    yield test_engine
+
+    test_engine.dispose()
 
 
 class TestSubscriptionEndpoints:
@@ -21,16 +86,16 @@ class TestSubscriptionEndpoints:
         """Test getting available subscription plans."""
         response = client.get("/v1/subscriptions/plans")
         assert response.status_code == 200
-        
+
         plans = response.json()
         assert len(plans) == 2
-        
+
         # Check free plan
         free_plan = next(p for p in plans if p["id"] == "free")
         assert free_plan["name"] == "Free"
         assert free_plan["price_cents"] == 0
         assert free_plan["daily_word_limit"] == 1000
-        
+
         # Check premium plan
         premium_plan = next(p for p in plans if p["id"] == "premium")
         assert premium_plan["name"] == "Premium"
@@ -78,9 +143,9 @@ class TestSubscriptionService:
     async def test_subscription_status_default(self):
         """Test default subscription status for new user."""
         from app.stripe.service import get_subscription_status
-        
+
         status = await get_subscription_status(999)  # Non-existent user
-        
+
         assert status["plan_type"] == "free"
         assert status["subscription_status"] == "inactive"
         assert status["is_active"] == False
@@ -90,28 +155,28 @@ class TestSubscriptionService:
     async def test_stripe_not_configured_error(self):
         """Test error when Stripe is not configured."""
         from app.stripe.service import create_checkout_session, StripeNotConfiguredError
-        
+
         with patch('app.stripe.service.settings') as mock_settings:
             mock_settings.STRIPE_SECRET_KEY = ""
-            
+
             with pytest.raises(StripeNotConfiguredError):
                 await create_checkout_session(1, "test@example.com")
 
     def test_is_stripe_configured(self):
         """Test Stripe configuration check."""
         from app.stripe.service import is_stripe_configured
-        
+
         with patch('app.stripe.service.settings') as mock_settings:
             # Not configured
             mock_settings.STRIPE_SECRET_KEY = ""
             mock_settings.STRIPE_PREMIUM_PRICE_ID = ""
             assert is_stripe_configured() == False
-            
+
             # Partially configured
             mock_settings.STRIPE_SECRET_KEY = "sk_test_xxx"
             mock_settings.STRIPE_PREMIUM_PRICE_ID = ""
             assert is_stripe_configured() == False
-            
+
             # Fully configured
             mock_settings.STRIPE_SECRET_KEY = "sk_test_xxx"
             mock_settings.STRIPE_PREMIUM_PRICE_ID = "price_xxx"
@@ -122,44 +187,59 @@ class TestWebhookHandling:
     """Test webhook event handling."""
 
     @pytest.mark.asyncio
-    async def test_handle_checkout_completed(self):
+    async def test_handle_checkout_completed(self, setup_test_db):
         """Test handling checkout.session.completed event."""
-        from app.stripe.service import _handle_checkout_completed, _subscriptions_db
-        
+        from app.stripe.service import _handle_checkout_completed
+        engine = setup_test_db
+
+        # Create a test user first
+        with engine.connect() as conn:
+            conn.execute(text("""
+                INSERT INTO users (id, email, full_name, password_hash)
+                VALUES (1, 'test@example.com', 'Test User', 'hash')
+            """))
+            conn.commit()
+
         mock_session = MagicMock()
         mock_session.metadata = {"user_id": "1"}
         mock_session.subscription = "sub_123"
         mock_session.customer = "cus_123"
-        
+
         await _handle_checkout_completed(mock_session)
-        
-        assert 1 in _subscriptions_db
-        assert _subscriptions_db[1]["subscription_status"] == "active"
-        assert _subscriptions_db[1]["stripe_subscription_id"] == "sub_123"
+
+        # Verify database was updated
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT subscription_status, stripe_subscription_id FROM users WHERE id = 1"))
+            row = result.fetchone()
+            assert row[0] == "active"
+            assert row[1] == "sub_123"
 
     @pytest.mark.asyncio
-    async def test_handle_subscription_deleted(self):
+    async def test_handle_subscription_deleted(self, setup_test_db):
         """Test handling subscription deletion."""
-        from app.stripe.service import (
-            _handle_subscription_deleted, 
-            _subscriptions_db
-        )
-        
-        # Setup existing subscription
-        _subscriptions_db[2] = {
-            "stripe_customer_id": "cus_456",
-            "stripe_subscription_id": "sub_456",
-            "subscription_status": "active",
-        }
-        
+        from app.stripe.service import _handle_subscription_deleted
+        engine = setup_test_db
+
+        # Setup existing user with active subscription
+        with engine.connect() as conn:
+            conn.execute(text("""
+                INSERT INTO users (id, email, full_name, password_hash, stripe_customer_id, stripe_subscription_id, subscription_status)
+                VALUES (2, 'user2@example.com', 'User Two', 'hash', 'cus_456', 'sub_456', 'active')
+            """))
+            conn.commit()
+
         mock_subscription = MagicMock()
         mock_subscription.metadata = {"user_id": "2"}
         mock_subscription.id = "sub_456"
         mock_subscription.customer = "cus_456"
-        
+
         await _handle_subscription_deleted(mock_subscription)
-        
-        assert _subscriptions_db[2]["subscription_status"] == "canceled"
+
+        # Verify database was updated
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT subscription_status FROM users WHERE id = 2"))
+            row = result.fetchone()
+            assert row[0] == "canceled"
 
 
 @pytest.fixture
