@@ -21,6 +21,18 @@ def _get_engine():
     return engine
 
 
+def _now():
+    """Get the DB-appropriate NOW() function."""
+    from db import now_func
+    return now_func()
+
+
+def _is_sqlite():
+    """Check if we're using SQLite."""
+    from db import IS_SQLITE
+    return IS_SQLITE
+
+
 class AuthServiceError(Exception):
     """Base exception for auth service errors."""
     pass
@@ -48,7 +60,7 @@ class UserNotActiveError(AuthServiceError):
 
 async def create_user(email: str, password: str, full_name: str = "") -> dict[str, Any]:
     """
-    Create a new user account in the PostgreSQL database.
+    Create a new user account in the database.
 
     Args:
         email: User's email (already validated and normalized)
@@ -74,21 +86,39 @@ async def create_user(email: str, password: str, full_name: str = "") -> dict[st
             raise EmailAlreadyExistsError("An account with this email already exists")
 
         password_hash = hash_password(password)
+        now = _now()
 
-        # Insert new user
-        result = conn.execute(
-            text("""
-                INSERT INTO users (email, full_name, password_hash, is_active, email_verified, created_at)
-                VALUES (:email, :full_name, :password_hash, TRUE, FALSE, NOW())
-                RETURNING id
-            """),
-            {
-                "email": email,
-                "full_name": full_name,
-                "password_hash": password_hash,
-            },
-        )
-        user_id = result.fetchone()[0]
+        if _is_sqlite():
+            # SQLite doesn't support RETURNING
+            conn.execute(
+                text(f"""
+                    INSERT INTO users (email, full_name, password_hash, is_active, email_verified, created_at)
+                    VALUES (:email, :full_name, :password_hash, 1, 0, {now})
+                """),
+                {
+                    "email": email,
+                    "full_name": full_name,
+                    "password_hash": password_hash,
+                },
+            )
+            result = conn.execute(text("SELECT last_insert_rowid()"))
+            user_id = result.fetchone()[0]
+        else:
+            # PostgreSQL with RETURNING
+            result = conn.execute(
+                text(f"""
+                    INSERT INTO users (email, full_name, password_hash, is_active, email_verified, created_at)
+                    VALUES (:email, :full_name, :password_hash, TRUE, FALSE, {now})
+                    RETURNING id
+                """),
+                {
+                    "email": email,
+                    "full_name": full_name,
+                    "password_hash": password_hash,
+                },
+            )
+            user_id = result.fetchone()[0]
+
         conn.commit()
 
     logger.info(f"New user created: {email} (id={user_id})")
@@ -136,11 +166,12 @@ async def authenticate_user(email: str, password: str) -> tuple[str, datetime, U
 
         # Create session
         token, token_hash, expires_at = create_session_token(days_valid=7)
+        now = _now()
 
         conn.execute(
-            text("""
+            text(f"""
                 INSERT INTO sessions (user_id, token_hash, expires_at, created_at)
-                VALUES (:user_id, :token_hash, :expires_at, NOW())
+                VALUES (:user_id, :token_hash, :expires_at, {now})
             """),
             {
                 "user_id": user_id,
@@ -151,7 +182,7 @@ async def authenticate_user(email: str, password: str) -> tuple[str, datetime, U
 
         # Update last login
         conn.execute(
-            text("UPDATE users SET last_login = NOW() WHERE id = :user_id"),
+            text(f"UPDATE users SET last_login = {now} WHERE id = :user_id"),
             {"user_id": user_id},
         )
         conn.commit()
@@ -160,7 +191,7 @@ async def authenticate_user(email: str, password: str) -> tuple[str, datetime, U
         id=user_id,
         email=user_email,
         full_name=full_name or "",
-        is_active=is_active,
+        is_active=bool(is_active),
     )
 
     logger.info(f"User logged in: {email}")
@@ -201,7 +232,15 @@ async def validate_session(token: str) -> UserInfo:
 
         user_id, expires_at, email, full_name, is_active = row
 
-        if expires_at < datetime.now(timezone.utc):
+        # Handle timezone-aware comparison
+        if isinstance(expires_at, str):
+            expires_at = datetime.fromisoformat(expires_at)
+
+        now = datetime.now(timezone.utc)
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+        if expires_at < now:
             # Clean up expired session
             conn.execute(
                 text("DELETE FROM sessions WHERE token_hash = :token_hash"),
@@ -217,7 +256,7 @@ async def validate_session(token: str) -> UserInfo:
         id=user_id,
         email=email,
         full_name=full_name or "",
-        is_active=is_active,
+        is_active=bool(is_active),
     )
 
 
@@ -235,16 +274,32 @@ async def invalidate_session(token: str) -> bool:
     token_hash = hash_token(token)
 
     with engine.connect() as conn:
-        result = conn.execute(
-            text("DELETE FROM sessions WHERE token_hash = :token_hash RETURNING user_id"),
-            {"token_hash": token_hash},
-        )
-        row = result.fetchone()
-        conn.commit()
-
-        if row:
-            logger.info(f"User logged out (user_id={row[0]})")
-            return True
+        if _is_sqlite():
+            # SQLite: check then delete (no RETURNING)
+            result = conn.execute(
+                text("SELECT user_id FROM sessions WHERE token_hash = :token_hash"),
+                {"token_hash": token_hash},
+            )
+            row = result.fetchone()
+            if row:
+                conn.execute(
+                    text("DELETE FROM sessions WHERE token_hash = :token_hash"),
+                    {"token_hash": token_hash},
+                )
+                conn.commit()
+                logger.info(f"User logged out (user_id={row[0]})")
+                return True
+        else:
+            # PostgreSQL with RETURNING
+            result = conn.execute(
+                text("DELETE FROM sessions WHERE token_hash = :token_hash RETURNING user_id"),
+                {"token_hash": token_hash},
+            )
+            row = result.fetchone()
+            conn.commit()
+            if row:
+                logger.info(f"User logged out (user_id={row[0]})")
+                return True
 
     return False
 

@@ -55,6 +55,8 @@ def setup_test_db(monkeypatch):
 
     # Patch the db module's engine to use our test engine
     monkeypatch.setattr(db_module, "engine", test_engine)
+    monkeypatch.setattr(db_module, "IS_SQLITE", True)
+    monkeypatch.setattr(db_module, "now_func", lambda: "CURRENT_TIMESTAMP")
 
     yield test_engine
 

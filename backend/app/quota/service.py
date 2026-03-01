@@ -10,6 +10,12 @@ from sqlalchemy import text
 
 from .schemas import PlanType, UsageStats, QuotaCheckResult
 
+
+def _now():
+    """Get the DB-appropriate NOW() function."""
+    from db import now_func
+    return now_func()
+
 logger = logging.getLogger(__name__)
 
 # Plan limits: words per day
@@ -214,18 +220,18 @@ def track_usage(
             # Update existing row
             if usage_type == "detect":
                 conn.execute(
-                    text("""
+                    text(f"""
                         UPDATE daily_usage 
-                        SET words_detect = words_detect + :word_count, updated_at = NOW()
+                        SET words_detect = words_detect + :word_count, updated_at = {_now()}
                         WHERE user_id = :user_id AND usage_date = :today
                     """),
                     {"word_count": word_count, "user_id": user_id, "today": today},
                 )
             else:
                 conn.execute(
-                    text("""
+                    text(f"""
                         UPDATE daily_usage 
-                        SET words_paraphrase = words_paraphrase + :word_count, updated_at = NOW()
+                        SET words_paraphrase = words_paraphrase + :word_count, updated_at = {_now()}
                         WHERE user_id = :user_id AND usage_date = :today
                     """),
                     {"word_count": word_count, "user_id": user_id, "today": today},
@@ -263,9 +269,9 @@ def reset_daily_usage(user_id: int) -> None:
 
     with engine.connect() as conn:
         conn.execute(
-            text("""
+            text(f"""
                 UPDATE daily_usage 
-                SET words_detect = 0, words_paraphrase = 0, updated_at = NOW()
+                SET words_detect = 0, words_paraphrase = 0, updated_at = {_now()}
                 WHERE user_id = :user_id AND usage_date = :today
             """),
             {"user_id": user_id, "today": today},

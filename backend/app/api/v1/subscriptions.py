@@ -55,6 +55,12 @@ async def _get_current_user(authorization: str | None) -> tuple[int, str]:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired session",
         )
+    except Exception:
+        logger.warning("Session validation failed with unexpected error", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session",
+        )
 
 
 @router.get("/config")
