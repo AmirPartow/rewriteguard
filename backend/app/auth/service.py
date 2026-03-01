@@ -78,12 +78,27 @@ async def create_user(email: str, password: str, full_name: str = "") -> dict[st
     with engine.connect() as conn:
         # Check if email already exists
         result = conn.execute(
-            text("SELECT id FROM users WHERE email = :email"),
+            text("SELECT id, password_hash FROM users WHERE email = :email"),
             {"email": email},
         )
-        if result.fetchone():
-            logger.warning(f"Signup attempt with existing email: {email}")
-            raise EmailAlreadyExistsError("An account with this email already exists")
+        existing = result.fetchone()
+        if existing:
+            existing_id, existing_hash = existing
+            # If the existing account has a broken/empty password hash
+            # (from old in-memory code or DDL default ''), allow re-registration
+            # by updating the password hash
+            if not existing_hash or existing_hash == '' or '$' not in existing_hash:
+                password_hash = hash_password(password)
+                conn.execute(
+                    text("UPDATE users SET password_hash = :password_hash, full_name = :full_name WHERE id = :id"),
+                    {"password_hash": password_hash, "full_name": full_name, "id": existing_id},
+                )
+                conn.commit()
+                logger.info(f"Updated password hash for existing user: {email} (id={existing_id})")
+                return {"user_id": existing_id, "email": email}
+            else:
+                logger.warning(f"Signup attempt with existing email: {email}")
+                raise EmailAlreadyExistsError("An account with this email already exists")
 
         password_hash = hash_password(password)
         now = _now()
