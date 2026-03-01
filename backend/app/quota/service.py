@@ -2,8 +2,9 @@
 Quota service for tracking and enforcing usage limits.
 Uses PostgreSQL database for persistent storage.
 """
-from datetime import date, datetime, timezone
-from typing import Any, Literal
+
+from datetime import date
+from typing import Literal
 import logging
 
 from sqlalchemy import text
@@ -14,7 +15,9 @@ from .schemas import PlanType, UsageStats, QuotaCheckResult
 def _now():
     """Get the DB-appropriate NOW() function."""
     from db import now_func
+
     return now_func()
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,17 +31,19 @@ PLAN_LIMITS: dict[PlanType, int] = {
 def _get_engine():
     """Lazy import to avoid circular dependency at module load time."""
     from db import engine
+
     return engine
 
 
 class QuotaExceededError(Exception):
     """Raised when user exceeds their daily word quota."""
+
     def __init__(
-        self, 
-        plan_type: PlanType, 
-        daily_limit: int, 
-        words_used: int, 
-        words_requested: int
+        self,
+        plan_type: PlanType,
+        daily_limit: int,
+        words_used: int,
+        words_requested: int,
     ):
         self.plan_type = plan_type
         self.daily_limit = daily_limit
@@ -114,7 +119,9 @@ def get_user_usage(user_id: int) -> UsageStats:
     words_paraphrase = row[1] if row else 0
     words_used_today = words_detect + words_paraphrase
     words_remaining = max(0, daily_limit - words_used_today)
-    percentage_used = min(100.0, (words_used_today / daily_limit) * 100) if daily_limit > 0 else 0
+    percentage_used = (
+        min(100.0, (words_used_today / daily_limit) * 100) if daily_limit > 0 else 0
+    )
 
     return UsageStats(
         user_id=user_id,
@@ -155,15 +162,15 @@ def check_quota(user_id: int, word_count: int) -> QuotaCheckResult:
             words_requested=word_count,
             words_remaining=usage.words_remaining,
             message=f"Quota exceeded. You have {usage.words_remaining} words remaining today. "
-                    f"Upgrade to premium for {PLAN_LIMITS['premium']:,} words/day.",
+            f"Upgrade to premium for {PLAN_LIMITS['premium']:,} words/day.",
         )
 
 
 def track_usage(
-    user_id: int, 
-    word_count: int, 
+    user_id: int,
+    word_count: int,
     usage_type: Literal["detect", "paraphrase"],
-    enforce_limit: bool = True
+    enforce_limit: bool = True,
 ) -> UsageStats:
     """
     Track word usage for a user in the database.
@@ -246,9 +253,9 @@ def track_usage(
                     VALUES (:user_id, :today, :detect, :paraphrase)
                 """),
                 {
-                    "user_id": user_id, 
-                    "today": today, 
-                    "detect": detect_val, 
+                    "user_id": user_id,
+                    "today": today,
+                    "detect": detect_val,
                     "paraphrase": paraphrase_val,
                 },
             )
@@ -287,7 +294,9 @@ def get_all_usage() -> dict[int, dict[str, dict[str, int]]]:
 
     with engine.connect() as conn:
         result = conn.execute(
-            text("SELECT user_id, usage_date, words_detect, words_paraphrase FROM daily_usage")
+            text(
+                "SELECT user_id, usage_date, words_detect, words_paraphrase FROM daily_usage"
+            )
         )
         for row in result:
             user_id = row[0]

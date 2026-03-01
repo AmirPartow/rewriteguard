@@ -18,18 +18,22 @@ if IS_SQLITE:
 
 engine = create_engine(DATABASE_URL, **engine_kwargs)
 
+
 def now_func() -> str:
     """Return the correct SQL function for current timestamp based on database type."""
     return "CURRENT_TIMESTAMP" if IS_SQLITE else "NOW()"
+
 
 def setup_sqlite_tables():
     """Create tables if using local SQLite database."""
     if not DATABASE_URL.startswith("sqlite"):
         return
-    
+
     from sqlalchemy import text
+
     with engine.connect() as conn:
-        conn.execute(text("""
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT NOT NULL UNIQUE,
@@ -46,8 +50,10 @@ def setup_sqlite_tables():
                 subscription_current_period_end TIMESTAMP,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS sessions (
                 id TEXT PRIMARY KEY,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -57,8 +63,10 @@ def setup_sqlite_tables():
                 ip_address TEXT,
                 user_agent TEXT
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS daily_usage (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -69,8 +77,10 @@ def setup_sqlite_tables():
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(user_id, usage_date)
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS subscription_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -84,8 +94,10 @@ def setup_sqlite_tables():
                 event_data TEXT,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS jobs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -95,8 +107,10 @@ def setup_sqlite_tables():
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE IF NOT EXISTS logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
@@ -105,12 +119,15 @@ def setup_sqlite_tables():
                 meta TEXT,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        """))
+        """)
+        )
         conn.commit()
+
 
 setup_sqlite_tables()
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+
 
 def get_db():
     db = SessionLocal()

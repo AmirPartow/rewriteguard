@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Header
 from typing import Annotated
 from app.schemas import DetectRequest, DetectResponse
 from app.services.ml_service import get_detector, DebertaDetector
-from app.quota.service import track_usage, check_quota, QuotaExceededError
+from app.quota.service import track_usage, QuotaExceededError
 from app.auth.service import validate_session, SessionNotFoundError
 import logging
 import time
@@ -27,11 +27,11 @@ async def get_optional_user_id(authorization: str | None) -> int | None:
     """Get user ID from token if provided, otherwise return None."""
     if not authorization:
         return None
-    
+
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
         return None
-    
+
     try:
         user_info = await validate_session(parts[1])
         return user_info.id
@@ -47,14 +47,14 @@ async def detect_text(
 ):
     """
     Detects the likelihood of the text being AI-generated using DeBERTa.
-    
+
     If authenticated (Authorization header), enforces daily word quota:
     - Free plan: 1,000 words/day
     - Premium plan: 10,000 words/day
-    
+
     Returns:
         DetectResponse with label (ai/human) and probability score
-        
+
     Raises:
         429: Quota exceeded (authenticated users only)
         504: Request timeout after 10 seconds
@@ -63,8 +63,10 @@ async def detect_text(
     text_length = len(request.text)
     word_count = count_words(request.text)
     text_preview = request.text[:50] + "..." if len(request.text) > 50 else request.text
-    logger.info(f"Received detection request | text_length={text_length} | words={word_count} | preview='{text_preview}'")
-    
+    logger.info(
+        f"Received detection request | text_length={text_length} | words={word_count} | preview='{text_preview}'"
+    )
+
     # Check and track quota if authenticated
     user_id = await get_optional_user_id(authorization)
     if user_id is not None:
@@ -82,18 +84,18 @@ async def detect_text(
                     "words_used": e.words_used,
                     "words_requested": e.words_requested,
                     "upgrade_url": "/v1/quota/upgrade",
-                }
+                },
             )
-    
+
     start_time = time.perf_counter()
-    
+
     try:
         # Run CPU-bound prediction in thread pool with timeout
         # Semaphore serializes inference to avoid thread contention on single vCPU
         async def run_prediction():
             async with _ml_semaphore:
                 return await anyio.to_thread.run_sync(detector.predict, request.text)
-        
+
         # Apply 30 second timeout (includes potential queue wait)
         try:
             label, score = await asyncio.wait_for(run_prediction(), timeout=30.0)
@@ -101,18 +103,18 @@ async def detect_text(
             logger.error(f"Prediction timeout after 30s | text_length={text_length}")
             raise HTTPException(
                 status_code=504,
-                detail="Request timeout: Detection took too long to complete. Try shorter text or wait a moment."
+                detail="Request timeout: Detection took too long to complete. Try shorter text or wait a moment.",
             )
-        
+
         duration_ms = (time.perf_counter() - start_time) * 1000
-        
+
         logger.info(
             f"Prediction complete | label={label} | probability={score:.4f} | "
             f"latency_ms={duration_ms:.2f} | text_length={text_length} | words={word_count}"
         )
-        
+
         return DetectResponse(label=label, probability=score)
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions (like timeout)
         raise
@@ -121,10 +123,8 @@ async def detect_text(
         logger.error(
             f"Detection error | error={str(e)} | latency_ms={duration_ms:.2f} | "
             f"text_length={text_length}",
-            exc_info=True
+            exc_info=True,
         )
         raise HTTPException(
-            status_code=500,
-            detail="Internal server error during detection processing"
+            status_code=500, detail="Internal server error during detection processing"
         )
-

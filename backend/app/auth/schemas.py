@@ -1,6 +1,7 @@
 """
 Pydantic schemas for authentication endpoints.
 """
+
 from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 import re
@@ -8,8 +9,11 @@ import re
 
 class SignupRequest(BaseModel):
     """Request body for user signup."""
+
     email: str = Field(..., description="User email address")
-    password: str = Field(..., min_length=8, max_length=128, description="Password (min 8 chars)")
+    password: str = Field(
+        ..., min_length=8, max_length=128, description="Password (min 8 chars)"
+    )
     full_name: str = Field(default="", max_length=255, description="User's full name")
 
     @field_validator("email")
@@ -36,6 +40,7 @@ class SignupRequest(BaseModel):
 
 class SignupResponse(BaseModel):
     """Response from successful signup."""
+
     message: str = "Account created successfully"
     user_id: int
     email: str
@@ -43,6 +48,7 @@ class SignupResponse(BaseModel):
 
 class LoginRequest(BaseModel):
     """Request body for user login."""
+
     email: str = Field(..., description="User email address")
     password: str = Field(..., description="User password")
 
@@ -54,6 +60,7 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     """Response from successful login."""
+
     message: str = "Login successful"
     token: str = Field(..., description="Session token for authentication")
     user: "UserInfo"
@@ -62,6 +69,7 @@ class LoginResponse(BaseModel):
 
 class UserInfo(BaseModel):
     """User information returned on login."""
+
     id: int
     email: str
     full_name: str
@@ -70,16 +78,19 @@ class UserInfo(BaseModel):
 
 class LogoutRequest(BaseModel):
     """Request body for logout (optional, can also use header token)."""
+
     token: str | None = Field(default=None, description="Session token to invalidate")
 
 
 class LogoutResponse(BaseModel):
     """Response from successful logout."""
+
     message: str = "Logged out successfully"
 
 
 class AuthError(BaseModel):
     """Error response for authentication failures."""
+
     error: str
     detail: str | None = None
 

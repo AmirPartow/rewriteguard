@@ -2,9 +2,15 @@
 Tests for authentication endpoints and service.
 Uses an in-memory SQLite database for test isolation.
 """
+
 import pytest
 from sqlalchemy import create_engine, text
-from app.auth.utils import hash_password, verify_password, create_session_token, hash_token
+from app.auth.utils import (
+    hash_password,
+    verify_password,
+    create_session_token,
+    hash_token,
+)
 
 
 class TestPasswordUtils:
@@ -79,7 +85,8 @@ def setup_test_db(monkeypatch):
 
     # Create tables that match the PostgreSQL schema
     with test_engine.connect() as conn:
-        conn.execute(text("""
+        conn.execute(
+            text("""
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT NOT NULL UNIQUE,
@@ -96,8 +103,10 @@ def setup_test_db(monkeypatch):
                 subscription_current_period_end TIMESTAMP,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE sessions (
                 id TEXT PRIMARY KEY,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -107,7 +116,8 @@ def setup_test_db(monkeypatch):
                 ip_address TEXT,
                 user_agent TEXT
             )
-        """))
+        """)
+        )
         conn.commit()
 
     # Patch the db module's engine to use our test engine
@@ -127,10 +137,9 @@ class TestAuthService:
     async def test_create_user_success(self):
         """Should create user and return user_id."""
         from app.auth.service import create_user
+
         result = await create_user(
-            email="test@example.com",
-            password="SecurePass123",
-            full_name="Test User"
+            email="test@example.com", password="SecurePass123", full_name="Test User"
         )
 
         assert result["email"] == "test@example.com"
@@ -140,6 +149,7 @@ class TestAuthService:
     async def test_create_user_duplicate_email(self):
         """Should raise error for duplicate email."""
         from app.auth.service import create_user, EmailAlreadyExistsError
+
         await create_user("test@example.com", "SecurePass123")
 
         with pytest.raises(EmailAlreadyExistsError):
@@ -149,11 +159,11 @@ class TestAuthService:
     async def test_authenticate_user_success(self):
         """Should authenticate and return session."""
         from app.auth.service import create_user, authenticate_user
+
         await create_user("test@example.com", "SecurePass123", "Test User")
 
         token, expires_at, user_info = await authenticate_user(
-            email="test@example.com",
-            password="SecurePass123"
+            email="test@example.com", password="SecurePass123"
         )
 
         assert isinstance(token, str)
@@ -164,7 +174,12 @@ class TestAuthService:
     @pytest.mark.anyio
     async def test_authenticate_user_wrong_password(self):
         """Should raise error for wrong password."""
-        from app.auth.service import create_user, authenticate_user, InvalidCredentialsError
+        from app.auth.service import (
+            create_user,
+            authenticate_user,
+            InvalidCredentialsError,
+        )
+
         await create_user("test@example.com", "SecurePass123")
 
         with pytest.raises(InvalidCredentialsError):
@@ -174,6 +189,7 @@ class TestAuthService:
     async def test_authenticate_user_nonexistent(self):
         """Should raise error for nonexistent user."""
         from app.auth.service import authenticate_user, InvalidCredentialsError
+
         with pytest.raises(InvalidCredentialsError):
             await authenticate_user("nobody@example.com", "AnyPass123")
 
@@ -181,6 +197,7 @@ class TestAuthService:
     async def test_validate_session_success(self):
         """Should validate token and return user info."""
         from app.auth.service import create_user, authenticate_user, validate_session
+
         await create_user("test@example.com", "SecurePass123", "Test User")
         token, _, _ = await authenticate_user("test@example.com", "SecurePass123")
 
@@ -193,13 +210,21 @@ class TestAuthService:
     async def test_validate_session_invalid_token(self):
         """Should raise error for invalid token."""
         from app.auth.service import validate_session, SessionNotFoundError
+
         with pytest.raises(SessionNotFoundError):
             await validate_session("invalid_token_12345")
 
     @pytest.mark.anyio
     async def test_invalidate_session_success(self):
         """Should invalidate session and prevent reuse."""
-        from app.auth.service import create_user, authenticate_user, validate_session, invalidate_session, SessionNotFoundError
+        from app.auth.service import (
+            create_user,
+            authenticate_user,
+            validate_session,
+            invalidate_session,
+            SessionNotFoundError,
+        )
+
         await create_user("test@example.com", "SecurePass123")
         token, _, _ = await authenticate_user("test@example.com", "SecurePass123")
 
@@ -215,5 +240,6 @@ class TestAuthService:
     async def test_invalidate_session_nonexistent(self):
         """Should return False for nonexistent session."""
         from app.auth.service import invalidate_session
+
         result = await invalidate_session("nonexistent_token")
         assert result is False

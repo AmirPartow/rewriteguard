@@ -1,6 +1,7 @@
 """
 Authentication utility functions for password hashing and session management.
 """
+
 import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -45,7 +46,7 @@ def hash_token(token: str) -> str:
 def create_session_token(days_valid: int = 7) -> tuple[str, str, datetime]:
     """
     Create a new session token with its hash and expiration.
-    
+
     Returns:
         tuple: (raw_token, token_hash, expires_at)
     """

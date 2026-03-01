@@ -2,8 +2,9 @@
 Tests for Stripe subscription endpoints.
 Uses an in-memory SQLite database for test isolation.
 """
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, MagicMock
 from sqlalchemy import create_engine, text
 
 
@@ -16,7 +17,8 @@ def setup_test_db(monkeypatch):
 
     # Create tables that match the PostgreSQL schema
     with test_engine.connect() as conn:
-        conn.execute(text("""
+        conn.execute(
+            text("""
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT NOT NULL UNIQUE,
@@ -33,8 +35,10 @@ def setup_test_db(monkeypatch):
                 subscription_current_period_end TIMESTAMP,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE sessions (
                 id TEXT PRIMARY KEY,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -44,8 +48,10 @@ def setup_test_db(monkeypatch):
                 ip_address TEXT,
                 user_agent TEXT
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE subscription_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -59,7 +65,8 @@ def setup_test_db(monkeypatch):
                 event_data TEXT,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        """))
+        """)
+        )
         conn.commit()
 
     # Patch the db module's engine to use our test engine
@@ -77,11 +84,11 @@ class TestSubscriptionEndpoints:
 
     def test_get_stripe_config_not_configured(self, client):
         """Test getting Stripe config when not configured."""
-        with patch('app.api.v1.subscriptions.is_stripe_configured', return_value=False):
+        with patch("app.api.v1.subscriptions.is_stripe_configured", return_value=False):
             response = client.get("/v1/subscriptions/config")
             assert response.status_code == 200
             data = response.json()
-            assert data["is_configured"] == False
+            assert not data["is_configured"]
             assert data["publishable_key"] is None
 
     def test_get_subscription_plans(self, client):
@@ -113,7 +120,7 @@ class TestSubscriptionEndpoints:
         """Test subscription status with invalid token."""
         response = client.get(
             "/v1/subscriptions/status",
-            headers={"Authorization": "Bearer invalid_token"}
+            headers={"Authorization": "Bearer invalid_token"},
         )
         assert response.status_code == 401
 
@@ -131,8 +138,8 @@ class TestSubscriptionEndpoints:
         """Test webhook requires Stripe signature header."""
         response = client.post(
             "/v1/subscriptions/webhook",
-            content=b'{}',
-            headers={"Content-Type": "application/json"}
+            content=b"{}",
+            headers={"Content-Type": "application/json"},
         )
         assert response.status_code == 400
         assert "Missing Stripe-Signature" in response.json()["detail"]
@@ -150,7 +157,7 @@ class TestSubscriptionService:
 
         assert status["plan_type"] == "free"
         assert status["subscription_status"] == "inactive"
-        assert status["is_active"] == False
+        assert not status["is_active"]
         assert status["daily_word_limit"] == 1000
 
     @pytest.mark.asyncio
@@ -158,7 +165,7 @@ class TestSubscriptionService:
         """Test error when Stripe is not configured."""
         from app.stripe.service import create_checkout_session, StripeNotConfiguredError
 
-        with patch('app.stripe.service.settings') as mock_settings:
+        with patch("app.stripe.service.settings") as mock_settings:
             mock_settings.STRIPE_SECRET_KEY = ""
 
             with pytest.raises(StripeNotConfiguredError):
@@ -168,21 +175,21 @@ class TestSubscriptionService:
         """Test Stripe configuration check."""
         from app.stripe.service import is_stripe_configured
 
-        with patch('app.stripe.service.settings') as mock_settings:
+        with patch("app.stripe.service.settings") as mock_settings:
             # Not configured
             mock_settings.STRIPE_SECRET_KEY = ""
             mock_settings.STRIPE_PREMIUM_PRICE_ID = ""
-            assert is_stripe_configured() == False
+            assert not is_stripe_configured()
 
             # Partially configured
             mock_settings.STRIPE_SECRET_KEY = "sk_test_xxx"
             mock_settings.STRIPE_PREMIUM_PRICE_ID = ""
-            assert is_stripe_configured() == False
+            assert not is_stripe_configured()
 
             # Fully configured
             mock_settings.STRIPE_SECRET_KEY = "sk_test_xxx"
             mock_settings.STRIPE_PREMIUM_PRICE_ID = "price_xxx"
-            assert is_stripe_configured() == True
+            assert is_stripe_configured()
 
 
 class TestWebhookHandling:
@@ -192,14 +199,17 @@ class TestWebhookHandling:
     async def test_handle_checkout_completed(self, setup_test_db):
         """Test handling checkout.session.completed event."""
         from app.stripe.service import _handle_checkout_completed
+
         engine = setup_test_db
 
         # Create a test user first
         with engine.connect() as conn:
-            conn.execute(text("""
+            conn.execute(
+                text("""
                 INSERT INTO users (id, email, full_name, password_hash)
                 VALUES (1, 'test@example.com', 'Test User', 'hash')
-            """))
+            """)
+            )
             conn.commit()
 
         mock_session = MagicMock()
@@ -211,7 +221,11 @@ class TestWebhookHandling:
 
         # Verify database was updated
         with engine.connect() as conn:
-            result = conn.execute(text("SELECT subscription_status, stripe_subscription_id FROM users WHERE id = 1"))
+            result = conn.execute(
+                text(
+                    "SELECT subscription_status, stripe_subscription_id FROM users WHERE id = 1"
+                )
+            )
             row = result.fetchone()
             assert row[0] == "active"
             assert row[1] == "sub_123"
@@ -220,14 +234,17 @@ class TestWebhookHandling:
     async def test_handle_subscription_deleted(self, setup_test_db):
         """Test handling subscription deletion."""
         from app.stripe.service import _handle_subscription_deleted
+
         engine = setup_test_db
 
         # Setup existing user with active subscription
         with engine.connect() as conn:
-            conn.execute(text("""
+            conn.execute(
+                text("""
                 INSERT INTO users (id, email, full_name, password_hash, stripe_customer_id, stripe_subscription_id, subscription_status)
                 VALUES (2, 'user2@example.com', 'User Two', 'hash', 'cus_456', 'sub_456', 'active')
-            """))
+            """)
+            )
             conn.commit()
 
         mock_subscription = MagicMock()
@@ -239,7 +256,9 @@ class TestWebhookHandling:
 
         # Verify database was updated
         with engine.connect() as conn:
-            result = conn.execute(text("SELECT subscription_status FROM users WHERE id = 2"))
+            result = conn.execute(
+                text("SELECT subscription_status FROM users WHERE id = 2")
+            )
             row = result.fetchone()
             assert row[0] == "canceled"
 
@@ -249,4 +268,5 @@ def client(setup_test_db):
     """Create test client (depends on setup_test_db for database)."""
     from fastapi.testclient import TestClient
     from app.main import app
+
     return TestClient(app)

@@ -18,7 +18,7 @@ import os
 import json
 import hashlib
 import logging
-from typing import Optional, Any
+from typing import Optional
 import redis
 
 logger = logging.getLogger(__name__)
@@ -42,49 +42,54 @@ except redis.ConnectionError:
     logger.warning("Redis unavailable - caching disabled")
 
 
-def generate_cache_key(text: str, mode: str, temperature: float, max_length: int) -> str:
+def generate_cache_key(
+    text: str, mode: str, temperature: float, max_length: int
+) -> str:
     """
     Generate a unique cache key for paraphrase requests.
-    
+
     Uses SHA256 hash of the concatenated parameters to create a fixed-length,
     collision-resistant key.
-    
+
     Args:
         text: Input text to paraphrase
         mode: Paraphrasing mode (standard, formal, casual, creative, concise)
         temperature: Generation temperature (0.0-1.0)
         max_length: Maximum output length in tokens
-        
+
     Returns:
         Cache key string in format "paraphrase:{hash}"
     """
     # Create a deterministic string from all parameters
-    key_data = json.dumps({
-        "text": text,
-        "mode": mode,
-        "temperature": temperature,
-        "max_length": max_length
-    }, sort_keys=True)
-    
+    key_data = json.dumps(
+        {
+            "text": text,
+            "mode": mode,
+            "temperature": temperature,
+            "max_length": max_length,
+        },
+        sort_keys=True,
+    )
+
     # Generate SHA256 hash
     hash_value = hashlib.sha256(key_data.encode()).hexdigest()
-    
+
     return f"paraphrase:{hash_value}"
 
 
 def get_cached_paraphrase(cache_key: str) -> Optional[dict]:
     """
     Retrieve cached paraphrase result from Redis.
-    
+
     Args:
         cache_key: The cache key to look up
-        
+
     Returns:
         Cached result dict if found, None otherwise
     """
     if not REDIS_AVAILABLE or r is None:
         return None
-    
+
     try:
         cached = r.get(cache_key)
         if cached:
@@ -104,21 +109,21 @@ def get_cached_paraphrase(cache_key: str) -> Optional[dict]:
 def set_cached_paraphrase(cache_key: str, result: dict, ttl: int = None) -> bool:
     """
     Store paraphrase result in Redis cache.
-    
+
     Args:
         cache_key: The cache key to store under
         result: The paraphrase result dict to cache
         ttl: Optional TTL override in seconds (defaults to PARAPHRASE_CACHE_TTL)
-        
+
     Returns:
         True if successfully cached, False otherwise
     """
     if not REDIS_AVAILABLE or r is None:
         return False
-    
+
     if ttl is None:
         ttl = PARAPHRASE_CACHE_TTL
-    
+
     try:
         r.setex(cache_key, ttl, json.dumps(result))
         logger.info(f"CACHE_SET | key={cache_key[:40]}... | ttl={ttl}s")
@@ -131,13 +136,13 @@ def set_cached_paraphrase(cache_key: str, result: dict, ttl: int = None) -> bool
 def get_cache_stats() -> dict:
     """
     Get cache statistics for monitoring.
-    
+
     Returns:
         Dict with cache stats (keys count, memory usage, etc.)
     """
     if not REDIS_AVAILABLE or r is None:
         return {"status": "unavailable"}
-    
+
     try:
         info = r.info("memory")
         key_count = r.dbsize()
@@ -145,7 +150,7 @@ def get_cache_stats() -> dict:
             "status": "connected",
             "keys": key_count,
             "used_memory": info.get("used_memory_human", "unknown"),
-            "ttl_seconds": PARAPHRASE_CACHE_TTL
+            "ttl_seconds": PARAPHRASE_CACHE_TTL,
         }
     except redis.RedisError as e:
         logger.error(f"Redis stats error: {e}")

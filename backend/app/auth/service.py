@@ -3,6 +3,7 @@ Authentication service layer - handles business logic for user auth.
 Uses PostgreSQL database for persistent storage.
 Accounts survive container restarts and EC2 stop/start cycles.
 """
+
 from datetime import datetime, timezone
 from typing import Any
 import logging
@@ -18,43 +19,51 @@ logger = logging.getLogger(__name__)
 def _get_engine():
     """Lazy import to avoid circular dependency at module load time."""
     from db import engine
+
     return engine
 
 
 def _now():
     """Get the DB-appropriate NOW() function."""
     from db import now_func
+
     return now_func()
 
 
 def _is_sqlite():
     """Check if we're using SQLite."""
     from db import IS_SQLITE
+
     return IS_SQLITE
 
 
 class AuthServiceError(Exception):
     """Base exception for auth service errors."""
+
     pass
 
 
 class EmailAlreadyExistsError(AuthServiceError):
     """Email already registered."""
+
     pass
 
 
 class InvalidCredentialsError(AuthServiceError):
     """Invalid email or password."""
+
     pass
 
 
 class SessionNotFoundError(AuthServiceError):
     """Session not found or expired."""
+
     pass
 
 
 class UserNotActiveError(AuthServiceError):
     """User account is not active."""
+
     pass
 
 
@@ -87,18 +96,28 @@ async def create_user(email: str, password: str, full_name: str = "") -> dict[st
             # If the existing account has a broken/empty password hash
             # (from old in-memory code or DDL default ''), allow re-registration
             # by updating the password hash
-            if not existing_hash or existing_hash == '' or '$' not in existing_hash:
+            if not existing_hash or existing_hash == "" or "$" not in existing_hash:
                 password_hash = hash_password(password)
                 conn.execute(
-                    text("UPDATE users SET password_hash = :password_hash, full_name = :full_name WHERE id = :id"),
-                    {"password_hash": password_hash, "full_name": full_name, "id": existing_id},
+                    text(
+                        "UPDATE users SET password_hash = :password_hash, full_name = :full_name WHERE id = :id"
+                    ),
+                    {
+                        "password_hash": password_hash,
+                        "full_name": full_name,
+                        "id": existing_id,
+                    },
                 )
                 conn.commit()
-                logger.info(f"Updated password hash for existing user: {email} (id={existing_id})")
+                logger.info(
+                    f"Updated password hash for existing user: {email} (id={existing_id})"
+                )
                 return {"user_id": existing_id, "email": email}
             else:
                 logger.warning(f"Signup attempt with existing email: {email}")
-                raise EmailAlreadyExistsError("An account with this email already exists")
+                raise EmailAlreadyExistsError(
+                    "An account with this email already exists"
+                )
 
         password_hash = hash_password(password)
         now = _now()
@@ -140,7 +159,9 @@ async def create_user(email: str, password: str, full_name: str = "") -> dict[st
     return {"user_id": user_id, "email": email}
 
 
-async def authenticate_user(email: str, password: str) -> tuple[str, datetime, UserInfo]:
+async def authenticate_user(
+    email: str, password: str
+) -> tuple[str, datetime, UserInfo]:
     """
     Authenticate user and create a session in the database.
 
@@ -160,7 +181,9 @@ async def authenticate_user(email: str, password: str) -> tuple[str, datetime, U
     with engine.connect() as conn:
         # Look up user by email
         result = conn.execute(
-            text("SELECT id, email, full_name, password_hash, is_active FROM users WHERE email = :email"),
+            text(
+                "SELECT id, email, full_name, password_hash, is_active FROM users WHERE email = :email"
+            ),
             {"email": email},
         )
         row = result.fetchone()
@@ -307,7 +330,9 @@ async def invalidate_session(token: str) -> bool:
         else:
             # PostgreSQL with RETURNING
             result = conn.execute(
-                text("DELETE FROM sessions WHERE token_hash = :token_hash RETURNING user_id"),
+                text(
+                    "DELETE FROM sessions WHERE token_hash = :token_hash RETURNING user_id"
+                ),
                 {"token_hash": token_hash},
             )
             row = result.fetchone()

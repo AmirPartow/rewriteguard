@@ -1,8 +1,12 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, BackgroundTasks
 from typing import Optional
-from app.services.email_service import send_contact_request_email, send_auto_reply_confirmation
+from app.services.email_service import (
+    send_contact_request_email,
+    send_auto_reply_confirmation,
+)
 
 router = APIRouter()
+
 
 @router.post("/submit")
 async def submit_contact_form(
@@ -13,7 +17,7 @@ async def submit_contact_form(
     sub_category: str = Form(""),
     subject: str = Form(...),
     description: str = Form(...),
-    attachment: Optional[UploadFile] = File(None)
+    attachment: Optional[UploadFile] = File(None),
 ):
     """
     Submits a contact form with an optional attachment and sends it to the support email.
@@ -33,13 +37,13 @@ async def submit_contact_form(
         subject=subject,
         description=description,
         attachment_content=file_content,
-        attachment_filename=filename
+        attachment_filename=filename,
     )
-    
+
     if not success:
         raise HTTPException(status_code=500, detail="Failed to send support request.")
-    
+
     # Send auto-reply in background so the user doesn't wait
     background_tasks.add_task(send_auto_reply_confirmation, email, name, subject)
-    
+
     return {"status": "success", "message": "Support request submitted successfully."}

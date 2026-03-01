@@ -35,7 +35,7 @@ def get_request_id() -> str:
 class StructuredFormatter(logging.Formatter):
     """
     JSON-structured log formatter for production.
-    
+
     Output is one JSON object per line, compatible with:
     - AWS CloudWatch Logs Insights
     - ELK / OpenSearch
@@ -72,8 +72,17 @@ class StructuredFormatter(logging.Formatter):
             log_entry["exception"] = self.formatException(record.exc_info)
 
         # Add any extra fields attached to the record
-        for key in ("latency_ms", "status_code", "method", "path", "user_id",
-                     "text_length", "cache_hit", "label", "probability"):
+        for key in (
+            "latency_ms",
+            "status_code",
+            "method",
+            "path",
+            "user_id",
+            "text_length",
+            "cache_hit",
+            "label",
+            "probability",
+        ):
             val = getattr(record, key, None)
             if val is not None:
                 log_entry[key] = val

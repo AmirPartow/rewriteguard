@@ -2,6 +2,7 @@
 FastAPI routes for Stripe subscription management.
 Handles checkout sessions, customer portal, and webhooks.
 """
+
 from fastapi import APIRouter, HTTPException, Header, Request, status
 from typing import Annotated
 import logging
@@ -39,14 +40,14 @@ async def _get_current_user(authorization: str | None) -> tuple[int, str]:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authorization header required",
         )
-    
+
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authorization format",
         )
-    
+
     try:
         user_info = await validate_session(parts[1])
         return user_info.id, user_info.email
@@ -67,12 +68,14 @@ async def _get_current_user(authorization: str | None) -> tuple[int, str]:
 async def get_stripe_config():
     """
     Get Stripe configuration for frontend.
-    
+
     Returns publishable key and whether Stripe is configured.
     """
     return {
         "is_configured": is_stripe_configured(),
-        "publishable_key": settings.STRIPE_PUBLISHABLE_KEY if is_stripe_configured() else None,
+        "publishable_key": settings.STRIPE_PUBLISHABLE_KEY
+        if is_stripe_configured()
+        else None,
     }
 
 
@@ -121,11 +124,11 @@ async def get_status(
 ):
     """
     Get current user's subscription status.
-    
+
     Requires authentication.
     """
     user_id, _ = await _get_current_user(authorization)
-    
+
     status_data = await get_subscription_status(user_id)
     return SubscriptionStatus(**status_data)
 
@@ -137,11 +140,11 @@ async def create_checkout(
 ):
     """
     Create a Stripe Checkout session for subscribing to premium.
-    
+
     Returns a URL to redirect the user to complete payment.
     """
     user_id, email = await _get_current_user(authorization)
-    
+
     try:
         checkout_url, session_id = await create_checkout_session(
             user_id=user_id,
@@ -152,7 +155,7 @@ async def create_checkout(
             checkout_url=checkout_url,
             session_id=session_id,
         )
-    except StripeNotConfiguredError as e:
+    except StripeNotConfiguredError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Payment processing is not configured",
@@ -171,12 +174,12 @@ async def create_portal(
 ):
     """
     Create a Stripe Customer Portal session.
-    
+
     Allows users to manage their subscription, update payment methods,
     view billing history, and cancel subscription.
     """
     user_id, _ = await _get_current_user(authorization)
-    
+
     try:
         portal_url = await create_portal_session(user_id)
         return CreatePortalSessionResponse(portal_url=portal_url)
@@ -205,7 +208,7 @@ async def handle_webhook(
 ):
     """
     Handle Stripe webhook events.
-    
+
     This endpoint receives events from Stripe when subscription status changes:
     - checkout.session.completed: User completed payment
     - customer.subscription.created: New subscription started
@@ -215,13 +218,13 @@ async def handle_webhook(
     - invoice.payment_failed: Payment failed
     """
     payload = await request.body()
-    
+
     if not stripe_signature:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Missing Stripe-Signature header",
         )
-    
+
     try:
         result = await handle_webhook_event(payload, stripe_signature)
         return WebhookResponse(**result)
@@ -231,6 +234,7 @@ async def handle_webhook(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+
 
 @router.post("/test-trustpilot-email")
 async def test_trustpilot_email(
@@ -242,11 +246,11 @@ async def test_trustpilot_email(
     """
     user_id, email = await _get_current_user(authorization)
     from app.services.email_service import send_subscription_receipt_email
-    
+
     await send_subscription_receipt_email(
         user_email=email,
         subscription_id="test_sub_" + str(user_id) + "_local",
-        plan_name="Premium"
+        plan_name="Premium",
     )
-    
+
     return {"status": "success", "message": "Test AFS email dispatched to console."}

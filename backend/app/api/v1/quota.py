@@ -1,6 +1,7 @@
 """
 FastAPI routes for quota and usage management.
 """
+
 from fastapi import APIRouter, HTTPException, Header, status
 from typing import Annotated
 import logging
@@ -20,14 +21,14 @@ async def get_user_id_from_token(authorization: str | None) -> int:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authorization header required",
         )
-    
+
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authorization format",
         )
-    
+
     try:
         user_info = await validate_session(parts[1])
         return user_info.id
@@ -44,7 +45,7 @@ async def get_usage(
 ) -> UsageStats:
     """
     Get current user's usage statistics for today.
-    
+
     Returns daily word usage, limits, and remaining quota.
     """
     user_id = await get_user_id_from_token(authorization)
@@ -58,7 +59,7 @@ async def check_user_quota(
 ) -> QuotaCheckResult:
     """
     Check if user has enough quota for a given word count.
-    
+
     - **words**: Number of words to check against quota
     """
     if words < 0:
@@ -66,7 +67,7 @@ async def check_user_quota(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Word count must be non-negative",
         )
-    
+
     user_id = await get_user_id_from_token(authorization)
     return check_quota(user_id, words)
 
@@ -88,7 +89,12 @@ async def get_plans():
                 "name": "premium",
                 "daily_limit": PLAN_LIMITS["premium"],
                 "price": 9.99,
-                "features": ["AI Detection", "Paraphrasing", "10,000 words/day", "Priority Support"],
+                "features": [
+                    "AI Detection",
+                    "Paraphrasing",
+                    "10,000 words/day",
+                    "Priority Support",
+                ],
             },
         ]
     }
@@ -100,14 +106,14 @@ async def upgrade_plan(
 ):
     """
     Upgrade user to premium plan (demo - instantly upgrades).
-    
+
     In production, this would integrate with payment processing.
     """
     user_id = await get_user_id_from_token(authorization)
     set_user_plan(user_id, "premium")
-    
+
     usage = get_user_usage(user_id)
-    
+
     return {
         "message": "Successfully upgraded to premium!",
         "plan_type": "premium",

@@ -21,12 +21,15 @@ Author: RewriteGuard Team
 from fastapi import APIRouter, HTTPException, Depends, Header
 from typing import Annotated
 from app.schemas import ParaphraseRequest, ParaphraseResponse
-from app.services.paraphrase_service import get_paraphraser, Paraphraser, ParaphraseResult
+from app.services.paraphrase_service import (
+    get_paraphraser,
+    Paraphraser,
+    ParaphraseResult,
+)
 from app.redis_client import (
     generate_cache_key,
     get_cached_paraphrase,
     set_cached_paraphrase,
-    PARAPHRASE_CACHE_TTL
 )
 from app.quota.service import track_usage, QuotaExceededError
 from app.auth.service import validate_session, SessionNotFoundError
@@ -56,11 +59,11 @@ async def get_optional_user_id(authorization: str | None) -> int | None:
     """Get user ID from token if provided, otherwise return None."""
     if not authorization:
         return None
-    
+
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
         return None
-    
+
     try:
         user_info = await validate_session(parts[1])
         return user_info.id
@@ -77,16 +80,16 @@ def record_job(
     input_tokens: int,
     output_tokens: int,
     total_tokens: int,
-    status: str = "success"
+    status: str = "success",
 ):
     """
     Record job entry with latency and token usage for monitoring/billing.
-    
+
     This logs the job details in a structured format that can be:
     - Parsed by log aggregation systems (e.g., ELK, Datadog)
     - Used for billing calculations based on token usage
     - Analyzed for performance monitoring
-    
+
     Args:
         job_id: Unique identifier for the job
         mode: Paraphrasing mode used
@@ -121,17 +124,17 @@ async def paraphrase_text(
 ):
     """
     Paraphrases the input text using the specified mode and parameters.
-    
+
     If authenticated (Authorization header), enforces daily word quota:
     - Free plan: 1,000 words/day
     - Premium plan: 10,000 words/day
-    
+
     Request Body:
         - text: The text to paraphrase (1-10000 chars)
         - mode: Paraphrasing style (standard, formal, casual, creative, concise)
         - temperature: Controls randomness (0.0-1.0, default 0.7)
         - max_length: Maximum output tokens (50-1024, default 512)
-        
+
     Returns:
         ParaphraseResponse with:
         - paraphrased_text: The rewritten text
@@ -141,7 +144,7 @@ async def paraphrase_text(
         - output_tokens: Number of output tokens generated
         - total_tokens: Total tokens for billing
         - cached: Whether result was served from cache
-        
+
     Raises:
         429: Quota exceeded (authenticated users only)
         504: Request timeout after 30 seconds
@@ -149,7 +152,7 @@ async def paraphrase_text(
     """
     # Generate unique job ID for tracking
     job_id = str(uuid.uuid4())[:8]
-    
+
     text_length = len(request.text)
     word_count = count_words(request.text)
     text_preview = request.text[:50] + "..." if len(request.text) > 50 else request.text
@@ -158,7 +161,7 @@ async def paraphrase_text(
         f"mode={request.mode} | temp={request.temperature} | max_len={request.max_length} | "
         f"text_length={text_length} | words={word_count} | preview='{text_preview}'"
     )
-    
+
     # Check and track quota if authenticated
     user_id = await get_optional_user_id(authorization)
     if user_id is not None:
@@ -176,54 +179,51 @@ async def paraphrase_text(
                     "words_used": e.words_used,
                     "words_requested": e.words_requested,
                     "upgrade_url": "/v1/quota/upgrade",
-                }
+                },
             )
-    
+
     start_time = time.perf_counter()
-    
+
     # === CACHE LOOKUP ===
     # Generate cache key from hash(text + mode + params)
     cache_key = generate_cache_key(
-        request.text, 
-        request.mode, 
-        request.temperature, 
-        request.max_length
+        request.text, request.mode, request.temperature, request.max_length
     )
-    
+
     # Try to get cached result
     cached_result = get_cached_paraphrase(cache_key)
     if cached_result:
         duration_ms = (time.perf_counter() - start_time) * 1000
-        
+
         logger.info(
             f"CACHE_HIT | job_id={job_id} | mode={request.mode} | "
             f"latency_ms={duration_ms:.2f} | text_length={text_length} | "
             f"output_length={len(cached_result.get('paraphrased_text', ''))} | "
             f"cache_speedup=true"
         )
-        
+
         # Record cache-hit job
         record_job(
             job_id=job_id,
             mode=request.mode,
             input_length=text_length,
-            output_length=len(cached_result.get('paraphrased_text', '')),
+            output_length=len(cached_result.get("paraphrased_text", "")),
             latency_ms=duration_ms,
-            input_tokens=cached_result.get('input_tokens', 0),
-            output_tokens=cached_result.get('output_tokens', 0),
-            total_tokens=cached_result.get('total_tokens', 0),
-            status="cache_hit"
+            input_tokens=cached_result.get("input_tokens", 0),
+            output_tokens=cached_result.get("output_tokens", 0),
+            total_tokens=cached_result.get("total_tokens", 0),
+            status="cache_hit",
         )
-        
+
         return ParaphraseResponse(
-            paraphrased_text=cached_result['paraphrased_text'],
-            mode=cached_result['mode'],
+            paraphrased_text=cached_result["paraphrased_text"],
+            mode=cached_result["mode"],
             processing_time_ms=round(duration_ms, 2),
-            input_tokens=cached_result['input_tokens'],
-            output_tokens=cached_result['output_tokens'],
-            total_tokens=cached_result['total_tokens']
+            input_tokens=cached_result["input_tokens"],
+            output_tokens=cached_result["output_tokens"],
+            total_tokens=cached_result["total_tokens"],
         )
-    
+
     # === CACHE MISS - Run ML Paraphrase ===
     try:
         # Run paraphrase in thread pool with timeout
@@ -232,20 +232,24 @@ async def paraphrase_text(
             async with _ml_semaphore:
                 return await anyio.to_thread.run_sync(
                     lambda: paraphraser.paraphrase(
-                        request.text, 
+                        request.text,
                         request.mode,
                         request.temperature,
-                        request.max_length
+                        request.max_length,
                     )
                 )
-        
+
         # Apply 30 second timeout for paraphrase (longer than detection)
         try:
-            result: ParaphraseResult = await asyncio.wait_for(run_paraphrase(), timeout=30.0)
+            result: ParaphraseResult = await asyncio.wait_for(
+                run_paraphrase(), timeout=30.0
+            )
         except asyncio.TimeoutError:
             duration_ms = (time.perf_counter() - start_time) * 1000
-            logger.error(f"Paraphrase timeout after 30s | job_id={job_id} | text_length={text_length} | mode={request.mode}")
-            
+            logger.error(
+                f"Paraphrase timeout after 30s | job_id={job_id} | text_length={text_length} | mode={request.mode}"
+            )
+
             # Record failed job
             record_job(
                 job_id=job_id,
@@ -256,27 +260,27 @@ async def paraphrase_text(
                 input_tokens=0,
                 output_tokens=0,
                 total_tokens=0,
-                status="timeout"
+                status="timeout",
             )
-            
+
             raise HTTPException(
                 status_code=504,
-                detail="Request timeout: Paraphrasing took too long to complete"
+                detail="Request timeout: Paraphrasing took too long to complete",
             )
-        
+
         duration_ms = (time.perf_counter() - start_time) * 1000
-        
+
         # === CACHE STORAGE ===
         # Store successful result in cache for future requests
         cache_data = {
-            'paraphrased_text': result.text,
-            'mode': request.mode,
-            'input_tokens': result.input_tokens,
-            'output_tokens': result.output_tokens,
-            'total_tokens': result.total_tokens
+            "paraphrased_text": result.text,
+            "mode": request.mode,
+            "input_tokens": result.input_tokens,
+            "output_tokens": result.output_tokens,
+            "total_tokens": result.total_tokens,
         }
         set_cached_paraphrase(cache_key, cache_data)
-        
+
         # Record successful job with latency and token usage
         record_job(
             job_id=job_id,
@@ -287,31 +291,31 @@ async def paraphrase_text(
             input_tokens=result.input_tokens,
             output_tokens=result.output_tokens,
             total_tokens=result.total_tokens,
-            status="success"
+            status="success",
         )
-        
+
         logger.info(
             f"Paraphrase complete | job_id={job_id} | mode={request.mode} | "
             f"latency_ms={duration_ms:.2f} | input_length={text_length} | "
             f"output_length={len(result.text)} | total_tokens={result.total_tokens} | "
             f"cached_for_next=true"
         )
-        
+
         return ParaphraseResponse(
             paraphrased_text=result.text,
             mode=request.mode,
             processing_time_ms=round(duration_ms, 2),
             input_tokens=result.input_tokens,
             output_tokens=result.output_tokens,
-            total_tokens=result.total_tokens
+            total_tokens=result.total_tokens,
         )
-        
+
     except HTTPException:
         # Re-raise HTTP exceptions (like timeout)
         raise
     except Exception as e:
         duration_ms = (time.perf_counter() - start_time) * 1000
-        
+
         # Record error job
         record_job(
             job_id=job_id,
@@ -322,16 +326,14 @@ async def paraphrase_text(
             input_tokens=0,
             output_tokens=0,
             total_tokens=0,
-            status="error"
+            status="error",
         )
-        
+
         logger.error(
             f"Paraphrase error | job_id={job_id} | error={str(e)} | latency_ms={duration_ms:.2f} | "
             f"text_length={text_length} | mode={request.mode}",
-            exc_info=True
+            exc_info=True,
         )
         raise HTTPException(
-            status_code=500,
-            detail="Internal server error during paraphrase processing"
+            status_code=500, detail="Internal server error during paraphrase processing"
         )
-

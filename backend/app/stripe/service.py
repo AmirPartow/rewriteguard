@@ -3,9 +3,9 @@ Stripe service layer - handles Stripe API interactions for subscriptions.
 Manages checkout sessions, webhooks, and subscription lifecycle.
 Uses PostgreSQL database for persistent storage.
 """
+
 import stripe
 import logging
-from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import text
@@ -27,26 +27,31 @@ PLAN_CONFIG = {
 def _get_engine():
     """Lazy import to avoid circular dependency at module load time."""
     from db import engine
+
     return engine
 
 
 class StripeServiceError(Exception):
     """Base exception for Stripe service errors."""
+
     pass
 
 
 class StripeNotConfiguredError(StripeServiceError):
     """Stripe is not properly configured."""
+
     pass
 
 
 class CustomerNotFoundError(StripeServiceError):
     """Stripe customer not found."""
+
     pass
 
 
 class SubscriptionNotFoundError(StripeServiceError):
     """Subscription not found."""
+
     pass
 
 
@@ -92,7 +97,9 @@ async def get_or_create_customer(user_id: int, email: str) -> str:
         # Store customer ID in database
         with engine.connect() as conn:
             conn.execute(
-                text("UPDATE users SET stripe_customer_id = :customer_id WHERE id = :user_id"),
+                text(
+                    "UPDATE users SET stripe_customer_id = :customer_id WHERE id = :user_id"
+                ),
                 {"customer_id": customer.id, "user_id": user_id},
             )
             conn.commit()
@@ -248,7 +255,9 @@ async def handle_webhook_event(payload: bytes, sig_header: str) -> dict[str, Any
     _ensure_stripe_configured()
 
     if not settings.STRIPE_WEBHOOK_SECRET:
-        logger.warning("Webhook secret not configured - skipping signature verification")
+        logger.warning(
+            "Webhook secret not configured - skipping signature verification"
+        )
         event = stripe.Event.construct_from(
             stripe.util.convert_to_stripe_object(payload),
             stripe.api_key,
@@ -341,11 +350,14 @@ async def _handle_checkout_completed(session: Any):
         )
         conn.commit()
 
-    logger.info(f"Checkout completed for user {user_id}, subscription: {subscription_id}")
+    logger.info(
+        f"Checkout completed for user {user_id}, subscription: {subscription_id}"
+    )
 
     # Try to send a welcome email
     try:
         from app.services.email_service import send_subscription_receipt_email
+
         # Look up user email from database
         with engine.connect() as conn:
             result = conn.execute(
@@ -357,11 +369,12 @@ async def _handle_checkout_completed(session: Any):
 
         if user_email:
             import asyncio
+
             asyncio.create_task(
                 send_subscription_receipt_email(
                     user_email=user_email,
                     subscription_id=subscription_id,
-                    plan_name="Premium"
+                    plan_name="Premium",
                 )
             )
         else:
@@ -483,12 +496,16 @@ async def _handle_invoice_paid(invoice: Any):
     user_id = _find_user_by_customer(customer_id)
 
     if user_id:
-        logger.info(f"Invoice paid for user {user_id}: {invoice.amount_paid / 100:.2f} {invoice.currency.upper()}")
+        logger.info(
+            f"Invoice paid for user {user_id}: {invoice.amount_paid / 100:.2f} {invoice.currency.upper()}"
+        )
 
         engine = _get_engine()
         with engine.connect() as conn:
             conn.execute(
-                text("UPDATE users SET subscription_status = 'active' WHERE id = :user_id"),
+                text(
+                    "UPDATE users SET subscription_status = 'active' WHERE id = :user_id"
+                ),
                 {"user_id": user_id},
             )
             conn.commit()
@@ -505,7 +522,9 @@ async def _handle_payment_failed(invoice: Any):
         engine = _get_engine()
         with engine.connect() as conn:
             conn.execute(
-                text("UPDATE users SET subscription_status = 'past_due' WHERE id = :user_id"),
+                text(
+                    "UPDATE users SET subscription_status = 'past_due' WHERE id = :user_id"
+                ),
                 {"user_id": user_id},
             )
             conn.commit()

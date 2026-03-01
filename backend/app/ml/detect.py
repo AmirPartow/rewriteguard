@@ -2,6 +2,7 @@ import torch
 from .config import MAX_LENGTH, THRESHOLD, DEVICE
 from .model import load_model
 
+
 def run_detection(text: str) -> dict:
     """
     Runs DeBERTa inference on text.

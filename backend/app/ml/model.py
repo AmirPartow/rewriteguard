@@ -10,6 +10,7 @@ _tokenizer = None
 _model = None
 _lock = threading.Lock()
 
+
 def load_model():
     """
     Load tokenizer + model once (singleton pattern with thread-safe lock).
@@ -24,8 +25,7 @@ def load_model():
 
         _tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
         _model = AutoModelForSequenceClassification.from_pretrained(
-            MODEL_NAME,
-            num_labels=2
+            MODEL_NAME, num_labels=2
         )
 
         device = torch.device(DEVICE if DEVICE else "cpu")

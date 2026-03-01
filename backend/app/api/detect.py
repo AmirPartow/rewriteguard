@@ -4,8 +4,10 @@ from app.ml.detect import run_detection
 
 router = APIRouter()
 
+
 class DetectRequest(BaseModel):
     text: str
+
 
 @router.post("/detect")
 def detect(req: DetectRequest):

@@ -34,21 +34,22 @@ ParaphraseMode = Literal["standard", "formal", "casual", "creative", "concise"]
 # Configuration constants
 MAX_CHUNK_LENGTH = 450  # Max tokens per chunk (leaving room for prompt)
 MAX_OUTPUT_LENGTH = 512  # Max output tokens per chunk
-MIN_CHUNK_LENGTH = 50   # Minimum tokens to form a chunk
-OVERLAP_SENTENCES = 1    # Number of sentences to overlap between chunks
+MIN_CHUNK_LENGTH = 50  # Minimum tokens to form a chunk
+OVERLAP_SENTENCES = 1  # Number of sentences to overlap between chunks
 
 
 @dataclass
 class ParaphraseResult:
     """
     Result from paraphrase operation including text and token usage metrics.
-    
+
     Attributes:
         text: The paraphrased text
         input_tokens: Number of input tokens processed
         output_tokens: Number of output tokens generated
         total_tokens: Total tokens (input + output)
     """
+
     text: str
     input_tokens: int
     output_tokens: int
@@ -60,124 +61,126 @@ class TextPreprocessor:
     Handles text preprocessing operations including cleaning, chunking, and tokenization.
     Prepares raw text for optimal processing by the T5 model.
     """
-    
+
     def __init__(self, tokenizer):
         """
         Initialize the preprocessor with a tokenizer.
-        
+
         Args:
             tokenizer: HuggingFace tokenizer for the T5 model
         """
         self.tokenizer = tokenizer
-    
+
     def clean_text(self, text: str) -> str:
         """
         Clean and normalize input text.
-        
+
         Operations:
         - Normalize whitespace (multiple spaces -> single space)
         - Normalize line breaks
         - Remove control characters
         - Strip leading/trailing whitespace
-        
+
         Args:
             text: Raw input text
-            
+
         Returns:
             Cleaned text ready for processing
         """
         # Normalize unicode characters
         text = text.strip()
-        
+
         # Replace multiple whitespaces with single space
-        text = re.sub(r'[ \t]+', ' ', text)
-        
+        text = re.sub(r"[ \t]+", " ", text)
+
         # Normalize line breaks (multiple -> double for paragraph separation)
-        text = re.sub(r'\n\s*\n', '\n\n', text)
-        text = re.sub(r'\n{3,}', '\n\n', text)
-        
+        text = re.sub(r"\n\s*\n", "\n\n", text)
+        text = re.sub(r"\n{3,}", "\n\n", text)
+
         # Remove control characters except newlines and tabs
-        text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
-        
+        text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
+
         return text
-    
+
     def split_into_sentences(self, text: str) -> List[str]:
         """
         Split text into sentences for chunking.
-        
+
         Uses regex pattern to detect sentence boundaries while handling
         common abbreviations and edge cases.
-        
+
         Args:
             text: Cleaned text
-            
+
         Returns:
             List of sentences
         """
         # Simple sentence splitting pattern
         # Handles: periods, question marks, exclamation points
         # Avoids splitting on common abbreviations
-        sentence_pattern = r'(?<=[.!?])\s+(?=[A-Z])'
+        sentence_pattern = r"(?<=[.!?])\s+(?=[A-Z])"
         sentences = re.split(sentence_pattern, text)
-        
+
         # Filter out empty sentences and strip whitespace
         sentences = [s.strip() for s in sentences if s.strip()]
-        
+
         return sentences
-    
+
     def chunk_text(self, text: str) -> List[str]:
         """
         Split text into processable chunks that fit within model context.
-        
+
         Strategy:
         - Split into sentences first
         - Group sentences into chunks under MAX_CHUNK_LENGTH tokens
         - Maintain sentence boundaries (no mid-sentence splits)
         - Add overlap between chunks for coherent output
-        
+
         Args:
             text: Cleaned input text
-            
+
         Returns:
             List of text chunks ready for tokenization
         """
         sentences = self.split_into_sentences(text)
-        
+
         if not sentences:
             return [text] if text else []
-        
+
         chunks = []
         current_chunk = []
         current_length = 0
-        
+
         for sentence in sentences:
             # Estimate token count for this sentence
-            sentence_tokens = len(self.tokenizer.encode(sentence, add_special_tokens=False))
-            
+            sentence_tokens = len(
+                self.tokenizer.encode(sentence, add_special_tokens=False)
+            )
+
             # If single sentence exceeds max, it becomes its own chunk
             if sentence_tokens > MAX_CHUNK_LENGTH:
                 # Save current chunk if exists
                 if current_chunk:
-                    chunks.append(' '.join(current_chunk))
+                    chunks.append(" ".join(current_chunk))
                     current_chunk = []
                     current_length = 0
-                
+
                 # Add long sentence as its own chunk (will be truncated by model)
                 chunks.append(sentence)
                 continue
-            
+
             # Check if adding this sentence would exceed limit
             if current_length + sentence_tokens > MAX_CHUNK_LENGTH:
                 # Save current chunk
                 if current_chunk:
-                    chunks.append(' '.join(current_chunk))
-                
+                    chunks.append(" ".join(current_chunk))
+
                 # Start new chunk with overlap (last sentence from previous)
                 if OVERLAP_SENTENCES > 0 and current_chunk:
                     overlap = current_chunk[-OVERLAP_SENTENCES:]
                     current_chunk = overlap + [sentence]
                     current_length = sum(
-                        len(self.tokenizer.encode(s, add_special_tokens=False)) 
+                        len(self.tokenizer.encode(s, add_special_tokens=False))
                         for s in current_chunk
                     )
                 else:
@@ -186,22 +189,22 @@ class TextPreprocessor:
             else:
                 current_chunk.append(sentence)
                 current_length += sentence_tokens
-        
+
         # Don't forget the last chunk
         if current_chunk:
-            chunks.append(' '.join(current_chunk))
-        
+            chunks.append(" ".join(current_chunk))
+
         logger.info(f"Text chunked into {len(chunks)} chunks")
         return chunks
-    
+
     def tokenize(self, text: str, max_length: int = MAX_CHUNK_LENGTH) -> dict:
         """
         Tokenize text for model input.
-        
+
         Args:
             text: Text to tokenize
             max_length: Maximum sequence length
-            
+
         Returns:
             Dictionary with input_ids, attention_mask, etc.
         """
@@ -210,7 +213,7 @@ class TextPreprocessor:
             return_tensors="pt",
             truncation=True,
             max_length=max_length,
-            padding=True
+            padding=True,
         )
 
 
@@ -219,181 +222,185 @@ class TextPostprocessor:
     Handles post-processing of model output including chunk merging and length trimming.
     Ensures coherent, well-formatted final output.
     """
-    
+
     def __init__(self, tokenizer):
         """
         Initialize the postprocessor with a tokenizer.
-        
+
         Args:
             tokenizer: HuggingFace tokenizer for decoding
         """
         self.tokenizer = tokenizer
-    
+
     def decode_output(self, output_ids: torch.Tensor) -> str:
         """
         Decode model output tokens to text.
-        
+
         Args:
             output_ids: Token IDs from model generation
-            
+
         Returns:
             Decoded text string
         """
         return self.tokenizer.decode(output_ids, skip_special_tokens=True)
-    
+
     def merge_chunks(self, chunks: List[str]) -> str:
         """
         Merge paraphrased chunks into coherent output.
-        
+
         Strategy:
         - Remove duplicate sentences from overlapping regions
         - Ensure proper spacing and punctuation
         - Maintain paragraph structure
-        
+
         Args:
             chunks: List of paraphrased text chunks
-            
+
         Returns:
             Merged, coherent text
         """
         if not chunks:
             return ""
-        
+
         if len(chunks) == 1:
             return chunks[0].strip()
-        
+
         merged = chunks[0].strip()
-        
+
         for i in range(1, len(chunks)):
             current_chunk = chunks[i].strip()
-            
+
             if not current_chunk:
                 continue
-            
+
             # Try to detect and remove overlapping content
             merged_sentences = self._split_sentences(merged)
             current_sentences = self._split_sentences(current_chunk)
-            
+
             # Check for overlap at boundary
-            overlap_found = False
             for overlap_size in range(min(3, len(merged_sentences)), 0, -1):
                 if overlap_size <= len(current_sentences):
                     # Compare last N sentences of merged with first N of current
-                    merged_end = ' '.join(merged_sentences[-overlap_size:]).lower()
-                    current_start = ' '.join(current_sentences[:overlap_size]).lower()
-                    
+                    merged_end = " ".join(merged_sentences[-overlap_size:]).lower()
+                    current_start = " ".join(current_sentences[:overlap_size]).lower()
+
                     # Fuzzy match (allow small differences)
                     if self._similarity(merged_end, current_start) > 0.8:
                         # Remove overlapping sentences from current chunk
-                        current_chunk = ' '.join(current_sentences[overlap_size:])
-                        overlap_found = True
+                        current_chunk = " ".join(current_sentences[overlap_size:])
                         break
-            
+
             # Add space and append
             if current_chunk:
-                if merged and not merged.endswith((' ', '\n')):
-                    merged += ' '
+                if merged and not merged.endswith((" ", "\n")):
+                    merged += " "
                 merged += current_chunk
-        
+
         return merged
-    
+
     def _split_sentences(self, text: str) -> List[str]:
         """Split text into sentences for overlap detection."""
-        pattern = r'(?<=[.!?])\s+'
+        pattern = r"(?<=[.!?])\s+"
         sentences = re.split(pattern, text)
         return [s.strip() for s in sentences if s.strip()]
-    
+
     def _similarity(self, text1: str, text2: str) -> float:
         """Calculate simple word-based similarity ratio."""
         words1 = set(text1.split())
         words2 = set(text2.split())
-        
+
         if not words1 or not words2:
             return 0.0
-        
+
         intersection = words1 & words2
         union = words1 | words2
-        
+
         return len(intersection) / len(union) if union else 0.0
-    
-    def trim_length(self, text: str, max_chars: Optional[int] = None, 
-                    max_sentences: Optional[int] = None) -> str:
+
+    def trim_length(
+        self,
+        text: str,
+        max_chars: Optional[int] = None,
+        max_sentences: Optional[int] = None,
+    ) -> str:
         """
         Trim output to specified length constraints.
-        
+
         Args:
             text: Text to trim
             max_chars: Maximum character count (optional)
             max_sentences: Maximum sentence count (optional)
-            
+
         Returns:
             Trimmed text, cut at sentence boundary when possible
         """
         if not text:
             return text
-        
+
         # Trim by sentence count first
         if max_sentences is not None:
             sentences = self._split_sentences(text)
             if len(sentences) > max_sentences:
-                text = ' '.join(sentences[:max_sentences])
+                text = " ".join(sentences[:max_sentences])
                 # Ensure proper ending punctuation
-                if text and text[-1] not in '.!?':
-                    text += '.'
-        
+                if text and text[-1] not in ".!?":
+                    text += "."
+
         # Trim by character count
         if max_chars is not None and len(text) > max_chars:
             # Try to cut at sentence boundary
             sentences = self._split_sentences(text)
             trimmed = ""
-            
+
             for sentence in sentences:
                 if len(trimmed) + len(sentence) + 1 <= max_chars:
-                    trimmed = (trimmed + ' ' + sentence).strip() if trimmed else sentence
+                    trimmed = (
+                        (trimmed + " " + sentence).strip() if trimmed else sentence
+                    )
                 else:
                     break
-            
+
             # If no complete sentence fits, hard cut with ellipsis
             if not trimmed:
-                trimmed = text[:max_chars-3].rsplit(' ', 1)[0] + '...'
-            
+                trimmed = text[: max_chars - 3].rsplit(" ", 1)[0] + "..."
+
             text = trimmed
-        
+
         return text
-    
+
     def clean_output(self, text: str) -> str:
         """
         Final cleanup of output text.
-        
+
         Operations:
         - Fix double spaces
         - Fix punctuation spacing
         - Ensure proper capitalization
-        
+
         Args:
             text: Raw model output
-            
+
         Returns:
             Cleaned, polished text
         """
         # Fix multiple spaces
-        text = re.sub(r' +', ' ', text)
-        
+        text = re.sub(r" +", " ", text)
+
         # Fix spacing around punctuation
-        text = re.sub(r'\s+([.!?,;:])', r'\1', text)
-        text = re.sub(r'([.!?])\s*([A-Z])', r'\1 \2', text)
-        
+        text = re.sub(r"\s+([.!?,;:])", r"\1", text)
+        text = re.sub(r"([.!?])\s*([A-Z])", r"\1 \2", text)
+
         # Ensure first character is capitalized
         if text:
             text = text[0].upper() + text[1:]
-        
+
         return text.strip()
 
 
 class Paraphraser:
     """
     Main paraphraser class integrating T5-large model with preprocessing and post-processing.
-    
+
     Supports multiple paraphrasing modes for different writing styles:
     - standard: Balanced rewrite maintaining original meaning
     - formal: Professional, academic tone
@@ -401,7 +408,7 @@ class Paraphraser:
     - creative: Unique, expressive rewording
     - concise: Brief, to-the-point version
     """
-    
+
     # Mode-specific prompts for T5
     MODE_PROMPTS = {
         "standard": "paraphrase: ",
@@ -410,18 +417,18 @@ class Paraphraser:
         "creative": "paraphrase creatively: ",
         "concise": "paraphrase concisely: ",
     }
-    
+
     # T5-small model configuration (optimized for t3.micro / low-resource servers)
     MODEL_NAME = "google/flan-t5-small"  # 77M params, fast inference on CPU
     FALLBACK_MODEL = "google/flan-t5-small"  # Same — no fallback to larger model
-    
+
     def __init__(self, model_name: Optional[str] = None):
         """
         Initialize the T5-large paraphraser with all components.
-        
+
         Downloads and configures the model and tokenizer on first use.
         Falls back to smaller model or mock mode if resources unavailable.
-        
+
         Args:
             model_name: Optional override for model name (for testing)
         """
@@ -431,68 +438,67 @@ class Paraphraser:
         self.tokenizer = None
         self.preprocessor = None
         self.postprocessor = None
-        
+
         self._load_model()
-    
+
     def _load_model(self):
         """
         Download and configure T5-large model and tokenizer.
-        
+
         Attempts to load the primary model, falls back to smaller variant,
         and finally to mock mode if all fails.
         """
         models_to_try = [self.model_name, self.FALLBACK_MODEL]
-        
+
         for model_name in models_to_try:
             try:
                 logger.info(f"Loading paraphrase model: {model_name} on {self.device}")
-                
+
                 # Download and load tokenizer
                 self.tokenizer = AutoTokenizer.from_pretrained(
-                    model_name,
-                    model_max_length=512
+                    model_name, model_max_length=512
                 )
-                
+
                 # Download and load model
                 self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
                 self.model.to(self.device)
                 self.model.eval()
-                
+
                 # Initialize preprocessor and postprocessor with tokenizer
                 self.preprocessor = TextPreprocessor(self.tokenizer)
                 self.postprocessor = TextPostprocessor(self.tokenizer)
-                
+
                 logger.info(f"Successfully loaded paraphrase model: {model_name}")
                 self.model_name = model_name
                 return
-                
+
             except Exception as e:
                 logger.warning(f"Failed to load {model_name}: {e}")
                 continue
-        
+
         logger.error("All model loading attempts failed. Using mock mode.")
-    
+
     def paraphrase(
-        self, 
-        text: str, 
+        self,
+        text: str,
         mode: ParaphraseMode = "standard",
         temperature: float = 0.7,
-        max_length: int = 512
+        max_length: int = 512,
     ) -> ParaphraseResult:
         """
         Paraphrase the input text using T5-large with full preprocessing/postprocessing.
-        
+
         Pipeline:
         1. Preprocess: clean -> chunk -> tokenize
         2. Generate: run each chunk through T5 model
         3. Postprocess: decode -> merge chunks -> trim -> clean
-        
+
         Args:
             text: Input text to paraphrase
             mode: Paraphrasing style (standard, formal, casual, creative, concise)
             temperature: Controls randomness (0.0-1.0, higher = more creative)
             max_length: Maximum output length in tokens
-            
+
         Returns:
             ParaphraseResult with paraphrased text and token usage metrics
         """
@@ -507,49 +513,55 @@ class Paraphraser:
                 text=mock_text,
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
-                total_tokens=input_tokens + output_tokens
+                total_tokens=input_tokens + output_tokens,
             )
-        
+
         try:
             # Track token counts for job recording
             total_input_tokens = 0
             total_output_tokens = 0
-            
+
             # === PREPROCESSING ===
             # Step 1: Clean the input text
             cleaned_text = self.preprocessor.clean_text(text)
             logger.debug(f"Cleaned text length: {len(cleaned_text)}")
-            
+
             # Step 2: Chunk text for processing
             chunks = self.preprocessor.chunk_text(cleaned_text)
-            logger.info(f"Processing {len(chunks)} chunks in '{mode}' mode | temp={temperature} | max_len={max_length}")
-            
+            logger.info(
+                f"Processing {len(chunks)} chunks in '{mode}' mode | temp={temperature} | max_len={max_length}"
+            )
+
             # === GENERATION ===
             # Step 3: Process each chunk through the model
             paraphrased_chunks = []
             prompt = self.MODE_PROMPTS.get(mode, self.MODE_PROMPTS["standard"])
-            
+
             # Adjust temperature based on mode if not overridden
-            effective_temp = temperature if temperature != 0.7 else (0.8 if mode == "creative" else 0.7)
-            
+            effective_temp = (
+                temperature
+                if temperature != 0.7
+                else (0.8 if mode == "creative" else 0.7)
+            )
+
             for i, chunk in enumerate(chunks):
                 # Prepare input with mode-specific prompt
                 input_text = f"{prompt}{chunk}"
-                
+
                 # Tokenize
                 inputs = self.preprocessor.tokenize(input_text)
                 inputs = {k: v.to(self.device) for k, v in inputs.items()}
-                
+
                 # Track input tokens
-                chunk_input_tokens = inputs['input_ids'].shape[1]
+                chunk_input_tokens = inputs["input_ids"].shape[1]
                 total_input_tokens += chunk_input_tokens
-                
+
                 # Generate paraphrase
                 with torch.no_grad():
                     outputs = self.model.generate(
                         **inputs,
                         max_length=min(max_length, MAX_OUTPUT_LENGTH),
-                        num_beams=2,            # reduced from 5 → 2 for CPU speed
+                        num_beams=2,  # reduced from 5 → 2 for CPU speed
                         num_return_sequences=1,
                         temperature=effective_temp,
                         do_sample=(mode == "creative" or temperature > 0.7),
@@ -557,56 +569,64 @@ class Paraphraser:
                         no_repeat_ngram_size=3,
                         length_penalty=1.0 if mode != "concise" else 0.8,
                     )
-                
+
                 # Track output tokens
                 chunk_output_tokens = outputs.shape[1]
                 total_output_tokens += chunk_output_tokens
-                
+
                 # Decode output
                 paraphrased = self.postprocessor.decode_output(outputs[0])
                 paraphrased_chunks.append(paraphrased)
-                
-                logger.debug(f"Chunk {i+1}/{len(chunks)} processed | in_tokens={chunk_input_tokens} | out_tokens={chunk_output_tokens}")
-            
+
+                logger.debug(
+                    f"Chunk {i + 1}/{len(chunks)} processed | in_tokens={chunk_input_tokens} | out_tokens={chunk_output_tokens}"
+                )
+
             # === POST-PROCESSING ===
             # Step 4: Merge chunks
             merged_text = self.postprocessor.merge_chunks(paraphrased_chunks)
-            
+
             # Step 5: Clean final output
             final_text = self.postprocessor.clean_output(merged_text)
-            
+
             # Step 6: Trim if concise mode
             if mode == "concise":
-                original_sentences = len(self.preprocessor.split_into_sentences(cleaned_text))
-                target_sentences = max(1, int(original_sentences * 0.7))  # 70% of original
-                final_text = self.postprocessor.trim_length(final_text, max_sentences=target_sentences)
-            
+                original_sentences = len(
+                    self.preprocessor.split_into_sentences(cleaned_text)
+                )
+                target_sentences = max(
+                    1, int(original_sentences * 0.7)
+                )  # 70% of original
+                final_text = self.postprocessor.trim_length(
+                    final_text, max_sentences=target_sentences
+                )
+
             logger.info(
                 f"Paraphrase complete: {len(text)} -> {len(final_text)} chars | "
                 f"input_tokens={total_input_tokens} | output_tokens={total_output_tokens}"
             )
-            
+
             return ParaphraseResult(
                 text=final_text,
                 input_tokens=total_input_tokens,
                 output_tokens=total_output_tokens,
-                total_tokens=total_input_tokens + total_output_tokens
+                total_tokens=total_input_tokens + total_output_tokens,
             )
-            
+
         except Exception as e:
             logger.error(f"Paraphrase error: {e}", exc_info=True)
             raise
-    
+
     def _mock_paraphrase(self, text: str, mode: ParaphraseMode) -> str:
         """
         Mock paraphrase for development/testing when model isn't available.
-        
+
         Provides realistic-looking output for UI development.
-        
+
         Args:
             text: Input text
             mode: Paraphrase mode
-            
+
         Returns:
             Mock paraphrased text
         """
@@ -615,9 +635,9 @@ class Paraphraser:
             "formal": lambda t: f"In formal terms, {t.lower()}",
             "casual": lambda t: f"So basically, {t.lower()}",
             "creative": lambda t: f"Reimagining this: {t}",
-            "concise": lambda t: ' '.join(t.split()[:len(t.split())//2]) + "...",
+            "concise": lambda t: " ".join(t.split()[: len(t.split()) // 2]) + "...",
         }
-        
+
         transform = mode_transforms.get(mode, mode_transforms["standard"])
         return transform(text)
 
@@ -626,10 +646,10 @@ class Paraphraser:
 def get_paraphraser() -> Paraphraser:
     """
     Singleton getter for the Paraphraser instance.
-    
+
     Uses LRU cache to ensure only one model instance is loaded,
     conserving memory and improving response times.
-    
+
     Returns:
         Shared Paraphraser instance
     """

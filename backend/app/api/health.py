@@ -55,6 +55,7 @@ async def readiness():
     # --- Check Redis ---
     try:
         from app.redis_client import r, REDIS_AVAILABLE
+
         if REDIS_AVAILABLE and r is not None:
             r.ping()
             checks["redis"] = {"status": "healthy"}
@@ -68,12 +69,16 @@ async def readiness():
     try:
         from sqlalchemy import text
         from db import engine
+
         if engine is not None:
             with engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
             checks["database"] = {"status": "healthy"}
         else:
-            checks["database"] = {"status": "degraded", "detail": "engine not available"}
+            checks["database"] = {
+                "status": "degraded",
+                "detail": "engine not available",
+            }
     except Exception as e:
         checks["database"] = {"status": "unhealthy", "detail": str(e)}
         overall_healthy = False
@@ -81,6 +86,7 @@ async def readiness():
     # --- Check Stripe (non-critical) ---
     try:
         from app.stripe.service import is_stripe_configured
+
         if is_stripe_configured():
             checks["stripe"] = {"status": "healthy"}
         else:
@@ -90,7 +96,6 @@ async def readiness():
 
     uptime_seconds = round(time.time() - _START_TIME, 1)
 
-    status_code = 200 if overall_healthy else 503
     response = {
         "status": "healthy" if overall_healthy else "unhealthy",
         "uptime_seconds": uptime_seconds,
@@ -100,6 +105,7 @@ async def readiness():
     if not overall_healthy:
         logger.warning("Readiness check failed: %s", checks)
         from fastapi.responses import JSONResponse
+
         return JSONResponse(content=response, status_code=503)
 
     return response

@@ -1,30 +1,42 @@
 """
 FastAPI authentication routes for signup, login, and logout.
 """
+
 from fastapi import APIRouter, HTTPException, Header, status
 from typing import Annotated
 import logging
 
 from app.auth.schemas import (
-    SignupRequest, SignupResponse,
-    LoginRequest, LoginResponse,
-    LogoutResponse, UserInfo
+    SignupRequest,
+    SignupResponse,
+    LoginRequest,
+    LoginResponse,
+    LogoutResponse,
+    UserInfo,
 )
 from app.auth.service import (
-    create_user, authenticate_user, invalidate_session, validate_session, get_total_users,
-    EmailAlreadyExistsError, InvalidCredentialsError, 
-    UserNotActiveError, SessionNotFoundError
+    create_user,
+    authenticate_user,
+    invalidate_session,
+    validate_session,
+    get_total_users,
+    EmailAlreadyExistsError,
+    InvalidCredentialsError,
+    UserNotActiveError,
+    SessionNotFoundError,
 )
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED
+)
 async def signup(request: SignupRequest) -> SignupResponse:
     """
     Create a new user account.
-    
+
     - **email**: Valid email address (will be normalized to lowercase)
     - **password**: Minimum 8 characters, must contain uppercase, lowercase, and digit
     - **full_name**: Optional, user's full name
@@ -50,10 +62,10 @@ async def signup(request: SignupRequest) -> SignupResponse:
 async def login(request: LoginRequest) -> LoginResponse:
     """
     Authenticate user and receive a session token.
-    
+
     - **email**: Registered email address
     - **password**: Account password
-    
+
     Returns a session token valid for 7 days.
     """
     try:
@@ -84,7 +96,7 @@ async def logout(
 ) -> LogoutResponse:
     """
     Invalidate the current session.
-    
+
     Requires Authorization header with Bearer token.
     """
     if not authorization:
@@ -92,7 +104,7 @@ async def logout(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authorization header required",
         )
-    
+
     # Extract token from "Bearer <token>" format
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
@@ -100,7 +112,7 @@ async def logout(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authorization format. Use: Bearer <token>",
         )
-    
+
     token = parts[1]
     await invalidate_session(token)
     return LogoutResponse()
@@ -112,7 +124,7 @@ async def get_current_user(
 ) -> UserInfo:
     """
     Get current authenticated user's information.
-    
+
     Requires Authorization header with Bearer token.
     """
     if not authorization:
@@ -120,16 +132,16 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authorization header required",
         )
-    
+
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authorization format",
         )
-    
+
     token = parts[1]
-    
+
     try:
         user_info = await validate_session(token)
         return user_info
@@ -138,6 +150,7 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
         )
+
 
 @router.get("/users/count", response_model=dict)
 async def get_total_users_count() -> dict:

@@ -2,8 +2,8 @@
 Tests for quota service and enforcement.
 Uses an in-memory SQLite database for test isolation.
 """
+
 import pytest
-from datetime import date
 from sqlalchemy import create_engine, text
 
 
@@ -16,7 +16,8 @@ def setup_test_db(monkeypatch):
 
     # Create tables that match the PostgreSQL schema
     with test_engine.connect() as conn:
-        conn.execute(text("""
+        conn.execute(
+            text("""
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT NOT NULL UNIQUE,
@@ -33,8 +34,10 @@ def setup_test_db(monkeypatch):
                 subscription_current_period_end TIMESTAMP,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        """))
-        conn.execute(text("""
+        """)
+        )
+        conn.execute(
+            text("""
             CREATE TABLE daily_usage (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -45,12 +48,15 @@ def setup_test_db(monkeypatch):
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(user_id, usage_date)
             )
-        """))
+        """)
+        )
         # Create a test user for all tests
-        conn.execute(text("""
+        conn.execute(
+            text("""
             INSERT INTO users (id, email, full_name, password_hash)
             VALUES (1, 'test@example.com', 'Test User', 'hash')
-        """))
+        """)
+        )
         conn.commit()
 
     # Patch the db module's engine to use our test engine
@@ -64,9 +70,15 @@ def setup_test_db(monkeypatch):
 
 
 # Import after fixture is defined
-from app.quota.service import (
-    get_user_usage, track_usage, check_quota, get_user_plan, set_user_plan,
-    reset_daily_usage, QuotaExceededError, PLAN_LIMITS,
+from app.quota.service import (  # noqa: E402
+    get_user_usage,
+    track_usage,
+    check_quota,
+    get_user_plan,
+    set_user_plan,
+    reset_daily_usage,
+    QuotaExceededError,
+    PLAN_LIMITS,
 )
 
 
@@ -157,7 +169,10 @@ class TestQuotaEnforcement:
         """Should deny requests exceeding quota."""
         result = check_quota(1, 1500)  # Free limit is 1000
         assert result.allowed is False
-        assert "exceeded" in result.message.lower() or "remaining" in result.message.lower()
+        assert (
+            "exceeded" in result.message.lower()
+            or "remaining" in result.message.lower()
+        )
 
     def test_track_usage_enforces_limit(self):
         """Should raise error when quota exceeded."""
