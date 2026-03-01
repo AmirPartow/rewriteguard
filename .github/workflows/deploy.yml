@@ -63,25 +63,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd ~/rewriteguard
-
-            # Pull latest code
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ~/rewriteguard/backend
             git pull origin main
-
-            # Rebuild and restart API container only
             docker compose build api
             docker compose up -d api
-
-            # Wait and verify
             sleep 10
             curl -sf http://localhost:8000/health/live && echo "✅ API healthy" || echo "❌ API unhealthy"
+          EOF
 
   # ===========================================================================
   # Job 3: Frontend auto-deploys on Vercel (no action needed)
