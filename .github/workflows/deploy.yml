@@ -63,26 +63,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup SSH Agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-          
-      - name: Add to known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-          
       - name: Deploy to EC2
-        run: |
-          ssh -o PubkeyAcceptedAlgorithms=+ssh-rsa -o HostKeyAlgorithms=+ssh-rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
             cd ~/rewriteguard/backend
             git pull origin main
             docker compose build api
             docker compose up -d api
             sleep 10
             curl -sf http://localhost:8000/health/live && echo "✅ API healthy" || echo "❌ API unhealthy"
-          EOF
 
   # ===========================================================================
   # Job 3: Frontend auto-deploys on Vercel (no action needed)
