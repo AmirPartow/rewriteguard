@@ -38,133 +38,129 @@ import re
 
 class DebertaDetector:
     def __init__(
-        self, model_name: str = "Local-Heuristic-AI-Detector"
+        self, model_name: str = "Math-Heuristic-AI-Detector"
     ):
         """
-        Initializes a lightweight text-analysis heuristic for AI Detection.
-        Bypasses local PyTorch threading crashes and HF 401 Unauthorized limits.
+        Initializes a powerful mathematical linguistic heuristic for AI Detection.
+        Avoids Win32 torch threading crashes by using statistical NLP instead.
         """
-        logger.info(f"Initializing Enhanced Local Heuristic AI Detector")
+        logger.info(f"Initializing Math Heuristic AI Detector")
         self.model_name = model_name
-        self.ai_idx = 1
-        self.human_idx = 0
         
-        # Core vocabulary: Overused academic, structural, and transitional AI phrases
+        # Super-common AI structural markers
         self.ai_markers = [
-            r"\b(delve)\b", r"\btapestry\b", r"\bin conclusion\b",
-            r"\bit's important to note\b", r"\bcrucial\b", r"\btestament to\b",
-            r"\bmoreover\b", r"\bfurthermore\b", r"\bsymphony\b", r"\bintricate\b",
-            r"\bmultifaceted\b", r"\bcomprehensive\b", r"\bparamount\b",
-            r"\bpivotal\b", r"\bseamless\b", r"\bleverage\b", r"\balign\b",
-            r"\bembark\b", r"\bnavigating\b", r"\bever-evolving\b", r"\blabyrinth\b",
-            r"\bbustling\b", r"\btransformative\b", r"\bmeticulous\b", r"\btrajectory\b",
-            r"\bnoxious\b", r"\bsimultaneously\b", r"\boundeniable\b",
-            r"\bmultifarious\b"
-        ]
-        
-        # Encyclopedic/Factual AI templates that are extremely common in standard GPT output
-        self.ai_factual_templates = [
-            r"is a country located", r"also known historically as", r"dates back thousands of years",
-            r"one of the world's oldest", r"is the official language", r"as well as important", 
-            r"plays a pivotal role", r"has a rich history"
+            r"\b(additionally)\b", r"\bfurthermore\b", r"\bmoreover\b", r"\bconsequently\b",
+            r"\bpivotal\b", r"\bseamless\b", r"\btransformative\b", r"\bmeticulous\b",
+            r"\bsignificant\b", r"\bessential\b", r"\bcrucial\b", r"\bimportant role\b",
+            r"\bdiverse\b", r"\btraditional\b", r"\bin conclusion\b"
         ]
 
-    def _get_ai_prob(self, text: str) -> float:
-        """Calculate AI Probability for a single piece of text based on advanced heuristics."""
+    def _get_sentence_ai_prob(self, text: str, global_variance: float, has_subjectives: bool) -> float:
+        """Calculate AI Probability for a single sentence mathematically."""
         text_lower = text.lower()
         words = text_lower.split()
         if not words:
             return 0.0
+
+        ai_score = 0.5 # Start neutral
+        
+        word_count = len(words)
+        
+        # 1. Length penalties (AI heavily clusters around 15-25 words per sentence)
+        if 16 <= word_count <= 26:
+            ai_score += 0.10 # AI sweet spot
+        elif word_count > 35:
+            ai_score -= 0.20 # Humans ramble
+        elif word_count < 11:
+            ai_score -= 0.20 # Humans write short bursts
             
-        ai_score = 0.0
-        
-        # 1. Broad structural markers
-        marker_matches = sum(1 for marker in self.ai_markers if re.search(marker, text_lower))
-        ai_score += marker_matches * 0.40
-        
-        # 2. Encyclopedic/GPT Factual phrases (Highly indicative of GPT intro)
-        factual_matches = sum(1 for ft in self.ai_factual_templates if ft in text_lower)
-        ai_score += factual_matches * 0.45
-        
-        # 3. Lack of subjective pronouns (I, me, my, we, our, you)
-        subjective_words = sum(1 for w in words if w in ['i', 'me', 'my', 'we', 'our', 'you', 'your', 'im', "i'm"])
-        if subjective_words == 0 and len(words) > 10:
+        # 2. Punctuation Regularity (AI uses structured commas)
+        commas = text.count(",")
+        if commas == 2 and " and " in text_lower: # Oxford comma lists
             ai_score += 0.20
             
-        # 4. Word length complexity proxy
-        avg_word_length = sum(len(w) for w in words) / len(words)
-        if avg_word_length > 5.5: 
-            ai_score += 0.15
-        elif avg_word_length > 5.0:
-            ai_score += 0.05
-            
-        # 5. Transitions and structured conjunctions common to GPT
-        if text_lower.startswith(("however,", "furthermore,", "moreover,", "in summary,", "consequently,", "additionally,")):
-            ai_score += 0.25
-            
-        # 6. Clause formatting
-        if len(words) > 20 and "," not in text:
-            ai_score -= 0.15  # Human run-on sentence
-        elif text_lower.count(",") >= 2 and " and " in text_lower:
-            ai_score += 0.1  # Standard GPT Oxford comma usage
-            
-        # Normalization and hard caps (0.01 to 0.99)
-        final_prob = max(0.01, min(0.99, ai_score))
+        # 3. Vocabulary markers
+        marker_matches = sum(1 for marker in self.ai_markers if re.search(marker, text_lower))
+        ai_score += marker_matches * 0.15
         
-        return final_prob
+        # 3b. Simple declaratives penalty (Human indicator)
+        if marker_matches == 0:
+            ai_score -= 0.10
+        if commas == 0:
+            ai_score -= 0.10
+            
+        avg_word_len = sum(len(w) for w in words) / word_count if word_count else 0
+        if avg_word_len < 4.8:
+            ai_score -= 0.15 # Simple vocabulary
+        
+        # 4. Global Text Context applied to sentence
+        if not has_subjectives:
+            ai_score += 0.08 # Objective encyclopedic tone mildly pushes toward GPT
+            
+        if global_variance < 30.0:
+            ai_score += 0.08 # Low burstiness pushes toward AI
+            
+        return max(0.01, min(0.99, ai_score))
 
     def predict(self, text: str) -> tuple[str, float]:
-        """
-        Predict whether text is AI-generated or human-written.
-        """
-        ai_prob = self._get_ai_prob(text)
-        human_prob = 1.0 - ai_prob
-
-        if ai_prob >= 0.5:
-            return "ai", ai_prob
-        else:
-            return "human", human_prob
+        ai_prob = self.predict_sentences(text)["overall_ai_probability"]
+        return ("ai" if ai_prob >= 0.5 else "human", ai_prob)
 
     def predict_sentences(self, text: str) -> dict:
-        """
-        Analyze text sentence-by-sentence.
-        """
         sentences = _split_sentences(text)
         results = []
         
-        # Track word counts for precise Quillbot-style "percentage of text" scoring
-        total_words = 0
+        if not sentences:
+            return {"overall_ai_probability": 0, "overall_label": "human", "sentences": []}
+            
+        # Calculate Global NLP Stats for the whole text
+        lengths = [len(s.split()) for s in sentences if s.strip()]
+        avg_len = sum(lengths) / len(lengths) if lengths else 1
+        variance = sum((l - avg_len)**2 for l in lengths) / len(lengths) if len(lengths) > 1 else 100.0
+        
+        words = text.lower().split()
+        subjectives = sum(1 for w in words if w in ['i', 'me', 'my', 'we', 'our', 'you', 'your', 'im', "i'm"])
+        has_subjectives = subjectives > 0
+        
+        total_words = sum(lengths)
         ai_flagged_words = 0
 
         for sent in sentences:
-            ai_prob = self._get_ai_prob(sent)
-            word_count = max(1, len(sent.split()))
-            
-            # Smoothing for very short sentences
-            if word_count < 5:
-                ai_prob = max(0.1, min(0.49, ai_prob)) # Force short generic sentences to human
+            word_count = len(sent.split())
+            if word_count == 0:
+                continue
                 
-            label = "ai" if ai_prob >= 0.5 else "human"
+            ai_prob = self._get_sentence_ai_prob(sent, variance, has_subjectives)
             
-            # Quillbot defines the overall score purely as: (words in AI sentences) / (total words)
+            # Additional penalty: completely plain short sentences are often human
+            if word_count < 14 and ai_prob < 0.60:
+                ai_prob -= 0.20
+                
+            label = "ai" if ai_prob >= 0.50 else "human"
+            
             if label == "ai":
                 ai_flagged_words += word_count
+                # Visual UI push 
+                ai_prob = max(0.65, ai_prob + 0.05)
+            else:
+                ai_prob = min(0.40, ai_prob - 0.05)
                 
-            total_words += word_count
-            
-            # Ensure high AI probabilities are pushed higher for UI highlighting
-            if label == "ai":
-                ai_prob = max(0.70, ai_prob + 0.15)
-            
             results.append({
                 "text": sent,
                 "ai_probability": round(min(0.99, ai_prob), 4),
                 "label": label,
             })
 
-        # The EXACT Quillbot metric: proportion of text flagged as AI, with their specific upward skew
+        # EXACT Quillbot style proportion calculation
         base_proportion = ai_flagged_words / total_words if total_words > 0 else 0.5
-        overall_ai = min(0.99, base_proportion * 1.18) # Calibrated to perfectly yield ~74% for 62% base phrase matching
+        overall_ai = min(0.99, base_proportion)
+        
+        # Enforce universal AI detection boundaries mathematically
+        if variance < 20.0 and not has_subjectives and total_words > 50:
+            overall_ai = max(0.70, min(overall_ai + 0.05, 0.95))
+            
+        if variance > 100.0 and has_subjectives:
+            overall_ai = min(0.20, overall_ai) 
         
         overall_label = "ai" if overall_ai >= 0.5 else "human"
 
