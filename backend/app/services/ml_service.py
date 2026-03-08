@@ -66,18 +66,18 @@ class DebertaDetector:
         
         word_count = len(words)
         
-        # 1. Length penalties (AI heavily clusters around 15-25 words per sentence)
-        if 16 <= word_count <= 26:
-            ai_score += 0.10 # AI sweet spot
-        elif word_count > 35:
-            ai_score -= 0.20 # Humans ramble
-        elif word_count < 11:
-            ai_score -= 0.20 # Humans write short bursts
+        # 1. Length penalties (AI heavily clusters around 15-28 words per sentence)
+        if 15 <= word_count <= 28:
+            ai_score += 0.12 # AI sweet spot
+        elif word_count > 38:
+            ai_score -= 0.15 # Humans ramble
+        elif word_count < 10:
+            ai_score -= 0.15 # Humans write short bursts
             
         # 2. Punctuation Regularity (AI uses structured commas)
         commas = text.count(",")
-        if commas == 2 and " and " in text_lower: # Oxford comma lists
-            ai_score += 0.20
+        if commas >= 2 and " and " in text_lower: # Oxford comma lists or complex structures
+            ai_score += 0.18
             
         # 3. Vocabulary markers
         marker_matches = sum(1 for marker in self.ai_markers if re.search(marker, text_lower))
@@ -85,20 +85,20 @@ class DebertaDetector:
         
         # 3b. Simple declaratives penalty (Human indicator)
         if marker_matches == 0:
-            ai_score -= 0.10
+            ai_score -= 0.08
         if commas == 0:
-            ai_score -= 0.10
+            ai_score -= 0.08
             
         avg_word_len = sum(len(w) for w in words) / word_count if word_count else 0
-        if avg_word_len < 4.8:
-            ai_score -= 0.15 # Simple vocabulary
+        if avg_word_len < 4.7:
+            ai_score -= 0.10 # Simple vocabulary
         
         # 4. Global Text Context applied to sentence
         if not has_subjectives:
-            ai_score += 0.08 # Objective encyclopedic tone mildly pushes toward GPT
+            ai_score += 0.10 # Objective encyclopedic tone pushes toward GPT
             
-        if global_variance < 30.0:
-            ai_score += 0.08 # Low burstiness pushes toward AI
+        if global_variance < 35.0:
+            ai_score += 0.10 # Low burstiness pushes toward AI
             
         return max(0.01, min(0.99, ai_score))
 
@@ -133,17 +133,17 @@ class DebertaDetector:
             ai_prob = self._get_sentence_ai_prob(sent, variance, has_subjectives)
             
             # Additional penalty: completely plain short sentences are often human
-            if word_count < 14 and ai_prob < 0.60:
-                ai_prob -= 0.20
+            if word_count < 13 and ai_prob < 0.60:
+                ai_prob -= 0.15
                 
             label = "ai" if ai_prob >= 0.50 else "human"
             
             if label == "ai":
                 ai_flagged_words += word_count
                 # Visual UI push 
-                ai_prob = max(0.65, ai_prob + 0.05)
+                ai_prob = max(0.68, ai_prob + 0.05)
             else:
-                ai_prob = min(0.40, ai_prob - 0.05)
+                ai_prob = min(0.42, ai_prob - 0.05)
                 
             results.append({
                 "text": sent,
@@ -153,14 +153,14 @@ class DebertaDetector:
 
         # EXACT Quillbot style proportion calculation
         base_proportion = ai_flagged_words / total_words if total_words > 0 else 0.5
-        overall_ai = min(0.99, base_proportion)
+        overall_ai = min(0.99, base_proportion * 1.08) # Restore QuillBot upward skew
         
         # Enforce universal AI detection boundaries mathematically
-        if variance < 20.0 and not has_subjectives and total_words > 50:
-            overall_ai = max(0.70, min(overall_ai + 0.05, 0.95))
+        if variance < 25.0 and not has_subjectives and total_words > 40:
+            overall_ai = max(0.72, min(overall_ai + 0.05, 0.98))
             
-        if variance > 100.0 and has_subjectives:
-            overall_ai = min(0.20, overall_ai) 
+        if variance > 90.0 and has_subjectives:
+            overall_ai = min(0.15, overall_ai) 
         
         overall_label = "ai" if overall_ai >= 0.5 else "human"
 
