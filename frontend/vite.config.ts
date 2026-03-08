@@ -8,14 +8,14 @@ export default defineConfig({
     host: '127.0.0.1',
     proxy: {
       '/v1': {
-        target: 'https://www.rewriteguard.com',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
       '/health': {
-        target: 'https://www.rewriteguard.com',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
     },
   },

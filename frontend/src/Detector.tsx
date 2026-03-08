@@ -1,8 +1,15 @@
 import { useState } from 'react';
 
+interface SentenceResult {
+    text: string;
+    ai_probability: number;
+    label: 'ai' | 'human';
+}
+
 interface DetectResponse {
     label: 'ai' | 'human';
     probability: number;
+    sentences?: SentenceResult[];
 }
 
 function Detector() {
@@ -43,16 +50,41 @@ function Detector() {
         }
     };
 
-    const getScoreColor = (score: number, label: string) => {
-        if (label === 'ai') {
-            return score > 0.8 ? 'text-red-500' : 'text-orange-500';
-        }
-        return score > 0.8 ? 'text-green-500' : 'text-blue-500';
+    const getOverallColor = (prob: number) => {
+        if (prob >= 0.7) return 'text-red-500';
+        if (prob >= 0.4) return 'text-orange-400';
+        return 'text-emerald-400';
     };
 
-    const getProgressColor = (label: string) => {
-        return label === 'ai' ? 'bg-red-500' : 'bg-green-500';
-    }
+    const getProgressGradient = (prob: number) => {
+        if (prob >= 0.7) return 'from-red-500 to-orange-500';
+        if (prob >= 0.4) return 'from-orange-400 to-yellow-400';
+        return 'from-emerald-500 to-cyan-500';
+    };
+
+    // Returns a background color with opacity based on AI probability
+    const getSentenceHighlight = (aiProb: number): string => {
+        if (aiProb >= 0.8) return 'bg-red-500/25 border-l-red-500';
+        if (aiProb >= 0.6) return 'bg-orange-500/20 border-l-orange-500';
+        if (aiProb >= 0.4) return 'bg-yellow-500/15 border-l-yellow-500';
+        return 'bg-emerald-500/10 border-l-emerald-500';
+    };
+
+    const getSentenceLabel = (aiProb: number): string => {
+        if (aiProb >= 0.8) return 'Very likely AI';
+        if (aiProb >= 0.6) return 'Likely AI';
+        if (aiProb >= 0.4) return 'Uncertain';
+        return 'Likely Human';
+    };
+
+    const getSentenceLabelColor = (aiProb: number): string => {
+        if (aiProb >= 0.8) return 'text-red-400';
+        if (aiProb >= 0.6) return 'text-orange-400';
+        if (aiProb >= 0.4) return 'text-yellow-400';
+        return 'text-emerald-400';
+    };
+
+    const aiPercentage = result ? Math.round(result.probability * 100) : 0;
 
     return (
         <div className="w-full animate-fade-in-up">
@@ -123,31 +155,92 @@ function Detector() {
                 {/* Results Section */}
                 {result && !loading && (
                     <div className="mt-8 pt-8 border-t border-slate-700/50 animate-fade-in">
-                        <div className="flex flex-col items-center">
+
+                        {/* Overall Result */}
+                        <div className="flex flex-col items-center mb-10">
                             <div className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-2">Detection Result</div>
-                            <div className={`text-5xl font-bold mb-4 capitalize ${getScoreColor(result.probability, result.label)}`}>
-                                {result.label === 'ai' ? 'AI Generated' : 'Human Written'}
+                            <div className={`text-5xl font-bold mb-1 ${getOverallColor(result.probability)}`}>
+                                {aiPercentage}% AI Content
+                            </div>
+                            <div className="text-gray-500 text-sm mb-6">
+                                {result.label === 'ai'
+                                    ? 'This text appears to be AI-generated'
+                                    : 'This text appears to be human-written'}
                             </div>
 
                             <div className="w-full bg-slate-700/50 rounded-full h-4 mb-4 overflow-hidden">
                                 <div
-                                    className={`h-full transition-all duration-1000 ease-out ${getProgressColor(result.label)}`}
+                                    className={`h-full transition-all duration-1000 ease-out bg-gradient-to-r ${getProgressGradient(result.probability)}`}
                                     style={{ width: `${result.probability * 100}%` }}
                                 />
                             </div>
 
                             <div className="flex justify-between w-full text-sm text-gray-400 px-1">
-                                <span>Confidence Score</span>
-                                <span className="font-mono text-white">{(result.probability * 100).toFixed(2)}%</span>
+                                <span>AI Confidence</span>
+                                <span className="font-mono text-white">{(result.probability * 100).toFixed(1)}%</span>
                             </div>
                         </div>
+
+                        {/* Sentence-by-Sentence Breakdown */}
+                        {result.sentences && result.sentences.length > 0 && (
+                            <div className="mt-8">
+                                <div className="flex items-center justify-between mb-5">
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        </svg>
+                                        Sentence Analysis
+                                    </h3>
+                                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500/60"></span>AI</span>
+                                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-500/60"></span>Likely AI</span>
+                                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60"></span>Uncertain</span>
+                                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500/60"></span>Human</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    {result.sentences.map((sentence, i) => (
+                                        <div
+                                            key={i}
+                                            className={`
+                                                p-4 rounded-xl border-l-4 transition-all
+                                                ${getSentenceHighlight(sentence.ai_probability)}
+                                            `}
+                                        >
+                                            <div className="flex justify-between items-start gap-4">
+                                                <p className="text-gray-200 text-[15px] leading-relaxed flex-1">
+                                                    {sentence.text}
+                                                </p>
+                                                <div className="flex flex-col items-end flex-shrink-0 gap-1 min-w-[100px]">
+                                                    <span className={`text-xs font-bold uppercase tracking-wider ${getSentenceLabelColor(sentence.ai_probability)}`}>
+                                                        {getSentenceLabel(sentence.ai_probability)}
+                                                    </span>
+                                                    <span className="text-xs text-gray-500 font-mono">
+                                                        {Math.round(sentence.ai_probability * 100)}% AI
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Mini progress bar */}
+                                            <div className="mt-2 w-full bg-slate-700/30 rounded-full h-1 overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full transition-all duration-700 bg-gradient-to-r ${getProgressGradient(sentence.ai_probability)}`}
+                                                    style={{ width: `${sentence.ai_probability * 100}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
 
             {/* Footer */}
             <p className="mt-8 text-center text-gray-600 text-sm">
-                Powered by RewriteGuard DeBERTa Model
+                Powered by RewriteGuard AI Detection Model
             </p>
         </div>
     );

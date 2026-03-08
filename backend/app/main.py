@@ -88,3 +88,4 @@ def cache_stats():
 @app.get("/protected")
 def protected(_: None = Depends(rate_limiter)):
     return {"ok": True, "message": "passed rate limit"}
+

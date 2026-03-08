@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from typing import Annotated
-from app.schemas import DetectRequest, DetectResponse
+from app.schemas import DetectRequest
 from app.services.ml_service import get_detector, DebertaDetector
 from app.quota.service import track_usage, QuotaExceededError
 from app.auth.service import validate_session, SessionNotFoundError
@@ -39,26 +39,16 @@ async def get_optional_user_id(authorization: str | None) -> int | None:
         return None
 
 
-@router.post("/detect", response_model=DetectResponse)
+@router.post("/detect")
 async def detect_text(
     request: DetectRequest,
     detector: DebertaDetector = Depends(get_detector),
     authorization: Annotated[str | None, Header()] = None,
 ):
     """
-    Detects the likelihood of the text being AI-generated using DeBERTa.
+    Detects the likelihood of the text being AI-generated using sentence-level analysis.
 
-    If authenticated (Authorization header), enforces daily word quota:
-    - Free plan: 1,000 words/day
-    - Premium plan: 10,000 words/day
-
-    Returns:
-        DetectResponse with label (ai/human) and probability score
-
-    Raises:
-        429: Quota exceeded (authenticated users only)
-        504: Request timeout after 10 seconds
-        500: Internal server error
+    Returns per-sentence AI probability scores and the overall weighted score.
     """
     text_length = len(request.text)
     word_count = count_words(request.text)
@@ -90,17 +80,14 @@ async def detect_text(
     start_time = time.perf_counter()
 
     try:
-        # Run CPU-bound prediction in thread pool with timeout
-        # Semaphore serializes inference to avoid thread contention on single vCPU
         async def run_prediction():
             async with _ml_semaphore:
-                return await anyio.to_thread.run_sync(detector.predict, request.text)
+                return detector.predict_sentences(request.text)
 
-        # Apply 30 second timeout (includes potential queue wait)
         try:
-            label, score = await asyncio.wait_for(run_prediction(), timeout=30.0)
+            result = await asyncio.wait_for(run_prediction(), timeout=60.0)
         except asyncio.TimeoutError:
-            logger.error(f"Prediction timeout after 30s | text_length={text_length}")
+            logger.error(f"Prediction timeout after 60s | text_length={text_length}")
             raise HTTPException(
                 status_code=504,
                 detail="Request timeout: Detection took too long to complete. Try shorter text or wait a moment.",
@@ -109,14 +96,20 @@ async def detect_text(
         duration_ms = (time.perf_counter() - start_time) * 1000
 
         logger.info(
-            f"Prediction complete | label={label} | probability={score:.4f} | "
+            f"Prediction complete | label={result['overall_label']} | "
+            f"probability={result['overall_ai_probability']:.4f} | "
+            f"sentences={len(result['sentences'])} | "
             f"latency_ms={duration_ms:.2f} | text_length={text_length} | words={word_count}"
         )
 
-        return DetectResponse(label=label, probability=score)
+        # Return backward-compatible fields + new sentence data
+        return {
+            "label": result["overall_label"],
+            "probability": result["overall_ai_probability"],
+            "sentences": result["sentences"],
+        }
 
     except HTTPException:
-        # Re-raise HTTP exceptions (like timeout)
         raise
     except Exception as e:
         duration_ms = (time.perf_counter() - start_time) * 1000
@@ -126,5 +119,5 @@ async def detect_text(
             exc_info=True,
         )
         raise HTTPException(
-            status_code=500, detail="Internal server error during detection processing"
+            status_code=500, detail=f"Detection error: {str(e)}"
         )
