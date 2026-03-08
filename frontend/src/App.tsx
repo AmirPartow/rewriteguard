@@ -20,6 +20,7 @@ function App() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [activePage, setActivePage] = useState<ActivePage>('dashboard');
   const [isGuest, setIsGuest] = useState(false);
+  const [paraphraserText, setParaphraserText] = useState('');
   const [showCookiesPolicy, setShowCookiesPolicy] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
@@ -40,12 +41,19 @@ function App() {
       setTimeout(() => window.dispatchEvent(new Event('open-auth')), 50);
     };
 
+    const handleParaphraserText = (e: Event) => {
+      const text = (e as CustomEvent).detail;
+      if (text) setParaphraserText(text);
+    };
+
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('open-auth-from-guest', handleGuestAuth);
+    window.addEventListener('send-to-paraphraser', handleParaphraserText);
     handlePopState();
     return () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('open-auth-from-guest', handleGuestAuth);
+      window.removeEventListener('send-to-paraphraser', handleParaphraserText);
     };
   }, []);
 
@@ -92,42 +100,22 @@ function App() {
 
   // Handle Cookies Policy View
   if (showCookiesPolicy) {
-    return (
-      <>
-        <CookiesPolicy {...footerProps} />
-        <CookieConsent />
-      </>
-    );
+    return (<><CookiesPolicy {...footerProps} /><CookieConsent /></>);
   }
 
   // Handle Privacy Policy View
   if (showPrivacyPolicy) {
-    return (
-      <>
-        <PrivacyPolicy {...footerProps} />
-        <CookieConsent />
-      </>
-    );
+    return (<><PrivacyPolicy {...footerProps} /><CookieConsent /></>);
   }
 
   // Handle Terms of Service View
   if (showTermsOfService) {
-    return (
-      <>
-        <TermsOfService {...footerProps} />
-        <CookieConsent />
-      </>
-    );
+    return (<><TermsOfService {...footerProps} /><CookieConsent /></>);
   }
 
   // Handle Legal Center View
   if (showLegalCenter) {
-    return (
-      <>
-        <LegalCenter {...footerProps} />
-        <CookieConsent />
-      </>
-    );
+    return (<><LegalCenter {...footerProps} /><CookieConsent /></>);
   }
 
   // Show Landing Page if not authenticated AND not in guest mode
@@ -144,125 +132,95 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start p-4 pt-8 bg-[#0f172a] text-white">
-      <div className="w-full max-w-4xl flex flex-col min-h-screen">
+    <div className="min-h-screen flex bg-[#0f172a] text-gray-200 font-sans">
 
-        {/* Header with User Menu */}
-        <header className="flex justify-between items-center mb-8">
-          {/* Logo — click to go home */}
-          <div
-            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => setActivePage('dashboard')}
-          >
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-              RewriteGuard
-            </span>
+      {/* Sidebar */}
+      <aside className="w-16 flex-shrink-0 bg-[#0f172a] border-r border-white/10 flex flex-col items-center py-4 gap-6 z-20">
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl mb-4 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+
+        <nav className="flex flex-col gap-5">
+          <button onClick={() => setActivePage('dashboard')} className={`p-2 rounded-lg transition-colors ${activePage === 'dashboard' ? 'bg-white/10 text-blue-400' : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}`}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
+          </button>
+          <button onClick={() => setActivePage('detector')} className={`p-2 rounded-lg transition-colors ${activePage === 'detector' ? 'bg-white/10 text-blue-400' : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}`}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+          </button>
+          <button onClick={() => setActivePage('paraphraser')} className={`p-2 rounded-lg transition-colors ${activePage === 'paraphraser' ? 'bg-white/10 text-blue-400' : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}`}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          </button>
+          <button className="p-2 rounded-lg text-gray-600 hover:bg-white/5 hover:text-gray-400"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></button>
+          <button className="p-2 rounded-lg text-gray-600 hover:bg-white/5 hover:text-gray-400"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></button>
+        </nav>
+      </aside>
+
+      {/* Main Body */}
+      <div className="flex-1 flex flex-col min-h-screen">
+
+        {/* Top Navbar */}
+        <header className="h-14 bg-[#0f172a]/80 backdrop-blur-md border-b border-white/5 px-8 flex items-center justify-between z-10 sticky top-0">
+          <div className="flex items-center gap-4">
+            <span className="font-bold text-xl cursor-default tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">RewriteGuard</span>
+            <span className="text-gray-600 mx-1">/</span>
+            <span className="text-gray-400 font-medium text-sm tracking-tight">{activePage === 'detector' ? 'AI Detector' : activePage === 'paraphraser' ? 'Paraphrasing Tool' : activePage.charAt(0).toUpperCase() + activePage.slice(1)}</span>
           </div>
 
-          {/* User Menu or Sign In */}
-          {user ? <UserMenu /> : (
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-gray-400 hidden sm:block">Guest Mode</span>
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase tracking-widest hover:text-gray-300 cursor-pointer transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2" /></svg>
+              English
+              <svg className="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+            </div>
+            {user ? <UserMenu /> : (
               <button
                 onClick={() => window.dispatchEvent(new Event('open-auth-from-guest'))}
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-blue-500/25 hover:scale-105 active:scale-95 text-white font-bold text-sm rounded-xl transition-all"
+                className="px-5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white text-sm font-medium transition-all"
               >
-                Sign In / Sign Up
+                Sign In
+              </button>
+            )}
+          </div>
+        </header>
+
+        {/* Dynamic Content */}
+        <main className="flex-1 p-6 flex flex-col items-center">
+          <div className="w-full max-w-[1400px] flex-1 flex flex-col">
+            {activePage === 'dashboard' && <Dashboard />}
+            {activePage === 'detector' && <Detector />}
+            {activePage === 'paraphraser' && <Paraphraser initialText={paraphraserText} onTextConsumed={() => setParaphraserText('')} />}
+            {activePage === 'admin' && <AdminPage />}
+            {activePage === 'contact' && <ContactSupport onBack={() => setActivePage('dashboard')} />}
+          </div>
+
+          {/* Paraphraser Promo Bar — slim, only on detector */}
+          {activePage === 'detector' && (
+            <div className="w-full max-w-full h-10 bg-blue-500/10 border border-blue-500/20 rounded-lg px-6 flex items-center justify-between animate-fade-in transition-all shrink-0 mt-2">
+              <span className="text-blue-300 font-bold text-xs tracking-tight">Want your text to sound more authentic?</span>
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new Event('grab-detector-text'));
+                  setTimeout(() => setActivePage('paraphraser'), 50);
+                }}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-1.5 rounded-full text-[10px] font-black tracking-[0.05em] hover:scale-105 transition-all flex items-center gap-1.5 shadow-lg shadow-blue-500/20"
+              >
+                Refine with Paraphraser
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
               </button>
             </div>
           )}
-        </header>
 
-        {/* Navigation Tabs */}
-        <nav className="mb-8 flex justify-center">
-          <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-1.5 inline-flex gap-1 shadow-xl flex-wrap justify-center">
-            {user && (
-              <button
-                onClick={() => setActivePage('dashboard')}
-                className={`
-                  px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 text-sm
-                  ${activePage === 'dashboard'
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20'
-                    : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
-                  }
-                `}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                </svg>
-                Dashboard
-              </button>
-            )}
-            <button
-              onClick={() => setActivePage('detector')}
-              className={`
-                px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 text-sm
-                ${activePage === 'detector'
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/20'
-                  : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
-                }
-              `}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              AI Detector
-            </button>
-            <button
-              onClick={() => setActivePage('paraphraser')}
-              className={`
-                px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 text-sm
-                ${activePage === 'paraphraser'
-                  ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 text-white shadow-lg shadow-emerald-500/20'
-                  : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
-                }
-              `}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Paraphraser
-            </button>
-            {user?.email === 'amir.ap.partow@gmail.com' && (
-              <button
-                onClick={() => setActivePage('admin')}
-                className={`
-                px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 text-sm
-                ${activePage === 'admin'
-                    ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-lg shadow-rose-500/20'
-                    : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
-                  }
-              `}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Admin
-              </button>
-            )}
-          </div>
-        </nav>
-
-        <main className="animate-fade-in flex-grow">
-          {activePage === 'dashboard' && <Dashboard />}
-          {activePage === 'detector' && <Detector />}
-          {activePage === 'paraphraser' && <Paraphraser />}
-          {activePage === 'admin' && <AdminPage />}
-          {activePage === 'contact' && <ContactSupport onBack={() => setActivePage('dashboard')} />}
+          {/* Footer — show on all pages */}
+          <Footer
+            {...footerProps}
+            className="w-full max-w-[1400px] mt-12 shrink-0"
+          />
         </main>
-
-        <Footer
-          {...footerProps}
-          className="mt-20 -mx-4 sm:-mx-8 rounded-t-3xl border-white/5 opacity-80"
-        />
-        <CookieConsent />
       </div>
+
+      <CookieConsent />
     </div>
   );
 }

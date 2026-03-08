@@ -133,17 +133,19 @@ class DebertaDetector:
             ai_prob = self._get_sentence_ai_prob(sent, variance, has_subjectives)
             
             # Additional penalty: completely plain short sentences are often human
-            if word_count < 13 and ai_prob < 0.60:
-                ai_prob -= 0.15
-                
-            label = "ai" if ai_prob >= 0.50 else "human"
+            if word_count < 14 and ai_prob < 0.65:
+                ai_prob -= 0.18
+            if has_subjectives:
+                ai_prob -= 0.05 # General subjective penalty
+
+            label = "ai" if ai_prob >= 0.55 else "human" # More strict ai threshold
             
             if label == "ai":
                 ai_flagged_words += word_count
                 # Visual UI push 
                 ai_prob = max(0.68, ai_prob + 0.05)
             else:
-                ai_prob = min(0.42, ai_prob - 0.05)
+                ai_prob = max(0.0, min(0.42, ai_prob - 0.08)) # Fix negative, better reduction
                 
             results.append({
                 "text": sent,
@@ -159,9 +161,13 @@ class DebertaDetector:
         if variance < 25.0 and not has_subjectives and total_words > 40:
             overall_ai = max(0.72, min(overall_ai + 0.05, 0.98))
             
-        if variance > 90.0 and has_subjectives:
-            overall_ai = min(0.15, overall_ai) 
-        
+        if (variance > 80.0 and has_subjectives) or (variance > 150.0):
+            overall_ai = min(0.15, overall_ai * 0.5) # More aggressive human reduction
+
+        # Snap to zero for clearly human high-variance text
+        if overall_ai < 0.10:
+            overall_ai = 0.0
+
         overall_label = "ai" if overall_ai >= 0.5 else "human"
 
         return {

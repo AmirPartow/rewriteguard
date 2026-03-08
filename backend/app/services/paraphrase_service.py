@@ -33,7 +33,7 @@ ParaphraseMode = Literal["standard", "formal", "casual", "creative", "concise"]
 
 # Configuration constants
 MAX_CHUNK_LENGTH = 450  # Max tokens per chunk (leaving room for prompt)
-MAX_OUTPUT_LENGTH = 512  # Max output tokens per chunk
+MAX_OUTPUT_LENGTH = 1024  # Max output tokens per chunk (increased for fuller output)
 MIN_CHUNK_LENGTH = 50  # Minimum tokens to form a chunk
 OVERLAP_SENTENCES = 1  # Number of sentences to overlap between chunks
 
@@ -556,18 +556,25 @@ class Paraphraser:
                 chunk_input_tokens = inputs["input_ids"].shape[1]
                 total_input_tokens += chunk_input_tokens
 
+                # Calculate target output length based on input length
+                # Aim for 1.5x input tokens to ensure full paraphrase
+                target_max_length = max(256, int(chunk_input_tokens * 1.5))
+                target_max_length = min(target_max_length, MAX_OUTPUT_LENGTH)
+                target_min_length = max(20, int(chunk_input_tokens * 0.7))
+
                 # Generate paraphrase
                 with torch.no_grad():
                     outputs = self.model.generate(
                         **inputs,
-                        max_length=min(max_length, MAX_OUTPUT_LENGTH),
-                        num_beams=2,  # reduced from 5 → 2 for CPU speed
+                        max_length=target_max_length,
+                        min_length=target_min_length,
+                        num_beams=3,
                         num_return_sequences=1,
                         temperature=effective_temp,
                         do_sample=(mode == "creative" or temperature > 0.7),
-                        early_stopping=True,
+                        early_stopping=False,
                         no_repeat_ngram_size=3,
-                        length_penalty=1.0 if mode != "concise" else 0.8,
+                        length_penalty=1.5 if mode != "concise" else 0.8,
                     )
 
                 # Track output tokens
