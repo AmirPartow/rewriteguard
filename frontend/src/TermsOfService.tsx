@@ -49,7 +49,7 @@ export default function TermsOfService(props: any) {
                             </p>
 
                             <p>
-                                The Service is provided by P5 Group (“RewriteGuard,” “we,” “us,” or “our”), located in North Vancouver, British Columbia, Canada.
+                                The Service is provided by <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">P5Solution</a> (“RewriteGuard,” “we,” “us,” or “our”), located in North Vancouver, British Columbia, Canada.
                             </p>
 
                             <ul className="list-none pl-0 space-y-2 !mb-10 text-sm bg-black/20 p-6 rounded-2xl border border-white/5">
@@ -180,7 +180,7 @@ export default function TermsOfService(props: any) {
                             <p>Some jurisdictions do not allow certain limitations, so these limits may not apply to you in full.</p>
 
                             <h2 className="text-2xl font-bold text-white mt-12 mb-4">12) Indemnity</h2>
-                            <p>You agree to defend, indemnify, and hold harmless RewriteGuard (P5 Group) from claims, damages, liabilities, and expenses (including reasonable legal fees) arising from:</p>
+                            <p>You agree to defend, indemnify, and hold harmless RewriteGuard (<a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">P5Solution</a>) from claims, damages, liabilities, and expenses (including reasonable legal fees) arising from:</p>
                             <ul className="list-disc pl-6 space-y-2">
                                 <li>your use of the Service,</li>
                                 <li>your Input or how you use Output, or</li>
@@ -203,7 +203,7 @@ export default function TermsOfService(props: any) {
                                 <h2 className="text-2xl font-bold text-white mb-4">15) Contact Us</h2>
                                 <p className="mb-6">If you have questions about these Terms, contact us:</p>
                                 <div className="bg-black/20 border border-white/5 p-6 md:p-8 rounded-2xl max-w-sm w-full mx-auto shadow-2xl">
-                                    <p className="font-bold text-white text-xl mb-4">RewriteGuard (P5 Group)</p>
+                                    <p className="font-bold text-white text-xl mb-4">RewriteGuard (<a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">P5Solution</a>)</p>
                                     <p className="text-gray-400 mb-2">North Vancouver, British Columbia, Canada</p>
                                     <p className="text-gray-300 mb-2"><span className="font-medium text-gray-400">Email:</span> <a href="mailto:rewriteguard@gmail.com" className="text-blue-400 hover:text-blue-300 transition-colors">rewriteguard@gmail.com</a></p>
                                     <p className="text-gray-300"><span className="font-medium text-gray-400">Website:</span> <a href="https://www.rewriteguard.com" className="text-blue-400 hover:text-blue-300 transition-colors">https://www.rewriteguard.com/</a></p>

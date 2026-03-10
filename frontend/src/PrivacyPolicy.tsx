@@ -23,7 +23,7 @@ export default function PrivacyPolicy(props: any) {
                         <p className="text-lg text-gray-400 mb-8 font-medium">Effective February 25, 2026</p>
 
                         <p className="mb-6">
-                            Welcome to RewriteGuard, operated by P5 Group. We value your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and share information when you use our website, RewriteGuard.com, and related AI content detection and paraphrasing services (collectively, the "Services").
+                            Welcome to RewriteGuard, operated by <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">P5Solution</a>. We value your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and share information when you use our website, RewriteGuard.com, and related AI content detection and paraphrasing services (collectively, the "Services").
                         </p>
 
                         <h2 className="text-2xl font-bold text-white mt-12 mb-4 border-b border-white/10 pb-2">1. Information We Collect</h2>
@@ -61,7 +61,7 @@ export default function PrivacyPolicy(props: any) {
 
                         <h2 className="text-2xl font-bold text-white mt-12 mb-4 border-b border-white/10 pb-2">Contact Us</h2>
                         <div className="bg-white/5 border border-white/10 p-6 rounded-2xl inline-block w-full md:w-auto">
-                            <p className="font-bold text-white text-lg">RewriteGuard (P5 Group)</p>
+                            <p className="font-bold text-white text-lg">RewriteGuard (<a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">P5Solution</a>)</p>
                             <p className="mt-2 text-gray-300"><span className="font-medium text-gray-400">Email:</span> <a href="mailto:rewriteguard@gmail.com" className="text-blue-400 hover:text-blue-300 transition-colors">rewriteguard@gmail.com</a></p>
                             <p className="mt-2 text-gray-300"><span className="font-medium text-gray-400">Location:</span> North Vancouver, British Columbia, Canada</p>
                         </div>

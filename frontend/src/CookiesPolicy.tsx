@@ -23,12 +23,12 @@ export default function CookiesPolicy(props: any) {
                         <p className="text-lg text-gray-400 mb-8 font-medium">Effective February 25, 2026</p>
 
                         <p className="mb-6">
-                            We are RewriteGuard, operated by P5 Group. This Cookies Policy describes the types of cookies and other tracking technologies we use, our purposes and basis for using them (where required by law), and your choices regarding them. If you have questions about this Cookies Policy, please see the Contact Us information on our website or contact us at <a href="mailto:rewriteguard@gmail.com" className="text-blue-400 hover:text-blue-300 transition-colors">rewriteguard@gmail.com</a>.
+                            We are RewriteGuard, operated by <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">P5Solution</a>. This Cookies Policy describes the types of cookies and other tracking technologies we use, our purposes and basis for using them (where required by law), and your choices regarding them. If you have questions about this Cookies Policy, please see the Contact Us information on our website or contact us at <a href="mailto:rewriteguard@gmail.com" className="text-blue-400 hover:text-blue-300 transition-colors">rewriteguard@gmail.com</a>.
                         </p>
 
                         <p className="mb-2 font-semibold text-white">For purposes of this Cookies Policy:</p>
                         <ul className="list-disc pl-6 space-y-2 mb-6 text-gray-400">
-                            <li><strong className="text-white">“RewriteGuard,” “we,” and “us”</strong> means P5 Group and its RewriteGuard-branded website and services.</li>
+                            <li><strong className="text-white">“RewriteGuard,” “we,” and “us”</strong> means <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">P5Solution</a> and its RewriteGuard-branded website and services.</li>
                             <li><strong className="text-white">“Services”</strong> means the services offered by us through <a href="https://www.rewriteguard.com/" className="text-blue-400 hover:text-blue-300 transition-colors" target="_blank" rel="noopener noreferrer">https://www.rewriteguard.com/</a> and related tools, as described in our website terms and policies.</li>
                             <li><strong className="text-white">“First-party cookies”</strong> means cookies served directly by us to your computer or device.</li>
                             <li><strong className="text-white">“Third-party cookies”</strong> means cookies served by a third party on our behalf (for example, analytics or social media/marketing partners).</li>
@@ -160,7 +160,7 @@ export default function CookiesPolicy(props: any) {
                         <h2 id="contact" className="text-2xl font-bold text-white mt-12 mb-4 border-b border-white/10 pb-2">Contact</h2>
                         <p className="mb-4">If you have questions about this Cookie Policy or our privacy practices, contact us at:</p>
                         <div className="bg-white/5 border border-white/10 p-6 rounded-2xl inline-block w-full md:w-auto">
-                            <p className="font-bold text-white text-lg">RewriteGuard (P5 Group)</p>
+                            <p className="font-bold text-white text-lg">RewriteGuard (<a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">P5Solution</a>)</p>
                             <p className="mt-2 text-gray-300"><span className="font-medium text-gray-400">Email:</span> <a href="mailto:rewriteguard@gmail.com" className="text-blue-400 hover:text-blue-300 transition-colors">rewriteguard@gmail.com</a></p>
                             <p className="mt-2 text-gray-300"><span className="font-medium text-gray-400">Location:</span> North Vancouver, British Columbia, Canada</p>
                             <p className="mt-2 text-gray-300"><span className="font-medium text-gray-400">Website:</span> <a href="https://www.rewriteguard.com/" className="text-blue-400 hover:text-blue-300 transition-colors" target="_blank" rel="noopener noreferrer">https://www.rewriteguard.com/</a></p>

@@ -226,7 +226,7 @@ export default function CookieConsent() {
                             </button>
                             <div className="flex items-center gap-1 opacity-50">
                                 <span className="text-xs font-medium text-gray-400">Powered by</span>
-                                <span className="text-xs font-bold text-white underline decoration-blue-500">P5 Group</span>
+                                <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-white underline decoration-blue-500 hover:text-blue-400 transition-colors">P5Solution</a>
                             </div>
                         </div>
                     </div>

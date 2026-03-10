@@ -180,8 +180,8 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
                     {/* Left Side: Branding & Policy Links */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-4 flex-wrap">
-                            <span className="text-2xl font-black text-white tracking-tighter uppercase mr-2">P5 GROUP</span>
-                            <span className="text-gray-400 text-[13px] font-medium border-l border-white/10 pl-4 italic">RewriteGuard, a P5 Group business</span>
+                            <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-2xl font-black text-white tracking-tighter uppercase mr-2 hover:text-gray-300 transition-colors">P5 SOLUTION</a>
+                            <span className="text-gray-400 text-[13px] font-medium border-l border-white/10 pl-4 italic">RewriteGuard, a <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-200 transition-colors">P5Solution</a> business</span>
                         </div>
 
                         <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px] font-semibold text-blue-400/90">
