@@ -25,6 +25,7 @@ function App() {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showLegalCenter, setShowLegalCenter] = useState(false);
+  const [showPublicHome, setShowPublicHome] = useState(false);
 
   // Listen for hash change or custom events to show policy
   useEffect(() => {
@@ -33,12 +34,22 @@ function App() {
       setShowPrivacyPolicy(window.location.pathname === '/privacy-policy');
       setShowTermsOfService(window.location.pathname === '/terms-of-service');
       setShowLegalCenter(window.location.pathname === '/legal-center');
+      setShowPublicHome(window.location.pathname === '/' && window.history.state?.publicHome === true);
     };
 
-    // Allow guest mode to trigger auth flow
     const handleGuestAuth = () => {
       setIsGuest(false);
       setTimeout(() => window.dispatchEvent(new Event('open-auth')), 50);
+    };
+
+    const handleGoPublicHome = () => {
+      setShowCookiesPolicy(false);
+      setShowPrivacyPolicy(false);
+      setShowTermsOfService(false);
+      setShowLegalCenter(false);
+      setShowPublicHome(true);
+      window.history.pushState({ publicHome: true }, '', '/');
+      window.scrollTo(0, 0);
     };
 
     const handleParaphraserText = (e: Event) => {
@@ -49,11 +60,13 @@ function App() {
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('open-auth-from-guest', handleGuestAuth);
     window.addEventListener('send-to-paraphraser', handleParaphraserText);
+    window.addEventListener('go-public-home', handleGoPublicHome);
     handlePopState();
     return () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('open-auth-from-guest', handleGuestAuth);
       window.removeEventListener('send-to-paraphraser', handleParaphraserText);
+      window.removeEventListener('go-public-home', handleGoPublicHome);
     };
   }, []);
 
@@ -71,6 +84,7 @@ function App() {
     setShowPrivacyPolicy(false);
     setShowTermsOfService(false);
     setShowLegalCenter(false);
+    setShowPublicHome(false);
     window.history.pushState({}, '', path);
     setter(true);
     window.scrollTo(0, 0);
@@ -86,6 +100,7 @@ function App() {
       setShowPrivacyPolicy(false);
       setShowTermsOfService(false);
       setShowLegalCenter(false);
+      setShowPublicHome(false);
       window.history.pushState({}, '', '/');
       window.scrollTo(0, 0);
       setTimeout(() => {
@@ -118,12 +133,14 @@ function App() {
     return (<><LegalCenter {...footerProps} /><CookieConsent /></>);
   }
 
-  // Show Landing Page if not authenticated AND not in guest mode
-  if (!isAuthenticated && !isGuest) {
+  // Show Landing Page if not authenticated AND not in guest mode, or if public home is forced
+  if (showPublicHome || (!isAuthenticated && !isGuest)) {
     return (
       <>
         <LandingPage
-          onGuestEntry={() => { setIsGuest(true); setActivePage('detector'); }}
+          onGuestEntry={() => { setIsGuest(true); setShowPublicHome(false); setActivePage('detector'); }}
+          onDashboardEntry={() => { setShowPublicHome(false); setActivePage('dashboard'); }}
+          isAuthenticated={!!isAuthenticated}
           {...footerProps}
         />
         <CookieConsent />
@@ -136,11 +153,11 @@ function App() {
 
       {/* Sidebar */}
       <aside className="w-16 flex-shrink-0 bg-[#0f172a] border-r border-white/10 flex flex-col items-center py-4 gap-6 z-20">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl mb-4 flex items-center justify-center shadow-lg shadow-blue-500/20">
+        <button onClick={() => window.dispatchEvent(new Event('go-public-home'))} className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl mb-4 flex items-center justify-center shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform cursor-pointer">
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
-        </div>
+        </button>
 
         <nav className="flex flex-col gap-5">
           <button onClick={() => setActivePage('dashboard')} className={`p-2 rounded-lg transition-colors ${activePage === 'dashboard' ? 'bg-white/10 text-blue-400' : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}`}>
@@ -163,7 +180,7 @@ function App() {
         {/* Top Navbar */}
         <header className="h-14 bg-[#0f172a]/80 backdrop-blur-md border-b border-white/5 px-8 flex items-center justify-between z-10 sticky top-0">
           <div className="flex items-center gap-4">
-            <span className="font-bold text-xl cursor-default tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">RewriteGuard</span>
+            <span onClick={() => window.dispatchEvent(new Event('go-public-home'))} className="font-bold text-xl cursor-pointer tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent hover:text-white transition-colors">RewriteGuard</span>
             <span className="text-gray-600 mx-1">/</span>
             <span className="text-gray-400 font-medium text-sm tracking-tight">{activePage === 'detector' ? 'AI Detector' : activePage === 'paraphraser' ? 'Paraphrasing Tool' : activePage.charAt(0).toUpperCase() + activePage.slice(1)}</span>
           </div>
@@ -187,7 +204,7 @@ function App() {
 
         {/* Dynamic Content */}
         <main className="flex-1 p-6 flex flex-col items-center">
-          <div className="w-full max-w-[1400px] flex-1 flex flex-col">
+          <div className="w-full flex-1 flex flex-col">
             {activePage === 'dashboard' && <Dashboard />}
             {activePage === 'detector' && <Detector />}
             {activePage === 'paraphraser' && <Paraphraser initialText={paraphraserText} onTextConsumed={() => setParaphraserText('')} />}
@@ -215,7 +232,7 @@ function App() {
           {/* Footer — show on all pages */}
           <Footer
             {...footerProps}
-            className="w-full max-w-[1400px] mt-12 shrink-0"
+            className="w-full mt-12 shrink-0"
           />
         </main>
       </div>

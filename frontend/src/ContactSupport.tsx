@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { API_BASE_URL } from './config';
+import LogoHomeButton from './components/LogoHomeButton';
 
 interface ContactSupportProps {
     onBack: () => void;
@@ -60,12 +61,9 @@ export default function ContactSupport({ onBack }: ContactSupportProps) {
                 <p className="text-gray-400 mb-8 leading-relaxed">
                     Thank you for contacting RewriteGuard support. We've received your request and our team will get back to you at <strong>{email}</strong> as soon as possible.
                 </p>
-                <button
-                    onClick={onBack}
-                    className="px-8 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
-                >
-                    Back to Home
-                </button>
+                <div className="flex justify-center mt-8">
+                    <LogoHomeButton onClick={onBack} />
+                </div>
             </div>
         );
     }

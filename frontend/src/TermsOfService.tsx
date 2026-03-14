@@ -1,4 +1,5 @@
 import Footer from './components/Footer';
+import LogoHomeButton from './components/LogoHomeButton';
 
 export default function TermsOfService(props: any) {
     return (
@@ -6,20 +7,9 @@ export default function TermsOfService(props: any) {
             {/* Header Area */}
             <div className="bg-gradient-to-b from-blue-900/20 to-[#0f172a] pt-20 pb-16 px-6 text-center border-b border-white/5">
                 <div className="max-w-4xl mx-auto animate-fade-in-up">
-                    <a
-                        href="/legal-center"
-                        className="inline-flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-colors mb-10 group"
-                        onClick={() => {
-                            if (window.location.pathname !== '/legal-center') {
-                                // Default behavior if they are viewing via App.tsx state management, or just simple href routing
-                            }
-                        }}
-                    >
-                        <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Back to Legal Center
-                    </a>
+                    <div className="mb-10 text-center flex justify-center">
+                        <LogoHomeButton />
+                    </div>
                     <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
                         RewriteGuard Terms of Service
                     </h1>

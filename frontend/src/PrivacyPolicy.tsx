@@ -1,19 +1,14 @@
 import Footer from './components/Footer';
+import LogoHomeButton from './components/LogoHomeButton';
 
 export default function PrivacyPolicy(props: any) {
     return (
         <div className="min-h-screen flex flex-col text-white bg-[#0f172a]">
             <div className="flex-grow p-8 md:p-20">
                 <div className="max-w-4xl mx-auto animate-fade-in-up">
-                    <a
-                        href="/"
-                        className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-12 group"
-                    >
-                        <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Back to Home
-                    </a>
+                    <div className="mb-12">
+                        <LogoHomeButton />
+                    </div>
 
                     <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
                         RewriteGuard Privacy Policy

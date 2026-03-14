@@ -94,7 +94,7 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
         <footer className={`w-full mt-auto ${className}`}>
             {/* Main Content Area - Dark theme to match website */}
             <div className="bg-[#0f172a] py-16 px-6 border-t border-white/5">
-                <div className="max-w-7xl mx-auto">
+                <div className="w-full">
                     {/* Top Row: Navigation Columns */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 mb-16">
                         {/* Column 2: Premium */}
@@ -176,7 +176,7 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
 
             {/* Sub-Footer - Branding & Legal (Matched to website background as requested earlier) */}
             <div className="bg-[#0f172a] py-12 px-6 border-t border-white/5">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
+                <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
                     {/* Left Side: Branding & Policy Links */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-4 flex-wrap">

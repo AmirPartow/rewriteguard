@@ -3,6 +3,7 @@ import { API } from './config';
 import AuthForm from './AuthForm';
 import ContactSupport from './ContactSupport';
 import Footer from './components/Footer';
+import LogoHomeButton from './components/LogoHomeButton';
 
 interface LandingPageProps {
     onShowPolicy: () => void;
@@ -10,9 +11,11 @@ interface LandingPageProps {
     onTermsClick: () => void;
     onLegalClick: () => void;
     onGuestEntry?: () => void;
+    onDashboardEntry?: () => void;
+    isAuthenticated?: boolean;
 }
 
-export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick, onLegalClick, onGuestEntry }: LandingPageProps) {
+export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick, onLegalClick, onGuestEntry, onDashboardEntry, isAuthenticated }: LandingPageProps) {
     const [view, setView] = useState<'home' | 'pricing' | 'auth' | 'contact'>('home');
     const [userCount, setUserCount] = useState<string>("10,000+");
 
@@ -38,15 +41,9 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
     if (view === 'contact') {
         return (
             <div className="min-h-screen flex flex-col items-center py-20 px-4 animate-fade-in bg-[#0f172a]">
-                <button
-                    onClick={() => setView('home')}
-                    className="mb-12 text-gray-400 hover:text-white flex items-center gap-2 transition-colors group self-start max-w-7xl mx-auto w-full px-6"
-                >
-                    <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Home
-                </button>
+                <div className="mb-12 self-start w-full px-6">
+                    <LogoHomeButton onClick={() => setView('home')} />
+                </div>
                 <div className="w-full flex-grow">
                     <ContactSupport onBack={() => setView('home')} />
                 </div>
@@ -58,15 +55,9 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
     if (view === 'auth') {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-fade-in bg-[#0f172a]">
-                <button
-                    onClick={() => setView('home')}
-                    className="mb-8 text-gray-400 hover:text-white flex items-center gap-2 transition-colors group"
-                >
-                    <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Home
-                </button>
+                <div className="mb-8">
+                    <LogoHomeButton onClick={() => setView('home')} />
+                </div>
                 <div className="w-full flex-grow flex items-center justify-center">
                     <AuthForm />
                 </div>
@@ -84,27 +75,27 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
             </div>
 
             {/* Navbar */}
-            <nav className="relative z-50 max-w-7xl mx-auto px-6 py-8 flex justify-between items-center bg-[#0f172a]/80 backdrop-blur-md sticky top-0 border-b border-white/5">
-                <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('home')}>
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                    </div>
-                    <span className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent tracking-tight">
-                        RewriteGuard
-                    </span>
-                </div>
+            <nav className="relative z-50 w-full px-6 md:px-12 py-8 flex justify-between items-center bg-[#0f172a]/80 backdrop-blur-md sticky top-0 border-b border-white/5">
+                <LogoHomeButton onClick={() => setView('home')} />
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
                     <button onClick={() => setView('home')} className={`hover:text-white transition-colors ${view === 'home' ? 'text-white' : ''}`}>Features</button>
                     <button onClick={() => { setView('home'); setTimeout(() => document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="hover:text-white transition-colors">FAQ</button>
                     <button onClick={() => setView('pricing')} className={`hover:text-white transition-colors ${view === 'pricing' ? 'text-white' : ''}`}>Pricing</button>
-                    <button
-                        onClick={() => setView('auth')}
-                        className="px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all ml-4"
-                    >
-                        Sign In
-                    </button>
+                    {isAuthenticated ? (
+                        <button
+                            onClick={() => onDashboardEntry && onDashboardEntry()}
+                            className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 border border-white/10 rounded-xl text-white font-medium hover:scale-105 transition-all ml-4"
+                        >
+                            Dashboard
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => setView('auth')}
+                            className="px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all ml-4"
+                        >
+                            Sign In
+                        </button>
+                    )}
                 </div>
             </nav>
 
@@ -112,7 +103,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                 /* Home / Features View */
                 <main className="relative z-10">
                     {/* Hero Section */}
-                    <div className="max-w-7xl mx-auto px-6 py-20 pb-32 text-center">
+                    <div className="w-full px-6 md:px-12 py-20 pb-32 text-center">
                         <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium animate-fade-in">
                             ✨ Advanced AI Text Protection
                         </div>
@@ -127,12 +118,21 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                             RewriteGuard uses state-of-the-art ML models to keep your writing authentic.
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                            <button
-                                onClick={() => onGuestEntry ? onGuestEntry() : setView('auth')}
-                                className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl font-bold text-lg shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all"
-                            >
-                                Get Started for Free
-                            </button>
+                            {isAuthenticated ? (
+                                <button
+                                    onClick={() => onDashboardEntry && onDashboardEntry()}
+                                    className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl font-bold text-lg shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all text-white"
+                                >
+                                    Go to Dashboard
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => onGuestEntry ? onGuestEntry() : setView('auth')}
+                                    className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl font-bold text-lg shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all"
+                                >
+                                    Get Started for Free
+                                </button>
+                            )}
                             <button
                                 onClick={() => setView('pricing')}
                                 className="px-10 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold text-lg backdrop-blur-sm transition-all"
@@ -142,7 +142,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                         </div>
 
                         {/* Dashboard Preview Mockup */}
-                        <div className="mt-24 relative max-w-5xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                        <div className="mt-24 relative w-full px-6 md:px-12 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                             <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-[2rem] blur-2xl opacity-50"></div>
                             <div className="relative bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden aspect-video flex flex-col p-4 lg:p-6 group">
                                 {/* Browser Chrome */}
@@ -219,7 +219,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                     </div>
 
                     {/* Features Section */}
-                    <section id="features" className="max-w-7xl mx-auto px-6 py-32 border-t border-white/5">
+                    <section id="features" className="w-full px-6 md:px-12 py-32 border-t border-white/5">
                         <div className="text-center mb-20">
                             <h2 className="text-4xl font-bold mb-4">Precision-Engineered Tools</h2>
                             <p className="text-gray-400">Everything you need to master AI-era content creation.</p>
@@ -261,7 +261,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                     </section>
 
                     {/* FAQ Section */}
-                    <section id="faq" className="max-w-4xl mx-auto px-6 py-32 border-t border-white/5">
+                    <section id="faq" className="w-full px-6 md:px-12 py-32 border-t border-white/5">
                         <div className="text-center mb-16">
                             <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm font-medium">
                                 ❓ Frequently Asked Questions
@@ -295,13 +295,13 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                 </main>
             ) : (
                 /* Pricing View */
-                <main className="relative z-10 max-w-7xl mx-auto px-6 py-20 animate-fade-in-up">
+                <main className="relative z-10 w-full px-6 md:px-12 py-20 animate-fade-in-up">
                     <div className="text-center mb-16">
                         <h2 className="text-5xl font-extrabold mb-4">Simple, Transparent Pricing</h2>
                         <p className="text-xl text-gray-400">Choose the plan that's right for your content needs.</p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div className="grid md:grid-cols-2 gap-8 w-full px-6 md:px-12">
                         {/* Free Plan */}
                         <div className="bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 flex flex-col hover:bg-slate-800/60 transition-all">
                             <div className="mb-8">
@@ -319,10 +319,10 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                                 <FeatureItem text="Community Support" />
                             </div>
                             <button
-                                onClick={() => onGuestEntry ? onGuestEntry() : setView('auth')}
+                                onClick={() => isAuthenticated && onDashboardEntry ? onDashboardEntry() : (onGuestEntry ? onGuestEntry() : setView('auth'))}
                                 className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold transition-all"
                             >
-                                Get Started
+                                {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
                             </button>
                         </div>
 
@@ -345,10 +345,10 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                                 <FeatureItem text="No Daily Limits (soon)" />
                             </div>
                             <button
-                                onClick={() => setView('auth')}
+                                onClick={() => isAuthenticated && onDashboardEntry ? onDashboardEntry() : setView('auth')}
                                 className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl font-bold shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all text-white"
                             >
-                                Upgrade Now
+                                {isAuthenticated ? 'Go to Dashboard' : 'Upgrade Now'}
                             </button>
                         </div>
                     </div>
@@ -357,7 +357,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
 
             {/* Common Section: Stats / Proof */}
             <section className="bg-white/[0.02] border-y border-white/5 py-24 relative overflow-hidden z-10">
-                <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center relative z-10">
+                <div className="w-full px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-12 text-center relative z-10">
                     <div>
                         <div className="text-4xl md:text-5xl font-extrabold text-white mb-2">99%</div>
                         <div className="text-xs md:text-sm text-gray-400 uppercase tracking-widest">Detection Accuracy</div>
