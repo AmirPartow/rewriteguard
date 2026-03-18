@@ -274,8 +274,6 @@ async def social_login(
                         ),
                         {"p": provider, "pid": provider_id, "user_id": user_id},
                     )
-                # If email exists but provider is different, we can either error or allow login.
-                # Usually we allow login if email matches.
             else:
                 # 3. Create new user
                 now = _now()
@@ -292,7 +290,9 @@ async def social_login(
                             "pid": provider_id,
                         },
                     )
-                    user_id = conn.execute(text("SELECT last_insert_rowid()")).fetchone()[0]
+                    user_id = conn.execute(text("SELECT last_insert_rowid()")).fetchone()[
+                        0
+                    ]
                 else:
                     user_id = conn.execute(
                         text(f"""
@@ -309,7 +309,6 @@ async def social_login(
                     ).fetchone()[0]
         else:
             user_id = row[0]
-            # Update email if changed? usually stay same as primary.
 
         # Now get user info for session
         result = conn.execute(
@@ -322,7 +321,9 @@ async def social_login(
             raise UserNotActiveError("Account is deactivated")
 
         # Create session
-        token, token_hash, expires_at = create_session_token(days_valid=30) # longer sessions for social
+        token, token_hash, expires_at = create_session_token(
+            days_valid=30
+        )  # longer sessions for social
         now = _now()
 
         conn.execute(
@@ -352,6 +353,7 @@ async def social_login(
 
     logger.info(f"Social user logged in: {user_email} via {provider}")
     return token, expires_at, user_info
+
 
 
 async def validate_session(token: str) -> UserInfo:

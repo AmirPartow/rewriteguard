@@ -9,6 +9,7 @@ import logging
 from app.auth.schemas import (
     SignupRequest,
     SignupResponse,
+    LoginRequest,
     LoginResponse,
     LogoutResponse,
     UserInfo,
@@ -113,6 +114,7 @@ async def social_auth(request: SocialLoginRequest) -> LoginResponse:
             status_code=status.HTTP_403_FORBIDDEN,
             detail=str(e),
         )
+
 
 
 @router.post("/logout", response_model=LogoutResponse)

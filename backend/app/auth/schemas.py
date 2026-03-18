@@ -67,6 +67,7 @@ class SocialLoginRequest(BaseModel):
     full_name: str = Field(default="", description="User's full name")
 
 
+
 class LoginResponse(BaseModel):
     """Response from successful login."""
 
