@@ -243,108 +243,121 @@ async def social_login(
     Handle authentication via a social provider.
     Creates user if they don't exist by email or provider_id.
     """
+    logger.info(f"Incoming social login request: {provider} / {provider_id} / {email}")
     engine = _get_engine()
     email = email.lower().strip()
 
-    with engine.connect() as conn:
-        # 1. Try to find user by provider_id
-        result = conn.execute(
-            text(
-                "SELECT id, email, full_name, is_active FROM users WHERE provider = :p AND provider_id = :pid"
-            ),
-            {"p": provider, "pid": provider_id},
-        )
-        row = result.fetchone()
-
-        if not row:
-            # 2. Try to find user by email
+    try:
+        with engine.connect() as conn:
+            # 1. Try to find user by provider_id
+            logger.debug(f"Checking for existing user by {provider}_id: {provider_id}")
             result = conn.execute(
-                text("SELECT id, provider, provider_id FROM users WHERE email = :email"),
-                {"email": email},
+                text(
+                    "SELECT id, email, full_name, is_active FROM users WHERE provider = :p AND provider_id = :pid"
+                ),
+                {"p": provider, "pid": provider_id},
             )
-            email_row = result.fetchone()
+            row = result.fetchone()
 
-            if email_row:
-                user_id, existing_provider, existing_pid = email_row
-                # Link provider if not already linked
-                if not existing_provider:
-                    conn.execute(
-                        text(
-                            "UPDATE users SET provider = :p, provider_id = :pid WHERE id = :user_id"
-                        ),
-                        {"p": provider, "pid": provider_id, "user_id": user_id},
-                    )
-            else:
-                # 3. Create new user
-                now = _now()
-                if _is_sqlite():
-                    conn.execute(
-                        text(f"""
-                            INSERT INTO users (email, full_name, provider, provider_id, is_active, email_verified, created_at)
-                            VALUES (:email, :full_name, :p, :pid, 1, 1, {now})
-                        """),
-                        {
-                            "email": email,
-                            "full_name": full_name,
-                            "p": provider,
-                            "pid": provider_id,
-                        },
-                    )
-                    user_id = conn.execute(text("SELECT last_insert_rowid()")).fetchone()[
-                        0
-                    ]
+            if not row:
+                logger.debug(f"User not found by provider_id, checking by email: {email}")
+                # 2. Try to find user by email
+                result = conn.execute(
+                    text("SELECT id, provider, provider_id FROM users WHERE email = :email"),
+                    {"email": email},
+                )
+                email_row = result.fetchone()
+
+                if email_row:
+                    user_id, existing_provider, existing_pid = email_row
+                    logger.debug(f"Found existing user by email: {user_id}. Linking provider.")
+                    # Link provider if not already linked
+                    if not existing_provider:
+                        conn.execute(
+                            text(
+                                "UPDATE users SET provider = :p, provider_id = :pid WHERE id = :user_id"
+                            ),
+                            {"p": provider, "pid": provider_id, "user_id": user_id},
+                        )
                 else:
-                    user_id = conn.execute(
-                        text(f"""
-                            INSERT INTO users (email, full_name, provider, provider_id, is_active, email_verified, created_at)
-                            VALUES (:email, :full_name, :p, :pid, TRUE, TRUE, {now})
-                            RETURNING id
-                        """),
-                        {
-                            "email": email,
-                            "full_name": full_name,
-                            "p": provider,
-                            "pid": provider_id,
-                        },
-                    ).fetchone()[0]
-        else:
-            user_id = row[0]
+                    # 3. Create new user
+                    logger.info(f"Creating new user for {email} via {provider}")
+                    now = _now()
+                    if _is_sqlite():
+                        conn.execute(
+                            text(f"""
+                                INSERT INTO users (email, full_name, provider, provider_id, is_active, email_verified, created_at)
+                                VALUES (:email, :full_name, :p, :pid, 1, 1, {now})
+                            """),
+                            {
+                                "email": email,
+                                "full_name": full_name,
+                                "p": provider,
+                                "pid": provider_id,
+                            },
+                        )
+                        user_id = conn.execute(text("SELECT last_insert_rowid()")).fetchone()[
+                            0
+                        ]
+                    else:
+                        user_id = conn.execute(
+                            text(f"""
+                                INSERT INTO users (email, full_name, provider, provider_id, is_active, email_verified, created_at)
+                                VALUES (:email, :full_name, :p, :pid, TRUE, TRUE, {now})
+                                RETURNING id
+                            """),
+                            {
+                                "email": email,
+                                "full_name": full_name,
+                                "p": provider,
+                                "pid": provider_id,
+                            },
+                        ).fetchone()[0]
+            else:
+                user_id = row[0]
+                logger.debug(f"Found existing user by provider_id: {user_id}")
 
-        # Now get user info for session
-        result = conn.execute(
-            text("SELECT id, email, full_name, is_active FROM users WHERE id = :id"),
-            {"id": user_id},
-        )
-        user_id, user_email, full_name, is_active = result.fetchone()
+            # Now get user info for session
+            result = conn.execute(
+                text("SELECT id, email, full_name, is_active FROM users WHERE id = :id"),
+                {"id": user_id},
+            )
+            user_id, user_email, full_name, is_active = result.fetchone()
 
-        if not is_active:
-            raise UserNotActiveError("Account is deactivated")
+            if not is_active:
+                logger.warning(f"Social login for inactive account: {user_email}")
+                raise UserNotActiveError("Account is deactivated")
 
-        # Create session
-        token, token_hash, expires_at = create_session_token(
-            days_valid=30
-        )  # longer sessions for social
-        now = _now()
+            # Create session
+            logger.debug(f"Creating session for user {user_id}")
+            token, token_hash, expires_at = create_session_token(
+                days_valid=30
+            )  # longer sessions for social
+            now = _now()
 
-        conn.execute(
-            text(f"""
-                INSERT INTO sessions (user_id, token_hash, expires_at, created_at)
-                VALUES (:user_id, :token_hash, :expires_at, {now})
-            """),
-            {
-                "user_id": user_id,
-                "token_hash": token_hash,
-                "expires_at": expires_at,
-            },
-        )
+            conn.execute(
+                text(f"""
+                    INSERT INTO sessions (user_id, token_hash, expires_at, created_at)
+                    VALUES (:user_id, :token_hash, :expires_at, {now})
+                """),
+                {
+                    "user_id": user_id,
+                    "token_hash": token_hash,
+                    "expires_at": expires_at,
+                },
+            )
 
-        conn.execute(
-            text(f"UPDATE users SET last_login = {now} WHERE id = :user_id"),
-            {"user_id": user_id},
-        )
-        conn.commit()
+            conn.execute(
+                text(f"UPDATE users SET last_login = {now} WHERE id = :user_id"),
+                {"user_id": user_id},
+            )
+            conn.commit()
+    except Exception as e:
+        logger.error(f"Social login failed: {str(e)}", exc_info=True)
+        raise
 
     user_info = UserInfo(
+
         id=user_id,
         email=user_email,
         full_name=full_name or "",
