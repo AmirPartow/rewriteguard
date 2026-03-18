@@ -58,6 +58,12 @@ class LoginRequest(BaseModel):
         return v.lower().strip()
 
 
+class SetPasswordRequest(BaseModel):
+    """Request body for setting a password for a social user."""
+    email: str
+    password: str = Field(..., min_length=8)
+
+
 class SocialLoginRequest(BaseModel):
     """Request body for social login."""
 
@@ -65,6 +71,13 @@ class SocialLoginRequest(BaseModel):
     provider_id: str = Field(..., description="Unique ID from the provider")
     email: str = Field(..., description="User email (if provided by oauth)")
     full_name: str = Field(default="", description="User's full name")
+
+
+class SocialConfirmRequest(BaseModel):
+    """Request body for confirming social login from code."""
+    provider: str
+    code: str
+    redirect_uri: str
 
 
 

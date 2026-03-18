@@ -67,6 +67,12 @@ class UserNotActiveError(AuthServiceError):
     pass
 
 
+class PasswordNotSetError(AuthServiceError):
+    """User has no password set (likely social-only user)."""
+
+    pass
+
+
 async def create_user(email: str, password: str, full_name: str = "") -> dict[str, Any]:
     """
     Create a new user account in the database.
@@ -193,6 +199,11 @@ async def authenticate_user(
             raise InvalidCredentialsError("Invalid email or password")
 
         user_id, user_email, full_name, password_hash, is_active = row
+
+        # CHECK 1: If user exists but has no password (signed up via social)
+        if not password_hash or password_hash == "" or "$" not in str(password_hash):
+            logger.warning(f"Login attempt for social-only account: {email}")
+            raise PasswordNotSetError("Please set a password or use social login.")
 
         if not verify_password(password, password_hash):
             logger.warning(f"Login attempt with wrong password for: {email}")
@@ -509,3 +520,38 @@ async def get_total_users() -> int:
     # Offset by a baseline so new site doesn't look empty, plus actual signups
     baseline = 10000
     return baseline + actual_users
+async def set_password_for_social_user(email: str, password: str) -> bool:
+    """
+    Allow a social user to set a password for the first time.
+    Only works if their password_hash is currently empty.
+    """
+    engine = _get_engine()
+    password_hash = hash_password(password)
+    email = email.lower().strip()
+
+    with engine.connect() as conn:
+        # Check if user exists and has NO password
+        result = conn.execute(
+            text("SELECT id, password_hash FROM users WHERE email = :email"),
+            {"email": email},
+        )
+        row = result.fetchone()
+
+        if not row:
+            logger.warning(f"Set password attempt for unknown email: {email}")
+            return False
+
+        user_id, existing_hash = row
+        if existing_hash and "$" in str(existing_hash):
+            logger.warning(f"Set password attempt for user who ALREADY has a password: {email}")
+            return False
+
+        # Update the password
+        conn.execute(
+            text("UPDATE users SET password_hash = :hash WHERE id = :user_id"),
+            {"hash": password_hash, "user_id": user_id},
+        )
+        conn.commit()
+    
+    logger.info(f"Password set successfully for social user: {email}")
+    return True

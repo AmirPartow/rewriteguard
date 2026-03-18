@@ -1,12 +1,12 @@
 /**
- * Authentication form component with signup and login modes.
+ * Authentication form component with signup, login and social-migration (set-password) modes.
  * Features client-side validation and animated transitions.
  */
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from './AuthContext';
 
-type AuthMode = 'login' | 'signup';
+type AuthMode = 'login' | 'signup' | 'set-password';
 
 interface FormErrors {
     email?: string;
@@ -21,7 +21,7 @@ interface AuthFormProps {
 }
 
 export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps = {}) {
-    const { login, signup, socialLogin, error, clearError, isLoading } = useAuth();
+    const { login, signup, error, clearError, isLoading } = useAuth();
     const [mode, setMode] = useState<AuthMode>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -57,7 +57,7 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
             errors.password = 'Password is required';
         } else if (password.length < 8) {
             errors.password = 'Password must be at least 8 characters';
-        } else if (mode === 'signup') {
+        } else if (mode === 'signup' || mode === 'set-password') {
             if (!/[A-Z]/.test(password)) {
                 errors.password = 'Password must contain an uppercase letter';
             } else if (!/[a-z]/.test(password)) {
@@ -67,13 +67,34 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
             }
         }
 
-        // Confirm password (signup only)
-        if (mode === 'signup' && password !== confirmPassword) {
+        // Confirm password (signup or set-password)
+        if ((mode === 'signup' || mode === 'set-password') && password !== confirmPassword) {
             errors.confirmPassword = 'Passwords do not match';
         }
 
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
+    };
+
+    const handleSetPassword = async () => {
+        setIsSubmitting(true);
+        try {
+            const apiBase = (import.meta as any).env.VITE_API_URL || 'http://localhost:8000';
+            const response = await fetch(`${apiBase}/api/v1/auth/set-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'Failed to set password');
+            
+            // On success, log them in automatically
+            await login(email, password);
+        } catch (err: any) {
+             console.error(err);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleSubmit = async (e: FormEvent) => {
@@ -85,9 +106,21 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
         setIsSubmitting(true);
         try {
             if (mode === 'login') {
-                await login(email, password);
-            } else {
+                try {
+                    await login(email, password);
+                } catch (err: any) {
+                    // Check if backend says they need to set a password
+                    if (err.message === 'ACCOUNT_HAS_NO_PASSWORD') {
+                        setMode('set-password');
+                        clearError();
+                        setPassword('');
+                        setConfirmPassword('');
+                    }
+                }
+            } else if (mode === 'signup') {
                 await signup(email, password, fullName);
+            } else if (mode === 'set-password') {
+                await handleSetPassword();
             }
         } catch {
             // Error is handled by auth context
@@ -98,19 +131,26 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
 
     const handleSocialLogin = async (provider: string) => {
         clearError();
-        setIsSubmitting(true);
-        try {
-            // Simulated OAuth provider data for development
-            // Use consistent providerId regardless of mode to ensure account persistence
-            const providerId = `dev_${provider}_user_123`; 
-            const email = `demo_${provider}@example.com`.toLowerCase();
-            const name = `Demo ${provider.charAt(0).toUpperCase() + provider.slice(1)}`;
-            
-            await socialLogin(provider, providerId, email, name);
-        } catch {
-            // Context handles error
-        } finally {
-            setIsSubmitting(false);
+        const CLIENT_IDS: Record<string, string> = {
+            google: (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || '',
+            facebook: (import.meta as any).env.VITE_FACEBOOK_APP_ID || '',
+            apple: (import.meta as any).env.VITE_APPLE_CLIENT_ID || ''
+        };
+
+        const REDIRECT_URI = `${window.location.origin}/auth-callback`;
+        let authUrl = '';
+        if (provider === 'google') {
+            authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_IDS.google}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=openid%20email%20profile&state=${provider}`;
+        } else if (provider === 'facebook') {
+            authUrl = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${CLIENT_IDS.facebook}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=email,public_profile&state=${provider}`;
+        } else if (provider === 'apple') {
+            authUrl = `https://appleid.apple.com/auth/authorize?client_id=${CLIENT_IDS.apple}&redirect_uri=${REDIRECT_URI}&response_type=code%20id_token&scope=name%20email&response_mode=form_post&state=${provider}`;
+        }
+
+        if (authUrl) {
+            window.location.href = authUrl;
+        } else {
+            console.warn('Social login provider not configured.');
         }
     };
 
@@ -124,63 +164,73 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
 
     return (
         <div className="w-full max-w-md mx-auto animate-fade-in-up">
-            {/* Card Container */}
-            <div className="bg-white dark:bg-slate-800/60 backdrop-blur-xl border border-gray-100 dark:border-slate-700/50 rounded-[2.5rem] p-10 shadow-2xl transition-colors">
 
-                {/* Header */}
-                <div className="text-center mb-8 transition-colors">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-700 rounded-3xl mb-6 shadow-xl shadow-blue-500/20 transition-transform hover:scale-105">
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-[3rem] p-10 shadow-2xl transition-colors">
+                
+                {/* Header Shield */}
+                <div className="flex justify-center mb-8">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-700 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/30">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                         </svg>
                     </div>
-                    <h1 className="text-3xl font-black bg-gradient-to-r from-blue-600 to-purple-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent tracking-tight transition-colors">
-                        {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+                </div>
+
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-black mb-2 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                        {mode === 'login' ? 'Welcome Back' : mode === 'signup' ? 'Create Account' : 'Security Setup'}
                     </h1>
-                    <p className="text-slate-500 dark:text-gray-400 mt-3 font-bold transition-colors">
-                        {mode === 'login'
-                            ? 'Log in to access RewriteGuard'
-                            : 'Start using AI-powered text tools'
-                        }
+                    <p className="text-slate-500 dark:text-slate-400 font-bold text-sm">
+                        {mode === 'login' 
+                            ? 'Log in to access RewriteGuard' 
+                            : mode === 'signup' 
+                                ? 'Join thousands of protected writers'
+                                : 'Create a password for your account'}
                     </p>
                 </div>
 
-                {/* Mode Toggle */}
-                <div className="flex bg-gray-100 dark:bg-slate-900/50 rounded-2xl p-1.5 mb-8 transition-colors">
+                {/* Mode Toggle Tabs */}
+                {(mode === 'login' || mode === 'signup') && (
+                    <div className="flex bg-gray-100 dark:bg-slate-800/50 rounded-[1.5rem] p-1.5 mb-10">
                         <button
                             type="button"
                             onClick={() => switchMode('login')}
-                            className={`flex-1 py-3 rounded-xl font-black text-sm transition-all duration-300 ${mode === 'login'
-                                ? 'bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-lg'
-                                : 'text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-white'
+                            className={`flex-1 py-3 rounded-[1.2rem] font-black text-sm transition-all duration-300 ${mode === 'login'
+                                ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-xl'
+                                : 'text-slate-400 dark:text-gray-500'
                                 }`}
                         >
                             Login
                         </button>
-                    <button
-                        type="button"
-                        onClick={() => switchMode('signup')}
-                        className={`flex-1 py-3 rounded-xl font-black text-sm transition-all duration-300 ${mode === 'signup'
-                            ? 'bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-lg'
-                            : 'text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-white'
-                            }`}
-                    >
-                        Sign Up
-                    </button>
-                </div>
+                        <button
+                            type="button"
+                            onClick={() => switchMode('signup')}
+                            className={`flex-1 py-3 rounded-[1.2rem] font-black text-sm transition-all duration-300 ${mode === 'signup'
+                                ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-xl'
+                                : 'text-slate-400 dark:text-gray-500'
+                                }`}
+                        >
+                            Sign Up
+                        </button>
+                    </div>
+                )}
 
-                {/* Social Login Buttons */}
-                <div className="space-y-3 mb-8">
-                    <button 
-                        type="button" 
-                        disabled={isSubmitting}
-                        onClick={() => handleSocialLogin('google')}
-                        className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white dark:bg-white border border-gray-200 dark:border-gray-200 rounded-2xl font-black text-slate-700 hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50 relative group"
-                    >
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-disabled:opacity-100 transition-opacity">
-                            <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></div>
+                {/* Error Banner */}
+                {error && (
+                    <div className="bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/30 rounded-2xl p-4 mb-8">
+                        <div className="flex items-center gap-3">
+                            <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-red-600 dark:text-red-300 text-xs font-bold">{error}</span>
                         </div>
-                        <div className="flex items-center gap-3 group-disabled:opacity-20 transition-opacity">
+                    </div>
+                )}
+
+                {/* Social Buttons (Above form in Picture 2) */}
+                {(mode === 'login' || mode === 'signup') && (
+                    <div className="space-y-3 mb-8">
+                        <button onClick={() => handleSocialLogin('google')} className="w-full h-14 flex items-center justify-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl font-bold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-700 transition-all shadow-sm">
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -188,225 +238,144 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
                                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                             </svg>
                             Continue with Google
-                        </div>
-                    </button>
-                    <button 
-                        type="button" 
-                        disabled={isSubmitting}
-                        onClick={() => handleSocialLogin('facebook')}
-                        className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-[#1877F2] border border-transparent rounded-2xl font-black text-white hover:opacity-90 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md disabled:opacity-50 relative group overflow-hidden"
-                    >
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-disabled:opacity-100 transition-opacity bg-[#1877F2]">
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        </div>
-                        <div className="flex items-center gap-3 group-disabled:opacity-0 transition-opacity">
-                            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </button>
+                        <button onClick={() => handleSocialLogin('facebook')} className="w-full h-14 flex items-center justify-center gap-3 bg-[#1877F2] rounded-2xl font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-blue-500/20">
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 12.073c0-6.627-5.373-12.073-12-12.073s-12 5.446-12 12.073c0 5.991 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.065 24 12.073z" />
                             </svg>
                             Continue with Facebook
-                        </div>
-                    </button>
-                    <button 
-                        type="button" 
-                        disabled={isSubmitting}
-                        onClick={() => handleSocialLogin('apple')}
-                        className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-black border border-transparent rounded-2xl font-black text-white hover:opacity-90 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md disabled:opacity-50 relative group overflow-hidden"
-                    >
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-disabled:opacity-100 transition-opacity bg-black">
-                            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                        </div>
-                        <div className="flex items-center gap-3 group-disabled:opacity-0 transition-opacity">
-                            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                                <path d="M12.152 6.896c-.548 0-1.711-.516-2.861-.516-1.56 0-2.992.837-3.792 2.234-1.613 2.812-.413 6.96 1.15 9.21.763 1.1 1.663 2.333 2.848 2.333 1.135 0 1.565-.688 2.94-.688 1.375 0 1.765.688 2.964.688 1.222 0 1.992-1.118 2.753-2.215.877-1.282 1.242-2.522 1.261-2.587-.028-.013-2.427-.932-2.453-3.702-.023-2.316 1.89-3.428 1.977-3.483-1.082-1.586-2.748-1.765-3.34-1.802-1.5-.123-2.91.916-3.448.916zm1.383-2.71c.642-.777 1.077-1.855.958-2.936-.928.037-2.05.617-2.717 1.393-.598.69-1.122 1.79-.982 2.84.103.01.205.015.31.015 1.183 0 2.22-.533 2.84-.916z" />
+                        </button>
+                        <button onClick={() => handleSocialLogin('apple')} className="w-full h-14 flex items-center justify-center gap-3 bg-black rounded-2xl font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-black/20">
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17.05 20.28c-.96.95-2.18 2.12-3.83 2.12-1.63 0-2.1-.98-3.96-.98-1.86 0-2.43.95-3.92.98-1.5.03-2.6-1.03-3.62-2.15-2.07-2.3-3.64-6.52-1.5-9.87 1.05-1.66 2.87-2.73 4.7-2.73 1.4 0 2.5.88 3.4 1.13.9-.25 2.2-1.4 3.8-1.4 1.6 0 3.03.88 3.96 1.77-3.13 2.14-2.6 6.8 1.14 8.7a8.6 8.6 0 01-2.17 2.63M13.2 2.6c.86-1.12.8-2.26.8-2.6-.96.04-2.06.65-2.76 1.48-.7.83-.7 2.1-.7 2.1.9 0 2-1.2 2.66-2" />
                             </svg>
                             Continue with Apple
-                        </div>
-                    </button>
-                </div>
-
-                {/* Divider */}
-                <div className="relative mb-8 text-center">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-100 dark:border-white/10"></div>
+                        </button>
                     </div>
-                    <span className="relative px-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-gray-500 bg-white dark:bg-[#20293c]">Or</span>
-                </div>
+                )}
 
-                {/* Error Banner */}
-                {error && (
-                    <div className="bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/30 rounded-xl p-4 mb-6 animate-shake transition-colors">
-                        <div className="flex items-center gap-3">
-                            <svg className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-red-600 dark:text-red-300 text-sm font-bold">{error}</span>
+                {/* OR Divider */}
+                {(mode === 'login' || mode === 'signup') && (
+                    <div className="relative my-10">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-100 dark:border-white/5"></div>
+                        </div>
+                        <div className="relative flex justify-center text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 dark:text-slate-600 bg-white dark:bg-slate-900 px-4">
+                            OR
                         </div>
                     </div>
                 )}
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-6 transition-colors">
-
+                <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Full Name (signup only) */}
                     {mode === 'signup' && (
-                        <div className="animate-fade-in space-y-2">
-                            <label className="text-xs font-black text-slate-400 dark:text-gray-500 ml-1 uppercase tracking-widest transition-colors tracking-tight">
-                                Full Name
-                            </label>
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 dark:text-gray-500 ml-1 uppercase tracking-widest">Full Name</label>
                             <input
                                 type="text"
-                                id="full-name-input"
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
                                 placeholder="Jane Doe"
-                                className="w-full bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700/50 rounded-2xl px-5 py-3.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20 transition-all font-bold transition-colors"
+                                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-300 dark:placeholder:text-slate-600"
                             />
-                            {formErrors.fullName && (
-                                <p className="text-red-500 text-[10px] font-black mt-1 ml-1 uppercase">{formErrors.fullName}</p>
-                            )}
                         </div>
                     )}
 
                     {/* Email */}
                     <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 dark:text-gray-500 ml-1 uppercase tracking-widest transition-colors tracking-tight">
-                            Email Address
-                        </label>
+                        <label className="text-xs font-black text-slate-400 dark:text-gray-500 ml-1 uppercase tracking-widest">Email Address</label>
                         <input
                             type="email"
-                            id="email-input"
                             value={email}
-                            onChange={(e) => {
-                                setEmail(e.target.value);
-                                if (formErrors.email) setFormErrors(f => ({ ...f, email: undefined }));
-                            }}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled={mode === 'set-password'}
                             placeholder="user@example.com"
-                            className={`w-full bg-gray-50 dark:bg-slate-900/50 border rounded-2xl px-5 py-3.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20 transition-all font-bold transition-colors ${formErrors.email ? 'border-red-500' : 'border-gray-200 dark:border-slate-700/50'}`}
+                            className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:opacity-75 placeholder:text-slate-300 dark:placeholder:text-slate-600"
                         />
-                        {formErrors.email && (
-                            <p className="text-red-500 text-[10px] font-black mt-1 ml-1 uppercase">{formErrors.email}</p>
-                        )}
                     </div>
 
                     {/* Password */}
                     <div className="space-y-2">
                         <div className="flex justify-between items-center px-1">
-                            <label className="text-xs font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest transition-colors tracking-tight">Password</label>
+                            <label className="text-xs font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Password</label>
                             {mode === 'login' && (
-                                <button type="button" className="text-[10px] font-black text-blue-600 dark:text-blue-400 hover:underline uppercase transition-colors">Forgot?</button>
+                                <button type="button" className="text-[10px] uppercase font-black text-blue-600 hover:text-purple-600 transition-colors tracking-widest">Forgot?</button>
                             )}
                         </div>
                         <div className="relative">
                             <input
                                 type={showPassword ? 'text' : 'password'}
-                                id="password-input"
                                 value={password}
-                                onChange={(e) => {
-                                    setPassword(e.target.value);
-                                    if (formErrors.password) setFormErrors(f => ({ ...f, password: undefined }));
-                                }}
+                                onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
-                                className={`w-full bg-gray-50 dark:bg-slate-900/50 border rounded-2xl px-5 py-3.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20 transition-all font-bold transition-colors ${formErrors.password ? 'border-red-500' : 'border-gray-200 dark:border-slate-700/50'}`}
+                                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-300 dark:placeholder:text-slate-600"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-white transition-colors"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 flex items-center justify-center w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                             >
                                 {showPassword ? (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                    </svg>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                 ) : (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.04m4.066-1.56a10.14 10.14 0 014.282-1.075c4.478 0 8.268 2.943 9.542 7a10.018 10.018 0 01-2.227 4.02m-4.696-4.696A3 3 0 1111.314 11.314M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" /></svg>
                                 )}
                             </button>
                         </div>
-                        {formErrors.password && (
-                            <p className="text-red-500 text-[10px] font-black mt-1 ml-1 uppercase">{formErrors.password}</p>
-                        )}
-                        {mode === 'signup' && !formErrors.password && (
-                            <p className="text-slate-400 dark:text-gray-500 text-[10px] font-bold mt-1 ml-1 uppercase tracking-tight transition-colors">
+                        {(mode === 'signup' || mode === 'set-password') && (
+                            <p className="text-slate-400 text-[9px] font-black mt-1 ml-1 uppercase tracking-widest leading-loose">
                                 Min 8 chars, uppercase, lowercase & digit
                             </p>
                         )}
                     </div>
 
-                    {/* Confirm Password (signup only) */}
-                    {mode === 'signup' && (
-                        <div className="space-y-2 animate-fade-in">
-                            <label className="text-xs font-black text-slate-400 dark:text-gray-500 ml-1 uppercase tracking-widest transition-colors tracking-tight">
-                                Confirm Password
-                            </label>
+                    {/* Confirm Password (signup and set-password only) */}
+                    {(mode === 'signup' || mode === 'set-password') && (
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 dark:text-gray-500 ml-1 uppercase tracking-widest">Confirm Password</label>
                             <input
                                 type="password"
-                                id="confirm-password-input"
                                 value={confirmPassword}
-                                onChange={(e) => {
-                                    setConfirmPassword(e.target.value);
-                                    if (formErrors.confirmPassword) setFormErrors(f => ({ ...f, confirmPassword: undefined }));
-                                }}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="••••••••"
-                                className={`w-full bg-gray-50 dark:bg-slate-900/50 border rounded-2xl px-5 py-3.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20 transition-all font-bold transition-colors ${formErrors.confirmPassword ? 'border-red-500' : 'border-gray-200 dark:border-slate-700/50'}`}
+                                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-300 dark:placeholder:text-slate-600"
                             />
-                            {formErrors.confirmPassword && (
-                                <p className="text-red-500 text-[10px] font-black mt-1 ml-1 uppercase">{formErrors.confirmPassword}</p>
-                            )}
                         </div>
                     )}
 
-                    {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={isSubmitting}
-                        className="w-full py-4 mt-4 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 hover:scale-[1.02] active:scale-[0.98] text-white font-black text-lg shadow-xl shadow-blue-500/25 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                        disabled={isSubmitting || isLoading}
+                        className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-[1.5rem] font-black text-sm tracking-widest uppercase shadow-2xl shadow-blue-500/40 hover:scale-[1.02] active:scale-95 disabled:opacity-50 transition-all duration-300 flex items-center justify-center gap-2"
                     >
-                        {isSubmitting ? (
-                            <svg className="animate-spin h-6 w-6 text-white" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        ) : (
+                        {isSubmitting ? 'Processing...' : (
                             <>
-                                {mode === 'login' ? 'Login' : 'Create Account'}
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                {mode === 'login' ? 'Login' : mode === 'signup' ? 'Create Account' : 'Set Password & Login'}
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
                             </>
                         )}
                     </button>
                 </form>
 
-                {/* Footer Link */}
-                <div className="text-center mt-8 space-y-4">
-                    <p className="text-slate-500 dark:text-gray-400 text-sm font-bold transition-colors">
-                        {mode === 'login' ? "Don't have an account?" : "Already have an account?"}
+                {/* Switcher & Footer Links */}
+                <div className="text-center mt-10">
+                    <p className="text-sm font-bold text-slate-500 mb-8">
+                        {mode === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
                         <button
+                            type="button"
                             onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}
-                            className="ml-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-black transition-all"
+                            className="text-blue-600 font-black hover:underline"
                         >
-                            {mode === 'login' ? 'Sign Up' : 'Login'}
+                            {mode === 'login' ? 'Sign Up' : 'Log In'}
                         </button>
                     </p>
 
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 leading-relaxed max-w-xs mx-auto transition-colors">
+                    <p className="text-[10px] text-slate-400 font-medium leading-relaxed max-w-[280px] mx-auto">
                         By continuing, you agree to RewriteGuard's{' '}
-                        <button 
-                            type="button"
-                            onClick={() => onTermsClick && onTermsClick()}
-                            className="text-blue-500 hover:underline cursor-pointer"
-                        >
-                            Terms of Service
-                        </button>
-                        {' '}and have read our{' '}
-                        <button 
-                            type="button"
-                            onClick={() => onPrivacyClick && onPrivacyClick()}
-                            className="text-blue-500 hover:underline cursor-pointer"
-                        >
-                            Privacy Policy
-                        </button>.
+                        <button onClick={onTermsClick} className="text-blue-500 hover:underline">Terms of Service</button> and have read our{' '}
+                        <button onClick={onPrivacyClick} className="text-blue-500 hover:underline">Privacy Policy</button>.
                     </p>
                 </div>
             </div>

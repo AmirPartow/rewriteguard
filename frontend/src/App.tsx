@@ -17,7 +17,7 @@ import ContactSupport from './ContactSupport';
 type ActivePage = 'dashboard' | 'detector' | 'paraphraser' | 'admin' | 'contact' | 'help';
 
 function App() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, socialConfirm } = useAuth();
   const [activePage, setActivePage] = useState<ActivePage>('dashboard');
   const [isGuest, setIsGuest] = useState(false);
   const [paraphraserText, setParaphraserText] = useState('');
@@ -27,48 +27,73 @@ function App() {
   const [showLegalCenter, setShowLegalCenter] = useState(false);
   const [showPublicHome, setShowPublicHome] = useState(false);
 
-  // Listen for hash change or custom events to show policy
-  useEffect(() => {
-    const handlePopState = () => {
-      setShowCookiesPolicy(window.location.pathname === '/cookies-policy');
-      setShowPrivacyPolicy(window.location.pathname === '/privacy-policy');
-      setShowTermsOfService(window.location.pathname === '/terms-of-service');
-      setShowLegalCenter(window.location.pathname === '/legal-center');
-      setShowPublicHome(window.location.pathname === '/' && window.history.state?.publicHome === true);
-    };
+    // 1. Auth & Policy Lifecycle
+    useEffect(() => {
+        const handlePopState = () => {
+            setShowCookiesPolicy(window.location.pathname === '/cookies-policy');
+            setShowPrivacyPolicy(window.location.pathname === '/privacy-policy');
+            setShowTermsOfService(window.location.pathname === '/terms-of-service');
+            setShowLegalCenter(window.location.pathname === '/legal-center');
+            setShowPublicHome(window.location.pathname === '/' && window.history.state?.publicHome === true);
+        };
 
-    const handleGuestAuth = () => {
-      setIsGuest(false);
-      setTimeout(() => window.dispatchEvent(new Event('open-auth')), 50);
-    };
+        const handleGuestAuth = () => {
+            setIsGuest(false);
+            setTimeout(() => window.dispatchEvent(new Event('open-auth')), 50);
+        };
 
-    const handleGoPublicHome = () => {
-      setShowCookiesPolicy(false);
-      setShowPrivacyPolicy(false);
-      setShowTermsOfService(false);
-      setShowLegalCenter(false);
-      setShowPublicHome(true);
-      window.history.pushState({ publicHome: true }, '', '/');
-      window.scrollTo(0, 0);
-    };
+        const handleGoPublicHome = () => {
+            setShowCookiesPolicy(false);
+            setShowPrivacyPolicy(false);
+            setShowTermsOfService(false);
+            setShowLegalCenter(false);
+            setShowPublicHome(true);
+            window.history.pushState({ publicHome: true }, '', '/');
+            window.scrollTo(0, 0);
+        };
 
-    const handleParaphraserText = (e: Event) => {
-      const text = (e as CustomEvent).detail;
-      if (text) setParaphraserText(text);
-    };
+        const handleParaphraserText = (e: Event) => {
+            const text = (e as CustomEvent).detail;
+            if (text) setParaphraserText(text);
+        };
 
-    window.addEventListener('popstate', handlePopState);
-    window.addEventListener('open-auth-from-guest', handleGuestAuth);
-    window.addEventListener('send-to-paraphraser', handleParaphraserText);
-    window.addEventListener('go-public-home', handleGoPublicHome);
-    handlePopState();
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('open-auth-from-guest', handleGuestAuth);
-      window.removeEventListener('send-to-paraphraser', handleParaphraserText);
-      window.removeEventListener('go-public-home', handleGoPublicHome);
-    };
-  }, []);
+        window.addEventListener('popstate', handlePopState);
+        window.addEventListener('open-auth-from-guest', handleGuestAuth);
+        window.addEventListener('send-to-paraphraser', handleParaphraserText);
+        window.addEventListener('go-public-home', handleGoPublicHome);
+        handlePopState();
+
+        // Check for Auth Callback
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+
+        if (code && state && window.location.pathname === '/auth-callback') {
+            console.log(`Processing real social redirect from ${state}`);
+            
+            const confirm = async () => {
+                try {
+                    const redirectUri = `${window.location.origin}/auth-callback`;
+                    await socialConfirm(state, code, redirectUri);
+                    // On success, history will be clean
+                    window.history.replaceState({}, '', '/');
+                } catch (err) {
+                    console.error('Social login exchange failed', err);
+                    alert('Social login failed. Please check your developer keys in .env');
+                    window.history.replaceState({}, '', '/');
+                }
+            };
+            confirm();
+        }
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+            window.removeEventListener('open-auth-from-guest', handleGuestAuth);
+            window.removeEventListener('send-to-paraphraser', handleParaphraserText);
+            window.removeEventListener('go-public-home', handleGoPublicHome);
+        };
+    }, []);
+
 
   // Show loading spinner while checking auth state
   if (isLoading) {

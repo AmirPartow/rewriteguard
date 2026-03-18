@@ -24,6 +24,7 @@ interface AuthContextType extends AuthState {
     login: (email: string, password: string) => Promise<void>;
     signup: (email: string, password: string, fullName?: string) => Promise<void>;
     socialLogin: (provider: string, providerId: string, email: string, fullName?: string) => Promise<void>;
+    socialConfirm: (provider: string, code: string, redirectUri: string) => Promise<void>;
     logout: () => Promise<void>;
     error: string | null;
     clearError: () => void;
@@ -193,7 +194,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const socialConfirm = async (provider: string, code: string, redirectUri: string) => {
+        setError(null);
+
+        try {
+            const response = await fetch(`${API_BASE}/social-confirm`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider, code, redirect_uri: redirectUri }),
+            });
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (err) {
+                if (response.status === 404) throw new Error('API Endpoint not found (404). Please ensure the backend server is running.');
+                throw new Error('Server returned an invalid response. Please try again later.');
+            }
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'Social confirmation failed');
+            }
+
+            // Save auth data
+            localStorage.setItem(TOKEN_KEY, data.token);
+            localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+
+            setState({
+                user: data.user,
+                token: data.token,
+                isAuthenticated: true,
+                isLoading: false,
+            });
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Social confirmation failed';
+            setError(message);
+            throw err;
+        }
+    };
+
     const logout = async () => {
+
         try {
             if (state.token) {
                 await fetch(`${API_BASE}/logout`, {
@@ -225,6 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             login,
             signup,
             socialLogin,
+            socialConfirm,
             logout,
             error,
             clearError,

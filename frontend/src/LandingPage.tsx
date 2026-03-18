@@ -35,6 +35,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
         return () => window.removeEventListener('open-contact', handleOpenContact);
     }, []);
 
+
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [view]);
@@ -174,6 +175,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                                 View Plans
                             </button>
                         </div>
+
 
                         {/* Dashboard Preview Mockup */}
                         <div className="mt-24 relative w-full px-0 md:px-12 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
