@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
@@ -24,12 +24,28 @@ def now_func() -> str:
     return "CURRENT_TIMESTAMP" if IS_SQLITE else "NOW()"
 
 
-def setup_sqlite_tables():
-    """Create tables if using local SQLite database."""
-    if not DATABASE_URL.startswith("sqlite"):
-        return
+def run_migrations():
+    """Ensure necessary columns exist across different DB types (Postgres/SQLite)."""
+    # Add columns if not exist
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN provider VARCHAR(20)"))
+            conn.commit()
+    except Exception:
+        pass
+    
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN provider_id VARCHAR(100)"))
+            conn.commit()
+    except Exception:
+        pass
 
-    from sqlalchemy import text
+
+def setup_sqlite_tables():
+    """Create initial tables if using local SQLite database."""
+    if not IS_SQLITE:
+        return
 
     with engine.connect() as conn:
         conn.execute(
@@ -44,33 +60,17 @@ def setup_sqlite_tables():
                 last_login TIMESTAMP,
                 plan_type TEXT NOT NULL DEFAULT 'free',
                 daily_word_limit INTEGER NOT NULL DEFAULT 1000,
-                stripe_customer_id TEXT,
-                stripe_subscription_id TEXT,
-                subscription_status TEXT DEFAULT 'inactive',
-                subscription_current_period_end TIMESTAMP,
                 provider TEXT,
                 provider_id TEXT,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
         """)
         )
-
-        # Upgrade path for existing users
-        try:
-            conn.execute(text("ALTER TABLE users ADD COLUMN provider TEXT"))
-        except:
-            pass
-        try:
-            conn.execute(text("ALTER TABLE users ADD COLUMN provider_id TEXT"))
-        except:
-            pass
-
         conn.execute(
             text("""
             CREATE TABLE IF NOT EXISTS sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-
                 token_hash TEXT NOT NULL UNIQUE,
                 expires_at TIMESTAMP NOT NULL,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -95,23 +95,6 @@ def setup_sqlite_tables():
         )
         conn.execute(
             text("""
-            CREATE TABLE IF NOT EXISTS subscription_events (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                stripe_event_id TEXT NOT NULL UNIQUE,
-                event_type TEXT NOT NULL,
-                subscription_id TEXT,
-                customer_id TEXT,
-                plan_type TEXT,
-                amount_cents INTEGER,
-                currency TEXT DEFAULT 'usd',
-                event_data TEXT,
-                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        )
-        conn.execute(
-            text("""
             CREATE TABLE IF NOT EXISTS jobs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -123,21 +106,11 @@ def setup_sqlite_tables():
             )
         """)
         )
-        conn.execute(
-            text("""
-            CREATE TABLE IF NOT EXISTS logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
-                level TEXT NOT NULL DEFAULT 'info',
-                message TEXT NOT NULL,
-                meta TEXT,
-                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        )
         conn.commit()
 
 
+# Run migrations and setup
+run_migrations()
 setup_sqlite_tables()
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
