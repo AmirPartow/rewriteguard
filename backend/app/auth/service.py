@@ -236,6 +236,124 @@ async def authenticate_user(
     return token, expires_at, user_info
 
 
+async def social_login(
+    provider: str, provider_id: str, email: str, full_name: str = ""
+) -> tuple[str, datetime, UserInfo]:
+    """
+    Handle authentication via a social provider.
+    Creates user if they don't exist by email or provider_id.
+    """
+    engine = _get_engine()
+    email = email.lower().strip()
+
+    with engine.connect() as conn:
+        # 1. Try to find user by provider_id
+        result = conn.execute(
+            text(
+                "SELECT id, email, full_name, is_active FROM users WHERE provider = :p AND provider_id = :pid"
+            ),
+            {"p": provider, "pid": provider_id},
+        )
+        row = result.fetchone()
+
+        if not row:
+            # 2. Try to find user by email
+            result = conn.execute(
+                text("SELECT id, provider, provider_id FROM users WHERE email = :email"),
+                {"email": email},
+            )
+            email_row = result.fetchone()
+
+            if email_row:
+                user_id, existing_provider, existing_pid = email_row
+                # Link provider if not already linked
+                if not existing_provider:
+                    conn.execute(
+                        text(
+                            "UPDATE users SET provider = :p, provider_id = :pid WHERE id = :user_id"
+                        ),
+                        {"p": provider, "pid": provider_id, "user_id": user_id},
+                    )
+                # If email exists but provider is different, we can either error or allow login.
+                # Usually we allow login if email matches.
+            else:
+                # 3. Create new user
+                now = _now()
+                if _is_sqlite():
+                    conn.execute(
+                        text(f"""
+                            INSERT INTO users (email, full_name, provider, provider_id, is_active, email_verified, created_at)
+                            VALUES (:email, :full_name, :p, :pid, 1, 1, {now})
+                        """),
+                        {
+                            "email": email,
+                            "full_name": full_name,
+                            "p": provider,
+                            "pid": provider_id,
+                        },
+                    )
+                    user_id = conn.execute(text("SELECT last_insert_rowid()")).fetchone()[0]
+                else:
+                    user_id = conn.execute(
+                        text(f"""
+                            INSERT INTO users (email, full_name, provider, provider_id, is_active, email_verified, created_at)
+                            VALUES (:email, :full_name, :p, :pid, TRUE, TRUE, {now})
+                            RETURNING id
+                        """),
+                        {
+                            "email": email,
+                            "full_name": full_name,
+                            "p": provider,
+                            "pid": provider_id,
+                        },
+                    ).fetchone()[0]
+        else:
+            user_id = row[0]
+            # Update email if changed? usually stay same as primary.
+
+        # Now get user info for session
+        result = conn.execute(
+            text("SELECT id, email, full_name, is_active FROM users WHERE id = :id"),
+            {"id": user_id},
+        )
+        user_id, user_email, full_name, is_active = result.fetchone()
+
+        if not is_active:
+            raise UserNotActiveError("Account is deactivated")
+
+        # Create session
+        token, token_hash, expires_at = create_session_token(days_valid=30) # longer sessions for social
+        now = _now()
+
+        conn.execute(
+            text(f"""
+                INSERT INTO sessions (user_id, token_hash, expires_at, created_at)
+                VALUES (:user_id, :token_hash, :expires_at, {now})
+            """),
+            {
+                "user_id": user_id,
+                "token_hash": token_hash,
+                "expires_at": expires_at,
+            },
+        )
+
+        conn.execute(
+            text(f"UPDATE users SET last_login = {now} WHERE id = :user_id"),
+            {"user_id": user_id},
+        )
+        conn.commit()
+
+    user_info = UserInfo(
+        id=user_id,
+        email=user_email,
+        full_name=full_name or "",
+        is_active=bool(is_active),
+    )
+
+    logger.info(f"Social user logged in: {user_email} via {provider}")
+    return token, expires_at, user_info
+
+
 async def validate_session(token: str) -> UserInfo:
     """
     Validate a session token and return user info from the database.

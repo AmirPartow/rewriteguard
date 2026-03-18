@@ -8,12 +8,12 @@ export default defineConfig({
     host: '127.0.0.1',
     proxy: {
       '/v1': {
-        target: 'http://52.32.253.222',
+        target: 'http://localhost:8000', // Local backend (standard development)
         changeOrigin: true,
         secure: false,
       },
       '/health': {
-        target: 'http://52.32.253.222',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       },

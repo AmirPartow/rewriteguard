@@ -25,17 +25,17 @@ export default function LegalCenter(props: any) {
     };
 
     return (
-        <div className="min-h-screen flex flex-col text-white bg-[#0f172a]">
+        <div className="min-h-screen flex flex-col text-slate-700 dark:text-white bg-slate-50 dark:bg-[#0f172a]">
             {/* Header Area */}
-            <div className="bg-gradient-to-b from-blue-900/20 to-[#0f172a] pt-20 pb-16 px-6 text-center border-b border-white/5">
+            <div className="bg-gradient-to-b from-blue-900/10 to-slate-50 dark:from-blue-900/20 dark:to-[#0f172a] pt-20 pb-16 px-6 text-center border-b border-gray-200 dark:border-white/5">
                 <div className="max-w-4xl mx-auto animate-fade-in-up">
                     <div className="mb-10 text-center flex justify-center">
                         <LogoHomeButton />
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                    <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
                         Legal Center
                     </h1>
-                    <p className="text-lg text-gray-400">
+                    <p className="text-lg text-slate-500 dark:text-gray-400">
                         All the legal resources you need in one place for your convenience.
                     </p>
                 </div>
@@ -46,10 +46,10 @@ export default function LegalCenter(props: any) {
                 <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
 
                     {/* General Terms Column */}
-                    <div className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/[0.08] transition-colors relative overflow-hidden group">
+                    <div className="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors relative overflow-hidden group shadow-lg">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-2xl rounded-full group-hover:bg-blue-500/10 transition-colors"></div>
-                        <h2 className="text-xl font-bold text-white mb-2">General terms</h2>
-                        <p className="text-sm text-gray-400 mb-8 pb-8 border-b border-white/10">
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">General terms</h2>
+                        <p className="text-sm text-slate-500 dark:text-gray-400 mb-8 pb-8 border-b border-gray-200 dark:border-white/10">
                             These terms and policies apply to all users of RewriteGuard Services.
                         </p>
 
@@ -82,12 +82,12 @@ export default function LegalCenter(props: any) {
                     </div>
 
                     {/* Content and Copyright Column */}
-                    <div className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/[0.08] transition-colors relative overflow-hidden group">
+                    <div className="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors relative overflow-hidden group shadow-lg">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 blur-2xl rounded-full group-hover:bg-purple-500/10 transition-colors"></div>
 
                         <div>
-                            <h2 className="text-xl font-bold text-white mb-2">Content and copyright</h2>
-                            <p className="text-sm text-gray-400 mb-8 pb-8 border-b border-white/10">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Content and copyright</h2>
+                            <p className="text-sm text-slate-500 dark:text-gray-400 mb-8 pb-8 border-b border-gray-200 dark:border-white/10">
                                 These policies and pages apply to RewriteGuard Services that process or host user-generated content.
                             </p>
 

@@ -48,10 +48,20 @@ def setup_sqlite_tables():
                 stripe_subscription_id TEXT,
                 subscription_status TEXT DEFAULT 'inactive',
                 subscription_current_period_end TIMESTAMP,
+                provider TEXT,
+                provider_id TEXT,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
         """)
         )
+
+        # Upgrade path for existing users
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN provider TEXT"))
+        except: pass
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN provider_id TEXT"))
+        except: pass
         conn.execute(
             text("""
             CREATE TABLE IF NOT EXISTS sessions (

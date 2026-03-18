@@ -6,10 +6,11 @@ interface FooterProps {
     onTermsClick?: () => void;
     onLegalClick?: () => void;
     onContactClick?: () => void;
+    onHelpClick?: () => void;
     className?: string;
 }
 
-export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onLegalClick, onContactClick, className = "" }: FooterProps) {
+export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onLegalClick, onContactClick, onHelpClick, className = "" }: FooterProps) {
     const handlePolicyClick = (e: React.MouseEvent) => {
         if (onShowPolicy) {
             e.preventDefault();
@@ -42,6 +43,13 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
         if (onContactClick) {
             e.preventDefault();
             onContactClick();
+        }
+    };
+
+    const handleHelpClick = (e: React.MouseEvent) => {
+        if (onHelpClick) {
+            e.preventDefault();
+            onHelpClick();
         }
     };
 
@@ -92,15 +100,15 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
 
     return (
         <footer className={`w-full mt-auto ${className}`}>
-            {/* Main Content Area - Dark theme to match website */}
-            <div className="bg-[#0f172a] py-16 px-6 border-t border-white/5">
+            {/* Main Content Area */}
+            <div className="bg-slate-50 dark:bg-[#0f172a] py-16 px-6 border-t border-gray-200 dark:border-white/5">
                 <div className="w-full">
                     {/* Top Row: Navigation Columns */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 mb-16">
                         {/* Column 2: Premium */}
                         <div className="space-y-4">
-                            <h4 className="text-[15px] font-bold text-white border-b border-white/10 pb-2">Premium</h4>
-                            <ul className="space-y-2 text-[13px] text-gray-400 font-medium">
+                            <h4 className="text-[15px] font-bold text-slate-900 dark:text-white border-b border-gray-200 dark:border-white/10 pb-2">Premium</h4>
+                            <ul className="space-y-2 text-[13px] text-gray-600 dark:text-gray-400 font-medium">
                                 <li><a href="/" className="hover:text-blue-400 transition-colors">Pricing</a></li>
                                 <li><a href="/" className="hover:text-blue-400 transition-colors">Plan Details</a></li>
                                 <li><a href="/" className="hover:text-blue-400 transition-colors">For Teams</a></li>
@@ -111,8 +119,8 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
 
                         {/* Column 3: Tools */}
                         <div className="space-y-4">
-                            <h4 className="text-[15px] font-bold text-white border-b border-white/10 pb-2">Tools</h4>
-                            <ul className="space-y-2 text-[13px] text-gray-400 font-medium">
+                            <h4 className="text-[15px] font-bold text-slate-900 dark:text-white border-b border-gray-200 dark:border-white/10 pb-2">Tools</h4>
+                            <ul className="space-y-2 text-[13px] text-gray-600 dark:text-gray-400 font-medium">
                                 <li><a href="/" className="hover:text-blue-400 transition-colors">AI Content Detector</a></li>
                                 <li><a href="/" className="hover:text-blue-400 transition-colors">AI Paraphraser</a></li>
                                 <li><a href="/" className="hover:text-blue-400 transition-colors">Content Humanizer</a></li>
@@ -123,25 +131,25 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
 
                         {/* Column 4: Company */}
                         <div className="space-y-4">
-                            <h4 className="text-[15px] font-bold text-white border-b border-white/10 pb-2">Company</h4>
-                            <ul className="space-y-2 text-[13px] text-gray-400 font-medium">
+                            <h4 className="text-[15px] font-bold text-slate-900 dark:text-white border-b border-gray-200 dark:border-white/10 pb-2">Company</h4>
+                            <ul className="space-y-2 text-[13px] text-gray-600 dark:text-gray-400 font-medium">
                                 <li><a href="/" className="hover:text-blue-400 transition-colors">About Us</a></li>
                                 <li><a href="/" className="hover:text-blue-400 transition-colors">Trust Center</a></li>
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">Help Center</a></li>
+                                <li><a href="/" onClick={handleHelpClick} className="hover:text-blue-400 transition-colors cursor-pointer">Help Center</a></li>
                                 <li><a href="mailto:support@rewriteguard.com" onClick={handleContactClick} className="hover:text-blue-400 transition-colors cursor-pointer">Contact Us</a></li>
                             </ul>
                         </div>
 
                         {/* Column 5: Social */}
                         <div className="space-y-4">
-                            <h4 className="text-[15px] font-bold text-white border-b border-white/10 pb-2">Follow us on social</h4>
+                            <h4 className="text-[15px] font-bold text-slate-900 dark:text-white border-b border-gray-200 dark:border-white/10 pb-2">Follow us on social</h4>
                             <div className="flex flex-wrap gap-4 text-xl">
                                 {socialLinks.map((s, i) => (
                                     <a
                                         key={i}
                                         href={s.url}
                                         title={s.name}
-                                        className={`hover:scale-110 transition-transform flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 ${s.color}`}
+                                        className={`hover:scale-110 transition-transform flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 shadow-sm hover:bg-gray-200 dark:hover:bg-white/10 ${s.color}`}
                                     >
                                         {s.icon}
                                     </a>
@@ -156,14 +164,14 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
                             href="https://www.trustpilot.com/review/rewriteguard.com"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group flex flex-row items-center justify-center gap-3 px-8 py-3 rounded-full bg-white/5 hover:bg-white/10 transition-all border border-white/10 shadow-lg shadow-black/20"
+                            className="group flex flex-row items-center justify-center gap-3 px-8 py-3 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all border border-gray-200 dark:border-white/10 shadow-lg"
                         >
-                            <span className="text-gray-300 font-medium text-[15px] group-hover:text-white transition-colors">
+                            <span className="text-slate-600 dark:text-gray-300 font-medium text-[15px] group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                                 Review us on
                             </span>
 
                             {/* Trustpilot Logo Native SVG */}
-                            <div className="flex items-center gap-1.5 text-white font-bold tracking-tight">
+                            <div className="flex items-center gap-1.5 text-slate-800 dark:text-white font-bold tracking-tight">
                                 <svg className="w-6 h-6 text-[#00b67a] drop-shadow-sm" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
                                 </svg>
@@ -174,14 +182,14 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
                 </div>
             </div>
 
-            {/* Sub-Footer - Branding & Legal (Matched to website background as requested earlier) */}
-            <div className="bg-[#0f172a] py-12 px-6 border-t border-white/5">
+            {/* Sub-Footer */}
+            <div className="bg-slate-100 dark:bg-[#0f172a] py-12 px-6 border-t border-gray-200 dark:border-white/5">
                 <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
                     {/* Left Side: Branding & Policy Links */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-4 flex-wrap">
-                            <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-2xl font-black text-white tracking-tighter uppercase mr-2 hover:text-gray-300 transition-colors">P5 SOLUTION</a>
-                            <span className="text-gray-400 text-[13px] font-medium border-l border-white/10 pl-4 italic">RewriteGuard, a <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-200 transition-colors">P5Solution</a> business</span>
+                            <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase mr-2 hover:text-slate-600 dark:hover:text-gray-300 transition-colors">P5 SOLUTION</a>
+                            <span className="text-gray-500 dark:text-gray-400 text-[13px] font-medium border-l border-gray-300 dark:border-white/10 pl-4 italic">RewriteGuard, a <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-700 dark:hover:text-gray-200 transition-colors">P5Solution</a> business</span>
                         </div>
 
                         <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px] font-semibold text-blue-400/90">

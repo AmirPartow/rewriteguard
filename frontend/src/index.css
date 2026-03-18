@@ -13,14 +13,22 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: dark;
-  color: #e2e8f0;
-  background-color: var(--color-bg-dark);
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root.dark {
+  color-scheme: dark;
+  color: #e2e8f0;
+  background-color: var(--color-bg-dark);
+}
+
+:root.light {
+  color-scheme: light;
+  color: #1e293b;
+  background-color: #f8fafc;
 }
 
 body {

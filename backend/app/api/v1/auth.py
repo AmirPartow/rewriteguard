@@ -9,14 +9,15 @@ import logging
 from app.auth.schemas import (
     SignupRequest,
     SignupResponse,
-    LoginRequest,
     LoginResponse,
     LogoutResponse,
     UserInfo,
+    SocialLoginRequest,
 )
 from app.auth.service import (
     create_user,
     authenticate_user,
+    social_login,
     invalidate_session,
     validate_session,
     get_total_users,
@@ -82,6 +83,30 @@ async def login(request: LoginRequest) -> LoginResponse:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
+        )
+    except UserNotActiveError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e),
+        )
+
+
+@router.post("/social-login", response_model=LoginResponse)
+async def social_auth(request: SocialLoginRequest) -> LoginResponse:
+    """
+    Simulated social login. In production, this would verify OAuth tokens.
+    """
+    try:
+        token, expires_at, user_info = await social_login(
+            provider=request.provider,
+            provider_id=request.provider_id,
+            email=request.email,
+            full_name=request.full_name,
+        )
+        return LoginResponse(
+            token=token,
+            user=user_info,
+            expires_at=expires_at,
         )
     except UserNotActiveError as e:
         raise HTTPException(

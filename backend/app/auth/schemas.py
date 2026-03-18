@@ -58,6 +58,15 @@ class LoginRequest(BaseModel):
         return v.lower().strip()
 
 
+class SocialLoginRequest(BaseModel):
+    """Request body for social login."""
+
+    provider: str = Field(..., description="Login provider (google, facebook, apple)")
+    provider_id: str = Field(..., description="Unique ID from the provider")
+    email: str = Field(..., description="User email (if provided by oauth)")
+    full_name: str = Field(default="", description="User's full name")
+
+
 class LoginResponse(BaseModel):
     """Response from successful login."""
 
