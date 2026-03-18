@@ -58,15 +58,19 @@ def setup_sqlite_tables():
         # Upgrade path for existing users
         try:
             conn.execute(text("ALTER TABLE users ADD COLUMN provider TEXT"))
-        except: pass
+        except:
+            pass
         try:
             conn.execute(text("ALTER TABLE users ADD COLUMN provider_id TEXT"))
-        except: pass
+        except:
+            pass
+
         conn.execute(
             text("""
             CREATE TABLE IF NOT EXISTS sessions (
-                id TEXT PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
                 token_hash TEXT NOT NULL UNIQUE,
                 expires_at TIMESTAMP NOT NULL,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
