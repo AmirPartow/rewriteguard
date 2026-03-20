@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-primary: #3b82f6;
@@ -36,7 +37,13 @@ body {
   display: block;
   min-width: 320px;
   min-height: 100vh;
-  background: var(--color-bg-dark);
+  background-color: #f8fafc; /* default light mode background */
+  color: #1e293b;
+}
+
+:root.dark body {
+  background-color: var(--color-bg-dark); /* dark mode background */
+  color: #e2e8f0;
 }
 
 #root {
