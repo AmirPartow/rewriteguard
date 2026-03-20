@@ -244,19 +244,19 @@ function App() {
             {activePage === 'help' && <ContactSupport onBack={() => setActivePage('dashboard')} mode="help" />}
           </div>
 
-          {/* Paraphraser Promo Bar — slim, only on detector */}
+          {/* Paraphraser Promo Bar — styled like user request */}
           {activePage === 'detector' && (
-            <div className="w-full max-w-full h-10 bg-blue-500/10 border border-blue-500/20 rounded-lg px-6 flex items-center justify-between animate-fade-in transition-all shrink-0 mt-2">
-              <span className="text-blue-300 font-bold text-xs tracking-tight">Want your text to sound more authentic?</span>
+            <div className="w-full max-w-full py-4 bg-[#f0f3ff] dark:bg-[#1a2035] border border-blue-100 dark:border-white/5 rounded-xl px-8 flex items-center justify-between animate-fade-in transition-all shrink-0 mt-6 shadow-sm">
+              <span className="text-blue-500 dark:text-blue-300 font-bold text-[14px] tracking-tight">Want your text to sound more authentic?</span>
               <button
                 onClick={() => {
                   window.dispatchEvent(new Event('grab-detector-text'));
                   setTimeout(() => setActivePage('paraphraser'), 50);
                 }}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-1.5 rounded-full text-[10px] font-black tracking-[0.05em] hover:scale-105 transition-all flex items-center gap-1.5 shadow-lg shadow-blue-500/20"
+                className="bg-[#6B55FA] hover:bg-[#5A45E0] text-white px-6 py-2.5 rounded-full text-[13px] font-black tracking-wide hover:scale-105 transition-all flex items-center gap-2 shadow-md shadow-[#6B55FA]/30"
               >
                 Refine with Paraphraser
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
               </button>
             </div>
           )}
