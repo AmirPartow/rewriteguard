@@ -19,6 +19,13 @@ type ActivePage = 'dashboard' | 'detector' | 'paraphraser' | 'admin' | 'contact'
 function App() {
   const { isAuthenticated, isLoading, socialConfirm } = useAuth();
   const [activePage, setActivePage] = useState<ActivePage>('dashboard');
+
+  const navigateTo = (page: ActivePage) => {
+    if (page === activePage) return;
+    window.history.pushState({ activePage: page }, '', window.location.pathname);
+    setActivePage(page);
+    window.scrollTo(0, 0);
+  };
   const [isGuest, setIsGuest] = useState(false);
   const [paraphraserText, setParaphraserText] = useState('');
   const [showCookiesPolicy, setShowCookiesPolicy] = useState(false);
@@ -29,12 +36,16 @@ function App() {
 
     // 1. Auth & Policy Lifecycle
     useEffect(() => {
-        const handlePopState = () => {
+        const handlePopState = (e?: PopStateEvent) => {
             setShowCookiesPolicy(window.location.pathname === '/cookies-policy');
             setShowPrivacyPolicy(window.location.pathname === '/privacy-policy');
             setShowTermsOfService(window.location.pathname === '/terms-of-service');
             setShowLegalCenter(window.location.pathname === '/legal-center');
             setShowPublicHome(window.location.pathname === '/' && window.history.state?.publicHome === true);
+            
+            if (e?.state && e.state.activePage) {
+                setActivePage(e.state.activePage);
+            }
         };
 
         const handleGuestAuth = () => {
@@ -177,8 +188,8 @@ function App() {
     return (
       <>
         <LandingPage
-          onGuestEntry={() => { setIsGuest(true); setShowPublicHome(false); setActivePage('detector'); }}
-          onDashboardEntry={() => { setShowPublicHome(false); setActivePage('dashboard'); }}
+          onGuestEntry={() => { setIsGuest(true); setShowPublicHome(false); navigateTo('detector'); }}
+          onDashboardEntry={() => { setShowPublicHome(false); navigateTo('dashboard'); }}
           isAuthenticated={!!isAuthenticated}
           {...footerProps}
         />
@@ -199,13 +210,13 @@ function App() {
         </button>
 
         <nav className="flex flex-col gap-5">
-          <button onClick={() => setActivePage('dashboard')} className={`p-2 rounded-lg transition-colors ${activePage === 'dashboard' ? 'bg-blue-50 dark:bg-white/10 text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+          <button onClick={() => navigateTo('dashboard')} className={`p-2 rounded-lg transition-colors ${activePage === 'dashboard' ? 'bg-blue-50 dark:bg-white/10 text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 dark:hover:text-gray-300'}`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
           </button>
-          <button onClick={() => setActivePage('detector')} className={`p-2 rounded-lg transition-colors ${activePage === 'detector' ? 'bg-blue-50 dark:bg-white/10 text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+          <button onClick={() => navigateTo('detector')} className={`p-2 rounded-lg transition-colors ${activePage === 'detector' ? 'bg-blue-50 dark:bg-white/10 text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 dark:hover:text-gray-300'}`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
           </button>
-          <button onClick={() => setActivePage('paraphraser')} className={`p-2 rounded-lg transition-colors ${activePage === 'paraphraser' ? 'bg-blue-50 dark:bg-white/10 text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+          <button onClick={() => navigateTo('paraphraser')} className={`p-2 rounded-lg transition-colors ${activePage === 'paraphraser' ? 'bg-blue-50 dark:bg-white/10 text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 dark:hover:text-gray-300'}`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
           </button>
           <button className="p-2 rounded-lg text-gray-400 dark:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 dark:hover:text-gray-400"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></button>
@@ -227,8 +238,8 @@ function App() {
           <div className="flex items-center gap-4">
             <AccountMenu 
               onLoginClick={() => window.dispatchEvent(new Event('open-auth-from-guest'))}
-              onContactClick={() => setActivePage('contact')}
-              onHelpClick={() => setActivePage('help')}
+              onContactClick={() => navigateTo('contact')}
+              onHelpClick={() => navigateTo('help')}
             />
           </div>
         </header>
@@ -240,8 +251,8 @@ function App() {
             {activePage === 'detector' && <Detector />}
             {activePage === 'paraphraser' && <Paraphraser initialText={paraphraserText} onTextConsumed={() => setParaphraserText('')} />}
             {activePage === 'admin' && <AdminPage />}
-            {activePage === 'contact' && <ContactSupport onBack={() => setActivePage('dashboard')} mode="contact" />}
-            {activePage === 'help' && <ContactSupport onBack={() => setActivePage('dashboard')} mode="help" />}
+            {activePage === 'contact' && <ContactSupport onBack={() => navigateTo('dashboard')} mode="contact" />}
+            {activePage === 'help' && <ContactSupport onBack={() => navigateTo('dashboard')} mode="help" />}
           </div>
 
           {/* Paraphraser Promo Bar — styled like user request */}
@@ -251,7 +262,7 @@ function App() {
               <button
                 onClick={() => {
                   window.dispatchEvent(new Event('grab-detector-text'));
-                  setTimeout(() => setActivePage('paraphraser'), 50);
+                  setTimeout(() => navigateTo('paraphraser'), 50);
                 }}
                 className="bg-[#6B55FA] hover:bg-[#5A45E0] text-white px-6 py-2.5 rounded-full text-[13px] font-black tracking-wide hover:scale-105 transition-all flex items-center gap-2 shadow-md shadow-[#6B55FA]/30"
               >

@@ -31,10 +31,34 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
             })
             .catch(err => console.error("Could not fetch user count", err));
 
-        const handleOpenContact = () => setView('contact');
+        const handlePopState = (e: PopStateEvent) => {
+            if (e.state && e.state.view) {
+                setView(e.state.view);
+            } else {
+                setView('home');
+            }
+        };
+
+        const handleOpenContact = () => navigateTo('contact');
+        window.addEventListener('popstate', handlePopState);
         window.addEventListener('open-contact', handleOpenContact);
-        return () => window.removeEventListener('open-contact', handleOpenContact);
+        
+        // Initial state
+        if (!window.history.state || !window.history.state.view) {
+            window.history.replaceState({ view: 'home' }, '', window.location.pathname);
+        }
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+            window.removeEventListener('open-contact', handleOpenContact);
+        };
     }, []);
+
+    const navigateTo = (newView: typeof view) => {
+        if (newView === view) return;
+        window.history.pushState({ view: newView }, '', window.location.pathname);
+        setView(newView);
+    };
 
 
     useEffect(() => {
@@ -44,14 +68,14 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
     if (view === 'help') {
         return (
             <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a] animate-fade-in transition-colors">
-                <ContactSupport onBack={() => setView('home')} mode="help" />
+                <ContactSupport onBack={() => navigateTo('home')} mode="help" />
                 <Footer 
                     onShowPolicy={onShowPolicy} 
                     onPrivacyClick={onPrivacyClick} 
                     onTermsClick={onTermsClick} 
                     onLegalClick={onLegalClick} 
-                    onContactClick={() => setView('contact')} 
-                    onHelpClick={() => setView('help')}
+                    onContactClick={() => navigateTo('contact')} 
+                    onHelpClick={() => navigateTo('help')}
                 />
             </div>
         );
@@ -61,18 +85,18 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
         return (
             <div className="min-h-screen flex flex-col items-center py-20 px-4 animate-fade-in bg-slate-50 dark:bg-[#0f172a] transition-colors">
                 <div className="mb-12 self-start w-full px-6">
-                    <LogoHomeButton onClick={() => setView('home')} />
+                    <LogoHomeButton onClick={() => navigateTo('home')} />
                 </div>
                 <div className="w-full flex-grow">
-                    <ContactSupport onBack={() => setView('home')} mode="contact" />
+                    <ContactSupport onBack={() => navigateTo('home')} mode="contact" />
                 </div>
                 <Footer 
                     onShowPolicy={onShowPolicy} 
                     onPrivacyClick={onPrivacyClick} 
                     onTermsClick={onTermsClick} 
                     onLegalClick={onLegalClick} 
-                    onContactClick={() => setView('contact')} 
-                    onHelpClick={() => setView('help')}
+                    onContactClick={() => navigateTo('contact')} 
+                    onHelpClick={() => navigateTo('help')}
                 />
             </div>
         );
@@ -82,7 +106,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-fade-in bg-slate-50 dark:bg-[#0f172a] transition-colors">
                 <div className="mb-8">
-                    <LogoHomeButton onClick={() => setView('home')} />
+                    <LogoHomeButton onClick={() => navigateTo('home')} />
                 </div>
                 <div className="w-full flex-grow flex items-center justify-center">
                     <AuthForm onPrivacyClick={onPrivacyClick} onTermsClick={onTermsClick} />
@@ -92,8 +116,8 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                     onPrivacyClick={onPrivacyClick} 
                     onTermsClick={onTermsClick} 
                     onLegalClick={onLegalClick} 
-                    onContactClick={() => setView('contact')} 
-                    onHelpClick={() => setView('help')}
+                    onContactClick={() => navigateTo('contact')} 
+                    onHelpClick={() => navigateTo('help')}
                 />
             </div>
         );
@@ -109,19 +133,19 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
 
             {/* Navbar */}
             <nav className="relative z-50 w-full px-6 md:px-12 py-6 flex justify-between items-center bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md sticky top-0 border-b border-gray-200 dark:border-white/5 transition-colors">
-                <LogoHomeButton onClick={() => setView('home')} />
+                <LogoHomeButton onClick={() => navigateTo('home')} />
                 <div className="flex items-center gap-6">
                     <div className="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-500 dark:text-gray-400">
-                        <button onClick={() => setView('home')} className={`hover:text-blue-600 dark:hover:text-white transition-colors ${view === 'home' ? 'text-blue-600 dark:text-white' : ''}`}>Features</button>
-                        <button onClick={() => { setView('home'); setTimeout(() => document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="hover:text-blue-600 dark:hover:text-white transition-colors">FAQ</button>
-                        <button onClick={() => setView('pricing')} className={`hover:text-blue-600 dark:hover:text-white transition-colors ${view === 'pricing' ? 'text-blue-600 dark:text-white' : ''}`}>Pricing</button>
+                <button onClick={() => navigateTo('home')} className={`hover:text-blue-600 dark:hover:text-white transition-colors ${view === 'home' ? 'text-blue-600 dark:text-white' : ''}`}>Features</button>
+                <button onClick={() => { navigateTo('home'); setTimeout(() => document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="hover:text-blue-600 dark:hover:text-white transition-colors">FAQ</button>
+                <button onClick={() => navigateTo('pricing')} className={`hover:text-blue-600 dark:hover:text-white transition-colors ${view === 'pricing' ? 'text-blue-600 dark:text-white' : ''}`}>Pricing</button>
                     </div>
                     
                     <div className="flex items-center gap-4 border-l border-gray-200 dark:border-white/10 ml-2 pl-6">
                         <AccountMenu 
-                            onLoginClick={() => setView('auth')}
-                            onContactClick={() => setView('contact')}
-                            onHelpClick={() => setView('help')}
+                            onLoginClick={() => navigateTo('auth')}
+                            onContactClick={() => navigateTo('contact')}
+                            onHelpClick={() => navigateTo('help')}
                         />
                         {isAuthenticated && (
                              <button
