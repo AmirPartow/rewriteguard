@@ -6,7 +6,7 @@ import Footer from './components/Footer';
 import LogoHomeButton from './components/LogoHomeButton';
 import AccountMenu from './components/AccountMenu';
 import PricingView from './components/PricingView';
-import DashboardPreview from './components/DashboardPreview';
+
 interface LandingPageProps {
     onShowPolicy: () => void;
     onPrivacyClick: () => void;
@@ -202,47 +202,78 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                         </div>
 
 
-                        {/* Dashboard Preview Section */}
+                        {/* Dashboard Preview Mockup */}
                         <div className="mt-24 relative w-full px-0 md:px-12 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                             <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-[2rem] blur-2xl opacity-50"></div>
-                            <div className="relative bg-[#f8fafc] dark:bg-[#0b1121] border border-gray-200 dark:border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group transition-all duration-1000">
-                                {/* Browser Chrome / Toolbar */}
-                                <div className="h-14 bg-white dark:bg-[#0f172a] border-b border-gray-200 dark:border-white/5 flex items-center px-8 gap-4 transition-colors">
+                            <div className="relative bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden aspect-video flex flex-col p-4 lg:p-6 group transition-colors">
+                                {/* Browser Chrome */}
+                                <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/5 pb-4 mb-6 transition-colors">
                                     <div className="flex gap-2">
-                                        <div className="w-3.5 h-3.5 rounded-full bg-red-400/20 border border-red-500/10"></div>
-                                        <div className="w-3.5 h-3.5 rounded-full bg-amber-400/20 border border-amber-500/10"></div>
-                                        <div className="w-3.5 h-3.5 rounded-full bg-emerald-400/20 border border-emerald-500/10"></div>
+                                        <div className="w-3 h-3 rounded-full bg-red-500/30 dark:bg-red-500/50"></div>
+                                        <div className="w-3 h-3 rounded-full bg-amber-500/30 dark:bg-amber-500/50"></div>
+                                        <div className="w-3 h-3 rounded-full bg-emerald-500/30 dark:bg-emerald-500/50"></div>
                                     </div>
-                                    <div className="flex-1 max-w-sm ml-4">
-                                        <div className="h-7 bg-gray-50/50 dark:bg-white/5 rounded-full border border-gray-100 dark:border-white/5 flex items-center px-4 transition-colors">
-                                            <span className="text-[11px] text-gray-400 font-medium tracking-tight">app.rewriteguard.com/dashboard</span>
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-2 w-24 bg-gray-100 dark:bg-white/5 rounded-full"></div>
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600"></div>
+                                    </div>
+                                </div>
+
+                                {/* Mock Dashboard Content */}
+                                <div className="flex-1 flex gap-6 overflow-hidden">
+                                    {/* Sidebar Mockup */}
+                                    <div className="hidden md:flex flex-col gap-4 w-48 border-r border-gray-100 dark:border-white/5 pr-6 transition-colors">
+                                        <div className="h-8 w-full bg-blue-500/20 rounded-lg flex items-center px-3 gap-2">
+                                            <div className="w-3 h-3 bg-blue-400 rounded-sm"></div>
+                                            <div className="h-2 w-16 bg-blue-400/50 rounded"></div>
+                                        </div>
+                                        {[1, 2, 3, 4].map(i => (
+                                            <div key={i} className="h-8 w-full bg-gray-50 dark:bg-white/5 rounded-lg flex items-center px-3 gap-2 transition-colors">
+                                                <div className="w-3 h-3 bg-gray-300 dark:bg-white/20 rounded-sm"></div>
+                                                <div className="h-2 w-20 bg-gray-200 dark:bg-white/10 rounded"></div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Main Area Mockup */}
+                                    <div className="flex-1 flex flex-col gap-6">
+                                        {/* Stats */}
+                                        <div className="grid grid-cols-3 gap-4">
+                                            <div className="p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl group/card hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-all">
+                                                <div className="text-xl mb-1">📝</div>
+                                                <div className="text-2xl font-bold text-slate-900 dark:text-white transition-colors">1,420</div>
+                                                <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-bold">Words Today</div>
+                                            </div>
+                                            <div className="p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl group/card hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-all">
+                                                <div className="text-xl mb-1">✨</div>
+                                                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 transition-colors">99.4%</div>
+                                                <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-bold">Accuracy</div>
+                                            </div>
+                                            <div className="p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl group/card hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-all">
+                                                <div className="text-xl mb-1">⚡</div>
+                                                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 transition-colors">0.8s</div>
+                                                <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-bold">Speed</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Activity Chart Mockup */}
+                                        <div className="flex-1 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group-hover:scale-[1.01] transition-all duration-700">
+                                            <div className="flex justify-between items-center">
+                                                <div className="h-3 w-32 bg-gray-200 dark:bg-white/10 rounded transition-colors"></div>
+                                                <div className="h-3 w-16 bg-gray-100 dark:bg-white/5 rounded text-[10px] flex items-center justify-center text-slate-400 dark:text-gray-400 transition-colors">7 Days</div>
+                                            </div>
+                                            <div className="flex-1 flex items-end gap-2 px-2">
+                                                {[40, 70, 45, 90, 65, 80, 55, 75, 50, 85].map((h, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="flex-1 bg-gradient-to-t from-blue-600/40 to-blue-400/60 rounded-t-sm animate-fade-in-up"
+                                                        style={{ height: `${h}%`, animationDelay: `${i * 0.05}s` }}
+                                                    ></div>
+                                                ))}
+                                            </div>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 to-transparent pointer-events-none"></div>
                                         </div>
                                     </div>
-                                    <div className="w-24 h-2.5 bg-gray-100 dark:bg-white/5 rounded-full ml-auto opacity-30 transition-colors"></div>
-                                </div>
-
-                                {/* Content Area - High Fidelity Mockup */}
-                                <div className="p-4 lg:p-12 overflow-hidden bg-white/50 dark:bg-transparent">
-                                    <div className="scale-[0.8] lg:scale-1 origin-top transition-transform duration-1000">
-                                        <DashboardPreview />
-                                    </div>
-                                </div>
-
-                                {/* Decorative Background Elements inside mockup */}
-                                <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-blue-500/5 blur-[120px] pointer-events-none rounded-full"></div>
-                                <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-purple-500/5 blur-[120px] pointer-events-none rounded-full"></div>
-                            </div>
-
-                            {/* Trust Indicator */}
-                            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-8 py-5 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl flex items-center gap-6 backdrop-blur-md hover:scale-105 transition-all cursor-default z-20">
-                                <div className="flex -space-x-4">
-                                    <div className="w-10 h-10 rounded-full border-4 border-white dark:border-[#1e293b] bg-blue-500 flex items-center justify-center font-black text-white text-xs shadow-sm">A</div>
-                                    <div className="w-10 h-10 rounded-full border-4 border-white dark:border-[#1e293b] bg-purple-500 flex items-center justify-center font-black text-white text-xs shadow-sm">M</div>
-                                    <div className="w-10 h-10 rounded-full border-4 border-white dark:border-[#1e293b] bg-emerald-500 flex items-center justify-center font-black text-white text-xs shadow-sm">J</div>
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[15px] font-black tracking-tight text-slate-800 dark:text-gray-100 transition-colors">Trusted by {userCount} authors</span>
-                                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest opacity-80">And Growing Daily</span>
                                 </div>
                             </div>
                         </div>
