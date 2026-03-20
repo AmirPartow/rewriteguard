@@ -130,7 +130,7 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
     const handleSocialLogin = async (provider: string) => {
         clearError();
         const CLIENT_IDS: Record<string, string> = {
-            google: (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || ''
+            google: (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || '1072943021853-a0j1rrqej35dhdqkqaacn4qdlt76hk8j.apps.googleusercontent.com'
         };
 
         const REDIRECT_URI = `${window.location.origin}/auth-callback`;
