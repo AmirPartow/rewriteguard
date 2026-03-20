@@ -212,9 +212,9 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                                 <p className="max-w-3xl mx-auto text-lg text-slate-500 dark:text-gray-400 font-medium leading-relaxed">
                                     RewriteGuard works alongside you to ensure your writing remains authentic, professional, and undetectable—in a fraction of the time. Welcome to a more secure future of writing.
                                 </p>
-                                <button
+                                 <button
                                     onClick={() => navigateTo('auth')}
-                                    className="mt-8 px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full transition-all shadow-lg hover:scale-105 active:scale-95"
+                                    className="mt-8 px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-full transition-all shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95"
                                 >
                                     Sign up now. It's free!
                                 </button>
