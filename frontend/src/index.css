@@ -53,14 +53,28 @@ body {
   text-align: left;
 }
 
-/* Hide ALL scrollbars — content still scrollable via mousewheel/trackpad (like QuillBot) */
+/* Show scrollbars — they help with accessibility and user feedback */
 *::-webkit-scrollbar {
-  display: none;
+  width: 8px;
 }
 
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* For Firefox */
 * {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
 @keyframes fadeInUp {
