@@ -2,9 +2,10 @@ import { useState } from 'react';
 
 interface PricingViewProps {
     onAuthRequest: () => void;
+    onBack: () => void;
 }
 
-export default function PricingView({ onAuthRequest }: PricingViewProps) {
+export default function PricingView({ onAuthRequest, onBack }: PricingViewProps) {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
     const [showComparison, setShowComparison] = useState(false);
 
@@ -17,8 +18,20 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
     };
 
     return (
-        <main className="relative z-10 w-full px-0 md:px-12 py-24 animate-fade-in-up">
-            <div className="text-center mb-16 px-6">
+        <main className="relative z-10 w-full px-0 md:px-12 py-24 animate-fade-in-up min-h-screen">
+            {/* Back Button */}
+            <div className="absolute top-8 left-6 md:left-12 z-20">
+                <button 
+                    onClick={onBack}
+                    className="p-3 bg-white dark:bg-slate-800 rounded-full shadow-md hover:shadow-lg transition-all text-slate-600 dark:text-gray-400 border border-gray-100 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-700"
+                >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+            </div>
+
+            <div className="text-center mb-16 px-6 relative">
                 <h2 className="text-5xl font-black mb-4 text-slate-900 dark:text-white transition-colors">Simple, Transparent Pricing</h2>
                 <p className="text-xl text-slate-500 dark:text-gray-400 font-medium transition-colors mb-8">Choose the plan that's right for your content needs.</p>
                 
@@ -47,8 +60,8 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
                 </div>
             </div>
 
-            {/* Top Cards Grid */}
-            <div className={`max-w-6xl mx-auto w-full px-6 grid gap-6 lg:gap-8 mb-16 ${billingCycle === 'monthly' ? 'md:grid-cols-3' : 'md:grid-cols-1 max-w-md'}`}>
+            {/* Top Cards Grid - Explicit centering */}
+            <div className={`mx-auto w-full px-6 grid gap-6 lg:gap-8 mb-16 items-center place-items-center ${billingCycle === 'monthly' ? 'max-w-6xl md:grid-cols-3' : 'max-w-md md:grid-cols-1'}`}>
                 {/* Free Plan - Only Montly */}
                 {billingCycle === 'monthly' && (
                     <div className="bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-3xl p-8 flex flex-col hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all shadow-sm">

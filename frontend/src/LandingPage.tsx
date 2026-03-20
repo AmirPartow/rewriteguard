@@ -100,7 +100,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
     }
 
     return (
-        <div className="min-h-screen text-slate-900 dark:text-white overflow-hidden bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300">
+        <div className="min-h-screen text-slate-900 dark:text-white bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300">
             {/* Background Decorations */}
             <div className="fixed inset-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse"></div>
@@ -332,7 +332,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                 </main>
             ) : (
                 /* Pricing View with Details */
-                <PricingView onAuthRequest={() => setView('auth')} />
+                <PricingView onAuthRequest={() => setView('auth')} onBack={() => setView('home')} />
             )}
 
             {/* Common Section: Stats / Proof */}
