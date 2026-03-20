@@ -5,6 +5,7 @@ import ContactSupport from './ContactSupport';
 import Footer from './components/Footer';
 import LogoHomeButton from './components/LogoHomeButton';
 import AccountMenu from './components/AccountMenu';
+import PricingView from './components/PricingView';
 
 interface LandingPageProps {
     onShowPolicy: () => void;
@@ -330,65 +331,8 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                     </section>
                 </main>
             ) : (
-                /* Pricing View */
-                <main className="relative z-10 w-full px-0 md:px-12 py-24 animate-fade-in-up">
-                    <div className="text-center mb-20 px-6">
-                        <h2 className="text-5xl font-black mb-4 text-slate-900 dark:text-white transition-colors">Simple, Transparent Pricing</h2>
-                        <p className="text-xl text-slate-500 dark:text-gray-400 font-medium transition-colors">Choose the plan that's right for your content needs.</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-8 w-full px-6 md:px-12">
-                        {/* Free Plan */}
-                        <div className="bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-[2.5rem] p-10 flex flex-col hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all shadow-sm">
-                            <div className="mb-8">
-                                <h3 className="text-2xl font-black mb-2 text-slate-900 dark:text-white transition-colors">Free</h3>
-                                <div className="flex items-baseline gap-1 mb-6">
-                                    <span className="text-5xl font-black text-slate-900 dark:text-white transition-colors">$0</span>
-                                    <span className="text-slate-500 dark:text-gray-400 font-bold">/forever</span>
-                                </div>
-                                <p className="text-slate-500 dark:text-gray-400 font-medium transition-colors">Perfect for trying out our tools.</p>
-                            </div>
-                            <div className="space-y-4 mb-10 flex-1">
-                                <FeatureItem text="1,000 words / day" />
-                                <FeatureItem text="Standard AI Detection" />
-                                <FeatureItem text="Basic Paraphrasing" />
-                                <FeatureItem text="Community Support" />
-                            </div>
-                            <button
-                                onClick={() => isAuthenticated && onDashboardEntry ? onDashboardEntry() : (onGuestEntry ? onGuestEntry() : setView('auth'))}
-                                className="w-full py-4 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 border border-transparent dark:border-white/10 rounded-2xl font-black transition-all text-slate-900 dark:text-white"
-                            >
-                                {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
-                            </button>
-                        </div>
-
-                        {/* Premium Plan */}
-                        <div className="bg-gradient-to-br from-blue-600/5 to-purple-600/5 dark:from-blue-600/20 dark:to-purple-600/20 border-2 border-blue-500/20 dark:border-blue-500/30 rounded-[2.5rem] p-10 flex flex-col relative overflow-hidden group hover:scale-[1.02] transition-all shadow-xl shadow-blue-500/10">
-                            <div className="absolute top-0 right-0 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-bl-2xl">Popular</div>
-                            <div className="mb-8">
-                                <h3 className="text-2xl font-black mb-2 text-slate-900 dark:text-white transition-colors">Premium</h3>
-                                <div className="flex items-baseline gap-1 mb-6">
-                                    <span className="text-5xl font-black text-slate-900 dark:text-white transition-colors">$9.99</span>
-                                    <span className="text-slate-500 dark:text-gray-400 font-bold">/mo</span>
-                                </div>
-                                <p className="text-slate-500 dark:text-gray-400 font-medium transition-colors">For power users and professionals.</p>
-                            </div>
-                            <div className="space-y-4 mb-10 flex-1">
-                                <FeatureItem text="10,000 words / day" />
-                                <FeatureItem text="Priority AI Processing" />
-                                <FeatureItem text="All 5 Paraphrasing Modes" />
-                                <FeatureItem text="Priority Support" />
-                                <FeatureItem text="No Daily Limits (soon)" />
-                            </div>
-                            <button
-                                onClick={() => isAuthenticated && onDashboardEntry ? onDashboardEntry() : setView('auth')}
-                                className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl font-black text-lg shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all text-white"
-                            >
-                                {isAuthenticated ? 'Go to Dashboard' : 'Upgrade Now'}
-                            </button>
-                        </div>
-                    </div>
-                </main>
+                /* Pricing View with Details */
+                <PricingView onAuthRequest={() => setView('auth')} />
             )}
 
             {/* Common Section: Stats / Proof */}
@@ -422,19 +366,6 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                onContactClick={() => setView('contact')} 
                onHelpClick={() => setView('help')}
            />
-        </div>
-    );
-}
-
-function FeatureItem({ text }: { text: string }) {
-    return (
-        <div className="flex items-center gap-3">
-            <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-3 h-3 text-emerald-600 dark:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
-            <span className="text-slate-600 dark:text-gray-300 font-medium transition-colors">{text}</span>
         </div>
     );
 }
