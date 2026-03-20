@@ -20,6 +20,7 @@ interface LandingPageProps {
 export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick, onLegalClick, onGuestEntry, onDashboardEntry, isAuthenticated }: LandingPageProps) {
     const [view, setView] = useState<'home' | 'pricing' | 'auth' | 'contact' | 'help'>('home');
     const [userCount, setUserCount] = useState<string>("10,000+");
+    const [activeSegment, setActiveSegment] = useState<number>(0);
 
     useEffect(() => {
         fetch(`${API.AUTH}/users/count`)
@@ -201,8 +202,183 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                             </button>
                         </div>
 
+                        {/* 1. Value Proposition Section: AI that writes with you */}
+                        <div className="mt-32 max-w-6xl mx-auto px-6 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                            <div className="text-center mb-16">
+                                <h2 className="text-4xl md:text-5xl font-black mb-6 text-slate-900 dark:text-white leading-tight">
+                                    AI that protects your voice, <br />
+                                    <span className="text-blue-600 dark:text-blue-400">doesn't replace it</span>
+                                </h2>
+                                <p className="max-w-3xl mx-auto text-lg text-slate-500 dark:text-gray-400 font-medium leading-relaxed">
+                                    RewriteGuard works alongside you to ensure your writing remains authentic, professional, and undetectable—in a fraction of the time. Welcome to a more secure future of writing.
+                                </p>
+                                <button
+                                    onClick={() => navigateTo('auth')}
+                                    className="mt-8 px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full transition-all shadow-lg hover:scale-105 active:scale-95"
+                                >
+                                    Sign up now. It's free!
+                                </button>
+                            </div>
 
+                            <div className="grid md:grid-cols-2 gap-16 items-center">
+                                <div className="space-y-12">
+                                    <div className="group transition-all">
+                                        <h3 className="text-2xl font-black mb-4 flex items-center gap-3 text-slate-900 dark:text-white">
+                                            <span className="w-10 h-10 flex items-center justify-center bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all">🛡️</span>
+                                            Clear, authentic communication
+                                        </h3>
+                                        <p className="text-lg text-slate-600 dark:text-gray-400 leading-relaxed font-medium">
+                                            Never worry about AI flags again. RewriteGuard straightens your tone, eliminates robotic patterns, and preserves your unique intent.
+                                        </p>
+                                    </div>
+                                    <div className="group transition-all">
+                                        <h3 className="text-2xl font-black mb-4 flex items-center gap-3 text-slate-900 dark:text-white">
+                                            <span className="w-10 h-10 flex items-center justify-center bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl group-hover:bg-purple-600 group-hover:text-white transition-all">✨</span>
+                                            Better results, faster delivery
+                                        </h3>
+                                        <p className="text-lg text-slate-600 dark:text-gray-400 leading-relaxed font-medium">
+                                            Humanize your text with one click. Choose from specialized modes to match your context and bypass even the most aggressive AI detectors.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="relative group">
+                                    <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 to-purple-600/10 rounded-3xl blur-2xl opacity-50 group-hover:opacity-80 transition-opacity"></div>
+                                    <img 
+                                        src="/academic_preview_mockup_1773986647445.png" 
+                                        alt="AI Detection Preview" 
+                                        className="relative w-full rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 hover:scale-[1.01] transition-transform duration-500"
+                                    />
+                                    <div className="absolute top-4 right-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-200 dark:border-white/10 shadow-lg animate-bounce">
+                                        <span className="text-blue-600 dark:text-blue-400 font-bold text-sm">✨ 99% Human Verified</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
+                        {/* 2. Tabbed Audience Section */}
+                        <div className="mt-40 mb-20 section-audience animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                            <div className="text-center mb-16">
+                                <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-12">Perfect any project with RewriteGuard</h2>
+                                <div className="flex flex-wrap justify-center gap-2 md:gap-4 p-2 bg-slate-100 dark:bg-white/5 rounded-full max-w-fit mx-auto border border-gray-200 dark:border-white/10">
+                                    {['Professional Writers', 'Students', 'Content Creators', 'Academic Researchers'].map((segment, idx) => (
+                                        <button
+                                            key={segment}
+                                            onClick={() => setActiveSegment(idx)}
+                                            className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all ${activeSegment === idx ? 'bg-white dark:bg-white/10 text-blue-600 dark:text-white shadow-md' : 'text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'}`}
+                                        >
+                                            {segment}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center min-h-[500px]">
+                                <div className="space-y-8 animate-fade-in-up" key={activeSegment}>
+                                    <h3 className="text-4xl font-black text-slate-900 dark:text-white leading-tight">
+                                        {activeSegment === 0 && "Write with professional authority."}
+                                        {activeSegment === 1 && "Excel in your academic journey."}
+                                        {activeSegment === 2 && "Ignite your content flow."}
+                                        {activeSegment === 3 && "Craft stellar research papers."}
+                                    </h3>
+                                    <p className="text-xl text-slate-600 dark:text-gray-400 leading-relaxed font-medium">
+                                        {activeSegment === 0 && "Polish your emails, reports, and presentations. RewriteGuard ensures your professional voice is sharp, clear, and fully authentic."}
+                                        {activeSegment === 1 && "Submit your essays with confidence. Detect AI footprints and refine your work to maintain the highest standards of originality."}
+                                        {activeSegment === 2 && "Create content that commands attention. Humanize AI-generated drafts to keep your personal touch while saving hours of effort."}
+                                        {activeSegment === 3 && "Elevate your research process. Ensure every citation, analysis, and discovery is presented in your own unmistakable voice."}
+                                    </p>
+                                    <div className="flex flex-wrap gap-4">
+                                        {activeSegment === 0 && ['Formal Mode', 'Clarity Plus', 'Professional Bias'].map(tag => <span key={tag} className="px-4 py-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl font-bold text-xs uppercase tracking-wider border border-blue-200/50 dark:border-blue-500/20">{tag}</span>)}
+                                        {activeSegment === 1 && ['Originality Check', 'Essay Smoother', 'Student Lite'].map(tag => <span key={tag} className="px-4 py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl font-bold text-xs uppercase tracking-wider border border-emerald-200/50 dark:border-emerald-500/20">{tag}</span>)}
+                                        {activeSegment === 2 && ['Voice Preserver', 'Creative Flare', 'Bulk Humanize'].map(tag => <span key={tag} className="px-4 py-2 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl font-bold text-xs uppercase tracking-wider border border-purple-200/50 dark:border-purple-500/20">{tag}</span>)}
+                                        {activeSegment === 3 && ['Academic Depth', 'Citation Safe', 'Research Polish'].map(tag => <span key={tag} className="px-4 py-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl font-bold text-xs uppercase tracking-wider border border-amber-200/50 dark:border-amber-500/20">{tag}</span>)}
+                                    </div>
+                                    <button
+                                        onClick={() => navigateTo('auth')}
+                                        className="px-8 py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-blue-500/20 group"
+                                    >
+                                        Try it for free <span className="inline-block group-hover:translate-x-1 transition-transform ml-2">→</span>
+                                    </button>
+                                </div>
+
+                                <div className="relative group animate-fade-in" style={{ animationDuration: '0.8s' }} key={`${activeSegment}-img`}>
+                                    <div className="absolute -inset-6 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-[3rem] blur-3xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                                    <div className="relative bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-2xl border border-gray-100 dark:border-white/10 overflow-hidden">
+                                        <img 
+                                            src={
+                                                activeSegment === 0 ? "/brand_protection_mockup_1773986690362.png" :
+                                                activeSegment === 1 ? "/student_essay_mockup_1773986659703.png" :
+                                                activeSegment === 2 ? "/creator_voice_mockup_1773986673586.png" :
+                                                "/academic_preview_mockup_1773986647445.png"
+                                            } 
+                                            alt="Segment Mockup" 
+                                            className="w-full h-auto rounded-xl shadow-lg border border-gray-100 dark:border-white/5 shadow-blue-500/5"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 3. Testimonials Section: Why people love us */}
+                        <div className="mt-40 bg-slate-100/50 dark:bg-white/[0.02] py-32 animate-fade-in border-y border-gray-200 dark:border-white/5">
+                            <div className="max-w-7xl mx-auto px-6 text-center">
+                                <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-20 tracking-tight">Why writers love RewriteGuard</h2>
+                                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                                    {[
+                                        { name: "Jerry Keszka", role: "Content Creator", text: "As someone who writes daily for my brand, keeping the voice human is vital. RewriteGuard saves me time and money while keeping my quality elite." },
+                                        { name: "Daniel Völk", role: "Published Author", text: "Whenever I struggle with repetitive phrasing, I use the humanizer. It generates unique sentences while maintaining the same story context." },
+                                        { name: "Akshita Thakur", role: "Language Trainer", text: "I've been teaching writing for years, and I've always needed a tool to simplify complex logic into natural, flowing English. This is it." },
+                                        { name: "Danisha Verma", role: "Student", text: "RewriteGuard has been a game-changer for my thesis. It's an indispensable tool for any student looking to improve their writing standards." }
+                                    ].map((testi, i) => (
+                                        <div key={i} className="flex flex-col p-8 bg-white dark:bg-white/5 rounded-3xl border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-xl transition-all hover:bg-gray-50 dark:hover:bg-white/[0.07]">
+                                            <p className="text-slate-600 dark:text-gray-400 italic mb-8 flex-grow leading-relaxed font-medium">"{testi.text}"</p>
+                                            <div className="flex items-center gap-4 border-t border-gray-100 dark:border-white/10 pt-6">
+                                                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-500/20 dark:to-purple-500/20 rounded-full flex items-center justify-center font-black text-blue-600 dark:text-blue-400">
+                                                    {testi.name[0]}
+                                                </div>
+                                                <div className="text-left">
+                                                    <div className="font-bold text-slate-900 dark:text-white">{testi.name}</div>
+                                                    <div className="text-xs text-slate-400 dark:text-gray-500 font-bold uppercase tracking-wider">{testi.role}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 4. Final CTA Section */}
+                        <div className="mt-40 mb-32 max-w-7xl mx-auto px-6 animate-fade-in">
+                            <div className="relative bg-gradient-to-br from-blue-600 to-purple-700 rounded-[3rem] p-12 md:p-24 overflow-hidden text-center shadow-2xl group transition-all">
+                                <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-3xl animate-pulse"></div>
+                                <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full -ml-48 -mb-48 blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                                
+                                <div className="relative z-10 max-w-4xl mx-auto">
+                                    <h2 className="text-4xl md:text-6xl font-black text-white mb-8 leading-tight">
+                                        Start writing clearly and confidently with RewriteGuard
+                                    </h2>
+                                    <p className="text-xl md:text-2xl text-white/80 mb-12 font-medium">
+                                        By enhancing your communication and giving your writing greater impact, we can help you reach your personal and professional goals.
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row justify-center gap-6">
+                                        <button
+                                            onClick={() => navigateTo('auth')}
+                                            className="px-12 py-5 bg-white text-blue-700 font-black text-xl rounded-2xl hover:bg-gray-100 transition-all shadow-xl hover:scale-105 active:scale-95"
+                                        >
+                                            Sign up now. It's free!
+                                        </button>
+                                        <button
+                                            onClick={() => navigateTo('pricing')}
+                                            className="px-12 py-5 bg-transparent border-2 border-white/30 text-white font-black text-xl rounded-2xl hover:bg-white/10 transition-all active:scale-95 backdrop-blur-sm"
+                                        >
+                                            View Plans
+                                        </button>
+                                    </div>
+                                    <div className="mt-12 text-white/50 text-sm font-bold uppercase tracking-[0.2em]">
+                                        Loved by 50,000+ writers worldwide
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Features Section */}
