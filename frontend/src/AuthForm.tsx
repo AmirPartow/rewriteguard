@@ -27,14 +27,12 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [fullName, setFullName] = useState('');
-    const [formErrors, setFormErrors] = useState<FormErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     // Clear errors when switching modes
     const switchMode = (newMode: AuthMode) => {
         setMode(newMode);
-        setFormErrors({});
         clearError();
         setPassword('');
         setConfirmPassword('');
@@ -72,7 +70,7 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
             errors.confirmPassword = 'Passwords do not match';
         }
 
-        setFormErrors(errors);
+        // Just check if errors object is empty to proceed, not setting state
         return Object.keys(errors).length === 0;
     };
 
@@ -132,19 +130,13 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
     const handleSocialLogin = async (provider: string) => {
         clearError();
         const CLIENT_IDS: Record<string, string> = {
-            google: (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || '',
-            facebook: (import.meta as any).env.VITE_FACEBOOK_APP_ID || '',
-            apple: (import.meta as any).env.VITE_APPLE_CLIENT_ID || ''
+            google: (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || ''
         };
 
         const REDIRECT_URI = `${window.location.origin}/auth-callback`;
         let authUrl = '';
         if (provider === 'google') {
             authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_IDS.google}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=openid%20email%20profile&state=${provider}`;
-        } else if (provider === 'facebook') {
-            authUrl = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${CLIENT_IDS.facebook}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=email,public_profile&state=${provider}`;
-        } else if (provider === 'apple') {
-            authUrl = `https://appleid.apple.com/auth/authorize?client_id=${CLIENT_IDS.apple}&redirect_uri=${REDIRECT_URI}&response_type=code%20id_token&scope=name%20email&response_mode=form_post&state=${provider}`;
         }
 
         if (authUrl) {
@@ -238,18 +230,6 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
                                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                             </svg>
                             Continue with Google
-                        </button>
-                        <button onClick={() => handleSocialLogin('facebook')} className="w-full h-14 flex items-center justify-center gap-3 bg-[#1877F2] rounded-2xl font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-blue-500/20">
-                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M24 12.073c0-6.627-5.373-12.073-12-12.073s-12 5.446-12 12.073c0 5.991 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.065 24 12.073z" />
-                            </svg>
-                            Continue with Facebook
-                        </button>
-                        <button onClick={() => handleSocialLogin('apple')} className="w-full h-14 flex items-center justify-center gap-3 bg-black rounded-2xl font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-black/20">
-                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M17.05 20.28c-.96.95-2.18 2.12-3.83 2.12-1.63 0-2.1-.98-3.96-.98-1.86 0-2.43.95-3.92.98-1.5.03-2.6-1.03-3.62-2.15-2.07-2.3-3.64-6.52-1.5-9.87 1.05-1.66 2.87-2.73 4.7-2.73 1.4 0 2.5.88 3.4 1.13.9-.25 2.2-1.4 3.8-1.4 1.6 0 3.03.88 3.96 1.77-3.13 2.14-2.6 6.8 1.14 8.7a8.6 8.6 0 01-2.17 2.63M13.2 2.6c.86-1.12.8-2.26.8-2.6-.96.04-2.06.65-2.76 1.48-.7.83-.7 2.1-.7 2.1.9 0 2-1.2 2.66-2" />
-                            </svg>
-                            Continue with Apple
                         </button>
                     </div>
                 )}
