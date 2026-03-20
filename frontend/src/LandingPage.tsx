@@ -5,8 +5,8 @@ import ContactSupport from './ContactSupport';
 import Footer from './components/Footer';
 import LogoHomeButton from './components/LogoHomeButton';
 import AccountMenu from './components/AccountMenu';
+import PricingView from './components/PricingView';
 
-import DashboardPreview from './components/DashboardPreview';
 interface LandingPageProps {
     onShowPolicy: () => void;
     onPrivacyClick: () => void;
@@ -31,10 +31,34 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
             })
             .catch(err => console.error("Could not fetch user count", err));
 
-        const handleOpenContact = () => setView('contact');
+        const handlePopState = (e: PopStateEvent) => {
+            if (e.state && e.state.view) {
+                setView(e.state.view);
+            } else {
+                setView('home');
+            }
+        };
+
+        const handleOpenContact = () => navigateTo('contact');
+        window.addEventListener('popstate', handlePopState);
         window.addEventListener('open-contact', handleOpenContact);
-        return () => window.removeEventListener('open-contact', handleOpenContact);
+        
+        // Initial state
+        if (!window.history.state || !window.history.state.view) {
+            window.history.replaceState({ view: 'home' }, '', window.location.pathname);
+        }
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+            window.removeEventListener('open-contact', handleOpenContact);
+        };
     }, []);
+
+    const navigateTo = (newView: typeof view) => {
+        if (newView === view) return;
+        window.history.pushState({ view: newView }, '', window.location.pathname);
+        setView(newView);
+    };
 
 
     useEffect(() => {
@@ -44,14 +68,14 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
     if (view === 'help') {
         return (
             <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a] animate-fade-in transition-colors">
-                <ContactSupport onBack={() => setView('home')} mode="help" />
-                <Footer
-                    onShowPolicy={onShowPolicy}
-                    onPrivacyClick={onPrivacyClick}
-                    onTermsClick={onTermsClick}
-                    onLegalClick={onLegalClick}
-                    onContactClick={() => setView('contact')}
-                    onHelpClick={() => setView('help')}
+                <ContactSupport onBack={() => navigateTo('home')} mode="help" />
+                <Footer 
+                    onShowPolicy={onShowPolicy} 
+                    onPrivacyClick={onPrivacyClick} 
+                    onTermsClick={onTermsClick} 
+                    onLegalClick={onLegalClick} 
+                    onContactClick={() => navigateTo('contact')} 
+                    onHelpClick={() => navigateTo('help')}
                 />
             </div>
         );
@@ -61,18 +85,18 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
         return (
             <div className="min-h-screen flex flex-col items-center py-20 px-4 animate-fade-in bg-slate-50 dark:bg-[#0f172a] transition-colors">
                 <div className="mb-12 self-start w-full px-6">
-                    <LogoHomeButton onClick={() => setView('home')} />
+                    <LogoHomeButton onClick={() => navigateTo('home')} />
                 </div>
                 <div className="w-full flex-grow">
-                    <ContactSupport onBack={() => setView('home')} mode="contact" />
+                    <ContactSupport onBack={() => navigateTo('home')} mode="contact" />
                 </div>
-                <Footer
-                    onShowPolicy={onShowPolicy}
-                    onPrivacyClick={onPrivacyClick}
-                    onTermsClick={onTermsClick}
-                    onLegalClick={onLegalClick}
-                    onContactClick={() => setView('contact')}
-                    onHelpClick={() => setView('help')}
+                <Footer 
+                    onShowPolicy={onShowPolicy} 
+                    onPrivacyClick={onPrivacyClick} 
+                    onTermsClick={onTermsClick} 
+                    onLegalClick={onLegalClick} 
+                    onContactClick={() => navigateTo('contact')} 
+                    onHelpClick={() => navigateTo('help')}
                 />
             </div>
         );
@@ -82,25 +106,25 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-fade-in bg-slate-50 dark:bg-[#0f172a] transition-colors">
                 <div className="mb-8">
-                    <LogoHomeButton onClick={() => setView('home')} />
+                    <LogoHomeButton onClick={() => navigateTo('home')} />
                 </div>
                 <div className="w-full flex-grow flex items-center justify-center">
                     <AuthForm onPrivacyClick={onPrivacyClick} onTermsClick={onTermsClick} />
                 </div>
-                <Footer
-                    onShowPolicy={onShowPolicy}
-                    onPrivacyClick={onPrivacyClick}
-                    onTermsClick={onTermsClick}
-                    onLegalClick={onLegalClick}
-                    onContactClick={() => setView('contact')}
-                    onHelpClick={() => setView('help')}
+                <Footer 
+                    onShowPolicy={onShowPolicy} 
+                    onPrivacyClick={onPrivacyClick} 
+                    onTermsClick={onTermsClick} 
+                    onLegalClick={onLegalClick} 
+                    onContactClick={() => navigateTo('contact')} 
+                    onHelpClick={() => navigateTo('help')}
                 />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen text-slate-900 dark:text-white overflow-hidden bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300">
+        <div className="min-h-screen text-slate-900 dark:text-white bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300">
             {/* Background Decorations */}
             <div className="fixed inset-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse"></div>
@@ -109,22 +133,22 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
 
             {/* Navbar */}
             <nav className="relative z-50 w-full px-6 md:px-12 py-6 flex justify-between items-center bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md sticky top-0 border-b border-gray-200 dark:border-white/5 transition-colors">
-                <LogoHomeButton onClick={() => setView('home')} />
+                <LogoHomeButton onClick={() => navigateTo('home')} />
                 <div className="flex items-center gap-6">
                     <div className="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-500 dark:text-gray-400">
-                        <button onClick={() => setView('home')} className={`hover:text-blue-600 dark:hover:text-white transition-colors ${view === 'home' ? 'text-blue-600 dark:text-white' : ''}`}>Features</button>
-                        <button onClick={() => { setView('home'); setTimeout(() => document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="hover:text-blue-600 dark:hover:text-white transition-colors">FAQ</button>
-                        <button onClick={() => setView('pricing')} className={`hover:text-blue-600 dark:hover:text-white transition-colors ${view === 'pricing' ? 'text-blue-600 dark:text-white' : ''}`}>Pricing</button>
+                <button onClick={() => navigateTo('home')} className={`hover:text-blue-600 dark:hover:text-white transition-colors ${view === 'home' ? 'text-blue-600 dark:text-white' : ''}`}>Features</button>
+                <button onClick={() => { navigateTo('home'); setTimeout(() => document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="hover:text-blue-600 dark:hover:text-white transition-colors">FAQ</button>
+                <button onClick={() => navigateTo('pricing')} className={`hover:text-blue-600 dark:hover:text-white transition-colors ${view === 'pricing' ? 'text-blue-600 dark:text-white' : ''}`}>Pricing</button>
                     </div>
-
+                    
                     <div className="flex items-center gap-4 border-l border-gray-200 dark:border-white/10 ml-2 pl-6">
-                        <AccountMenu
-                            onLoginClick={() => setView('auth')}
-                            onContactClick={() => setView('contact')}
-                            onHelpClick={() => setView('help')}
+                        <AccountMenu 
+                            onLoginClick={() => navigateTo('auth')}
+                            onContactClick={() => navigateTo('contact')}
+                            onHelpClick={() => navigateTo('help')}
                         />
                         {isAuthenticated && (
-                            <button
+                             <button
                                 onClick={() => onDashboardEntry && onDashboardEntry()}
                                 className="hidden sm:block px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:scale-105 transition-all shadow-lg shadow-blue-500/20"
                             >
@@ -178,47 +202,78 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                         </div>
 
 
-                        {/* Dashboard Preview Section */}
+                        {/* Dashboard Preview Mockup */}
                         <div className="mt-24 relative w-full px-0 md:px-12 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                             <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-[2rem] blur-2xl opacity-50"></div>
-                            <div className="relative bg-[#f8fafc] dark:bg-[#0b1121] border border-gray-200 dark:border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden group transition-all duration-1000">
-                                {/* Browser Chrome / Toolbar */}
-                                <div className="h-14 bg-white dark:bg-[#0f172a] border-b border-gray-200 dark:border-white/5 flex items-center px-8 gap-4 transition-colors">
+                            <div className="relative bg-white dark:bg-[#0f172a] border border-gray-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden aspect-video flex flex-col p-4 lg:p-6 group transition-colors">
+                                {/* Browser Chrome */}
+                                <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/5 pb-4 mb-6 transition-colors">
                                     <div className="flex gap-2">
-                                        <div className="w-3.5 h-3.5 rounded-full bg-red-400/20 border border-red-500/10"></div>
-                                        <div className="w-3.5 h-3.5 rounded-full bg-amber-400/20 border border-amber-500/10"></div>
-                                        <div className="w-3.5 h-3.5 rounded-full bg-emerald-400/20 border border-emerald-500/10"></div>
+                                        <div className="w-3 h-3 rounded-full bg-red-500/30 dark:bg-red-500/50"></div>
+                                        <div className="w-3 h-3 rounded-full bg-amber-500/30 dark:bg-amber-500/50"></div>
+                                        <div className="w-3 h-3 rounded-full bg-emerald-500/30 dark:bg-emerald-500/50"></div>
                                     </div>
-                                    <div className="flex-1 max-w-sm ml-4">
-                                        <div className="h-7 bg-gray-50/50 dark:bg-white/5 rounded-full border border-gray-100 dark:border-white/5 flex items-center px-4 transition-colors">
-                                            <span className="text-[11px] text-gray-400 font-medium tracking-tight">app.rewriteguard.com/dashboard</span>
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-2 w-24 bg-gray-100 dark:bg-white/5 rounded-full"></div>
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600"></div>
+                                    </div>
+                                </div>
+
+                                {/* Mock Dashboard Content */}
+                                <div className="flex-1 flex gap-6 overflow-hidden">
+                                    {/* Sidebar Mockup */}
+                                    <div className="hidden md:flex flex-col gap-4 w-48 border-r border-gray-100 dark:border-white/5 pr-6 transition-colors">
+                                        <div className="h-8 w-full bg-blue-500/20 rounded-lg flex items-center px-3 gap-2">
+                                            <div className="w-3 h-3 bg-blue-400 rounded-sm"></div>
+                                            <div className="h-2 w-16 bg-blue-400/50 rounded"></div>
+                                        </div>
+                                        {[1, 2, 3, 4].map(i => (
+                                            <div key={i} className="h-8 w-full bg-gray-50 dark:bg-white/5 rounded-lg flex items-center px-3 gap-2 transition-colors">
+                                                <div className="w-3 h-3 bg-gray-300 dark:bg-white/20 rounded-sm"></div>
+                                                <div className="h-2 w-20 bg-gray-200 dark:bg-white/10 rounded"></div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Main Area Mockup */}
+                                    <div className="flex-1 flex flex-col gap-6">
+                                        {/* Stats */}
+                                        <div className="grid grid-cols-3 gap-4">
+                                            <div className="p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl group/card hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-all">
+                                                <div className="text-xl mb-1">📝</div>
+                                                <div className="text-2xl font-bold text-slate-900 dark:text-white transition-colors">1,420</div>
+                                                <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-bold">Words Today</div>
+                                            </div>
+                                            <div className="p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl group/card hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-all">
+                                                <div className="text-xl mb-1">✨</div>
+                                                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 transition-colors">99.4%</div>
+                                                <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-bold">Accuracy</div>
+                                            </div>
+                                            <div className="p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl group/card hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-all">
+                                                <div className="text-xl mb-1">⚡</div>
+                                                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 transition-colors">0.8s</div>
+                                                <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-bold">Speed</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Activity Chart Mockup */}
+                                        <div className="flex-1 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group-hover:scale-[1.01] transition-all duration-700">
+                                            <div className="flex justify-between items-center">
+                                                <div className="h-3 w-32 bg-gray-200 dark:bg-white/10 rounded transition-colors"></div>
+                                                <div className="h-3 w-16 bg-gray-100 dark:bg-white/5 rounded text-[10px] flex items-center justify-center text-slate-400 dark:text-gray-400 transition-colors">7 Days</div>
+                                            </div>
+                                            <div className="flex-1 flex items-end gap-2 px-2">
+                                                {[40, 70, 45, 90, 65, 80, 55, 75, 50, 85].map((h, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="flex-1 bg-gradient-to-t from-blue-600/40 to-blue-400/60 rounded-t-sm animate-fade-in-up"
+                                                        style={{ height: `${h}%`, animationDelay: `${i * 0.05}s` }}
+                                                    ></div>
+                                                ))}
+                                            </div>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 to-transparent pointer-events-none"></div>
                                         </div>
                                     </div>
-                                    <div className="w-24 h-2.5 bg-gray-100 dark:bg-white/5 rounded-full ml-auto opacity-30 transition-colors"></div>
-                                </div>
-
-                                {/* Content Area - Scaled for better preview feel */}
-                                <div className="p-4 lg:p-12 overflow-hidden bg-white/50 dark:bg-transparent">
-                                    <div className="scale-[0.9] lg:scale-1 origin-top transition-transform duration-1000">
-                                        <DashboardPreview />
-                                    </div>
-                                </div>
-
-                                {/* Decorative Background Elements inside mockup */}
-                                <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-blue-500/5 blur-[120px] pointer-events-none rounded-full"></div>
-                                <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-purple-500/5 blur-[120px] pointer-events-none rounded-full"></div>
-                            </div>
-
-                            {/* Trust Indicator / Extra Layer */}
-                            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-8 py-5 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl flex items-center gap-6 backdrop-blur-md animate-bounce-slow hover:scale-105 transition-all cursor-default z-20">
-                                <div className="flex -space-x-4">
-                                    <div className="w-10 h-10 rounded-full border-4 border-white dark:border-[#1e293b] bg-blue-500 flex items-center justify-center font-black text-white text-xs shadow-sm">A</div>
-                                    <div className="w-10 h-10 rounded-full border-4 border-white dark:border-[#1e293b] bg-purple-500 flex items-center justify-center font-black text-white text-xs shadow-sm">M</div>
-                                    <div className="w-10 h-10 rounded-full border-4 border-white dark:border-[#1e293b] bg-emerald-500 flex items-center justify-center font-black text-white text-xs shadow-sm">J</div>
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[15px] font-black tracking-tight text-slate-800 dark:text-gray-100 transition-colors">Trusted by {userCount} authors</span>
-                                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest opacity-80">And Growing Daily</span>
                                 </div>
                             </div>
                         </div>
@@ -300,65 +355,8 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                     </section>
                 </main>
             ) : (
-                /* Pricing View */
-                <main className="relative z-10 w-full px-0 md:px-12 py-24 animate-fade-in-up">
-                    <div className="text-center mb-20 px-6">
-                        <h2 className="text-5xl font-black mb-4 text-slate-900 dark:text-white transition-colors">Simple, Transparent Pricing</h2>
-                        <p className="text-xl text-slate-500 dark:text-gray-400 font-medium transition-colors">Choose the plan that's right for your content needs.</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-8 w-full px-6 md:px-12">
-                        {/* Free Plan */}
-                        <div className="bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-[2.5rem] p-10 flex flex-col hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all shadow-sm">
-                            <div className="mb-8">
-                                <h3 className="text-2xl font-black mb-2 text-slate-900 dark:text-white transition-colors">Free</h3>
-                                <div className="flex items-baseline gap-1 mb-6">
-                                    <span className="text-5xl font-black text-slate-900 dark:text-white transition-colors">$0</span>
-                                    <span className="text-slate-500 dark:text-gray-400 font-bold">/forever</span>
-                                </div>
-                                <p className="text-slate-500 dark:text-gray-400 font-medium transition-colors">Perfect for trying out our tools.</p>
-                            </div>
-                            <div className="space-y-4 mb-10 flex-1">
-                                <FeatureItem text="1,000 words / day" />
-                                <FeatureItem text="Standard AI Detection" />
-                                <FeatureItem text="Basic Paraphrasing" />
-                                <FeatureItem text="Community Support" />
-                            </div>
-                            <button
-                                onClick={() => isAuthenticated && onDashboardEntry ? onDashboardEntry() : (onGuestEntry ? onGuestEntry() : setView('auth'))}
-                                className="w-full py-4 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 border border-transparent dark:border-white/10 rounded-2xl font-black transition-all text-slate-900 dark:text-white"
-                            >
-                                {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
-                            </button>
-                        </div>
-
-                        {/* Premium Plan */}
-                        <div className="bg-gradient-to-br from-blue-600/5 to-purple-600/5 dark:from-blue-600/20 dark:to-purple-600/20 border-2 border-blue-500/20 dark:border-blue-500/30 rounded-[2.5rem] p-10 flex flex-col relative overflow-hidden group hover:scale-[1.02] transition-all shadow-xl shadow-blue-500/10">
-                            <div className="absolute top-0 right-0 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-bl-2xl">Popular</div>
-                            <div className="mb-8">
-                                <h3 className="text-2xl font-black mb-2 text-slate-900 dark:text-white transition-colors">Premium</h3>
-                                <div className="flex items-baseline gap-1 mb-6">
-                                    <span className="text-5xl font-black text-slate-900 dark:text-white transition-colors">$9.99</span>
-                                    <span className="text-slate-500 dark:text-gray-400 font-bold">/mo</span>
-                                </div>
-                                <p className="text-slate-500 dark:text-gray-400 font-medium transition-colors">For power users and professionals.</p>
-                            </div>
-                            <div className="space-y-4 mb-10 flex-1">
-                                <FeatureItem text="10,000 words / day" />
-                                <FeatureItem text="Priority AI Processing" />
-                                <FeatureItem text="All 5 Paraphrasing Modes" />
-                                <FeatureItem text="Priority Support" />
-                                <FeatureItem text="No Daily Limits (soon)" />
-                            </div>
-                            <button
-                                onClick={() => isAuthenticated && onDashboardEntry ? onDashboardEntry() : setView('auth')}
-                                className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl font-black text-lg shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all text-white"
-                            >
-                                {isAuthenticated ? 'Go to Dashboard' : 'Upgrade Now'}
-                            </button>
-                        </div>
-                    </div>
-                </main>
+                /* Pricing View with Details */
+                <PricingView onAuthRequest={() => setView('auth')} />
             )}
 
             {/* Common Section: Stats / Proof */}
@@ -384,27 +382,14 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
             </section>
 
             {/* Shared Footer */}
-            <Footer
-                onShowPolicy={onShowPolicy}
-                onPrivacyClick={onPrivacyClick}
-                onTermsClick={onTermsClick}
-                onLegalClick={onLegalClick}
-                onContactClick={() => setView('contact')}
-                onHelpClick={() => setView('help')}
-            />
-        </div>
-    );
-}
-
-function FeatureItem({ text }: { text: string }) {
-    return (
-        <div className="flex items-center gap-3">
-            <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-3 h-3 text-emerald-600 dark:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
-            <span className="text-slate-600 dark:text-gray-300 font-medium transition-colors">{text}</span>
+            <Footer 
+               onShowPolicy={onShowPolicy} 
+               onPrivacyClick={onPrivacyClick} 
+               onTermsClick={onTermsClick} 
+               onLegalClick={onLegalClick} 
+               onContactClick={() => setView('contact')} 
+               onHelpClick={() => setView('help')}
+           />
         </div>
     );
 }
