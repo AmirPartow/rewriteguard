@@ -82,7 +82,7 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
         <footer className={`w-full mt-auto ${className}`}>
             {/* Main Content Area */}
             <div className="bg-slate-50 dark:bg-[#0f172a] py-16 px-6 border-t border-gray-200 dark:border-white/5">
-                <div className="w-full">
+                <div className="max-w-7xl mx-auto w-full">
                     {/* Top Row: Navigation Columns - Centered */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 mb-16 text-center">
                         {/* Column 2: Premium */}
@@ -164,7 +164,7 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
 
             {/* Sub-Footer */}
             <div className="bg-slate-100 dark:bg-[#0f172a] py-12 px-6 border-t border-gray-200 dark:border-white/5">
-                <div className="w-full flex flex-col items-center text-center gap-12">
+                <div className="max-w-7xl mx-auto w-full flex flex-col items-center text-center gap-12">
                     {/* Branding & Policy Links - Centered */}
                     <div className="flex flex-col items-center space-y-6">
                         <div className="flex flex-col items-center gap-4">

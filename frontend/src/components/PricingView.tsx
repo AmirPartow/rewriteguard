@@ -17,10 +17,10 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
     };
 
     return (
-        <main className="relative z-10 w-full px-0 md:px-12 py-24 animate-fade-in-up">
-            <div className="text-center mb-16 px-6">
-                <h2 className="text-5xl font-black mb-4 text-slate-900 dark:text-white transition-colors">Simple, Transparent Pricing</h2>
-                <p className="text-xl text-slate-500 dark:text-gray-400 font-medium transition-colors mb-8">Choose the plan that's right for your content needs.</p>
+        <main className="relative z-10 w-full px-4 md:px-12 py-32 animate-fade-in-up min-h-[70vh] flex flex-col items-center">
+            <div className="text-center mb-20 px-6 max-w-4xl">
+                <h2 className="text-5xl md:text-6xl font-black mb-6 text-slate-900 dark:text-white transition-colors tracking-tight">Simple, Transparent Pricing</h2>
+                <p className="text-xl md:text-2xl text-slate-500 dark:text-gray-400 font-medium transition-colors mb-12">Choose the plan that's right for your content needs.</p>
                 
                 {/* Billing Toggle - Monthly First */}
                 <div className="inline-flex items-center bg-gray-100 dark:bg-slate-800/80 p-1 rounded-full border border-gray-200 dark:border-slate-700/50">
@@ -47,8 +47,8 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
                 </div>
             </div>
 
-            {/* Top Cards Grid */}
-            <div className={`max-w-6xl mx-auto w-full px-6 grid gap-6 lg:gap-8 mb-16 ${billingCycle === 'monthly' ? 'md:grid-cols-3' : 'md:grid-cols-1 max-w-md'}`}>
+            {/* Top Cards Grid - Wider and taller cards */}
+            <div className={`max-w-7xl mx-auto w-full px-6 grid gap-8 lg:gap-10 mb-20 ${billingCycle === 'monthly' ? 'md:grid-cols-3' : 'md:grid-cols-1 max-w-lg'}`}>
                 {/* Free Plan - Only Montly */}
                 {billingCycle === 'monthly' && (
                     <div className="bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-3xl p-8 flex flex-col hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all shadow-sm">
@@ -106,7 +106,7 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
                         </div>
                         <button
                             onClick={handleStudentClick}
-                            className="w-full py-3.5 bg-white dark:bg-slate-800 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded-full font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                            className="w-full py-4 bg-white dark:bg-slate-800 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded-full font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-sm leading-tight shadow-sm"
                         >
                             Verify Student Email
                         </button>
