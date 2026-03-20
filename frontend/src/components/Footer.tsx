@@ -211,18 +211,6 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
                         <a href="https://www.rewriteguard.com" className="hover:text-white transition-colors border-b border-gray-600 pb-0.5">RewriteGuard</a>
                     </div>
 
-                    {/* Back Button (last picture) - Added specifically here */}
-                    <div className="mt-4 flex justify-center">
-                        <button 
-                            onClick={() => window.history.back()}
-                            className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-all shadow-md group"
-                        >
-                            <svg className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                            </svg>
-                            <span className="font-bold text-sm text-[15px]">Go Back</span>
-                        </button>
-                    </div>
                 </div>
             </div>
         </footer>
