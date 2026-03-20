@@ -83,8 +83,8 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
             {/* Main Content Area */}
             <div className="bg-slate-50 dark:bg-[#0f172a] py-16 px-6 border-t border-gray-200 dark:border-white/5">
                 <div className="w-full">
-                    {/* Top Row: Navigation Columns */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 mb-16">
+                    {/* Top Row: Navigation Columns - Centered */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 mb-16 text-center">
                         {/* Column 2: Premium */}
                         <div className="space-y-4">
                             <h4 className="text-[15px] font-bold text-slate-900 dark:text-white border-b border-gray-200 dark:border-white/10 pb-2">Premium</h4>
@@ -123,7 +123,7 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
                         {/* Column 5: Social */}
                         <div className="space-y-4">
                             <h4 className="text-[15px] font-bold text-slate-900 dark:text-white border-b border-gray-200 dark:border-white/10 pb-2">Follow us on social</h4>
-                            <div className="flex flex-wrap gap-4 text-xl">
+                            <div className="flex flex-wrap gap-4 text-xl justify-center">
                                 {socialLinks.map((s, i) => (
                                     <a
                                         key={i}
@@ -164,15 +164,15 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
 
             {/* Sub-Footer */}
             <div className="bg-slate-100 dark:bg-[#0f172a] py-12 px-6 border-t border-gray-200 dark:border-white/5">
-                <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
-                    {/* Left Side: Branding & Policy Links */}
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-4 flex-wrap">
-                            <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase mr-2 hover:text-slate-600 dark:hover:text-gray-300 transition-colors">P5 SOLUTION</a>
-                            <span className="text-gray-500 dark:text-gray-400 text-[13px] font-medium border-l border-gray-300 dark:border-white/10 pl-4 italic">RewriteGuard, a <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-700 dark:hover:text-gray-200 transition-colors">P5Solution</a> business</span>
+                <div className="w-full flex flex-col items-center text-center gap-12">
+                    {/* Branding & Policy Links - Centered */}
+                    <div className="flex flex-col items-center space-y-6">
+                        <div className="flex flex-col items-center gap-4">
+                            <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase hover:text-slate-600 dark:hover:text-gray-300 transition-colors">P5 SOLUTION</a>
+                            <span className="text-gray-500 dark:text-gray-400 text-[13px] font-medium italic">RewriteGuard, a <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-700 dark:hover:text-gray-200 transition-colors">P5Solution</a> business</span>
                         </div>
 
-                        <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px] font-semibold text-blue-400/90">
+                        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[14px] font-semibold text-blue-400/90">
                             <a href="/privacy-policy" onClick={handlePrivacyClick} className="hover:text-blue-300 transition-colors">Privacy Policy</a>
                             <span className="text-gray-600 text-[10px]">•</span>
                             <a href="/terms-of-service" onClick={handleTermsClick} className="hover:text-blue-300 transition-colors">Terms of Service</a>
@@ -187,20 +187,20 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
                             </button>
                         </nav>
 
-                        <div className="space-y-2">
-                            <div className="flex flex-wrap gap-x-3 text-[12px] text-gray-500 font-medium">
+                        <div className="flex flex-col items-center space-y-2">
+                            <div className="flex flex-wrap justify-center gap-x-3 text-[12px] text-gray-500 font-medium">
                                 <span>Copyright © {new Date().getFullYear()} RewriteGuard</span>
                                 <span className="text-gray-600">,</span>
                                 <a href="/legal-center" onClick={handleLegalClick} className="hover:text-gray-300 transition-colors cursor-pointer">Community Guidelines, DSA and other Legal Resources</a>
                             </div>
-                            <p className="text-[11px] text-gray-600 leading-relaxed max-w-2xl">
+                            <p className="text-[11px] text-gray-600 leading-relaxed max-w-2xl mx-auto">
                                 This site is protected by reCAPTCHA and the Google <a href="https://policies.google.com/privacy" target="_blank" className="underline">Privacy Policy</a> and <a href="https://policies.google.com/terms" target="_blank" className="underline">Terms of Service</a> apply.
                             </p>
                         </div>
                     </div>
 
-                    {/* Right Side: Quality Seal */}
-                    <div className="text-gray-400 text-[13px] font-semibold flex items-center gap-2 self-end tracking-tight bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                    {/* Quality Seal - Centered */}
+                    <div className="text-gray-400 text-[13px] font-semibold flex items-center justify-center gap-2 tracking-tight bg-white/5 px-4 py-2 rounded-full border border-white/5">
                         <span>Made with</span>
                         <div className="w-5 h-5 bg-blue-500 rounded-md flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,6 +209,19 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
                         </div>
                         <span>at</span>
                         <a href="https://www.rewriteguard.com" className="hover:text-white transition-colors border-b border-gray-600 pb-0.5">RewriteGuard</a>
+                    </div>
+
+                    {/* Back Button (last picture) - Added specifically here */}
+                    <div className="mt-4 flex justify-center">
+                        <button 
+                            onClick={() => window.history.back()}
+                            className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-full text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-all shadow-md group"
+                        >
+                            <svg className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                            </svg>
+                            <span className="font-bold text-sm text-[15px]">Go Back</span>
+                        </button>
                     </div>
                 </div>
             </div>
