@@ -22,18 +22,8 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
                 <h2 className="text-5xl font-black mb-4 text-slate-900 dark:text-white transition-colors">Simple, Transparent Pricing</h2>
                 <p className="text-xl text-slate-500 dark:text-gray-400 font-medium transition-colors mb-8">Choose the plan that's right for your content needs.</p>
                 
-                {/* Billing Toggle - Defaulted to Monthly */}
+                {/* Billing Toggle - Monthly First */}
                 <div className="inline-flex items-center bg-gray-100 dark:bg-slate-800/80 p-1 rounded-full border border-gray-200 dark:border-slate-700/50">
-                    <button
-                        onClick={() => setBillingCycle('annual')}
-                        className={`px-8 py-3 rounded-full text-sm font-bold transition-all ${
-                            billingCycle === 'annual'
-                                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                        }`}
-                    >
-                        Annually (Save 15%)
-                    </button>
                     <button
                         onClick={() => setBillingCycle('monthly')}
                         className={`px-8 py-3 rounded-full text-sm font-bold transition-all ${
@@ -44,34 +34,46 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
                     >
                         Monthly
                     </button>
+                    <button
+                        onClick={() => setBillingCycle('annual')}
+                        className={`px-8 py-3 rounded-full text-sm font-bold transition-all ${
+                            billingCycle === 'annual'
+                                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                        }`}
+                    >
+                        Annually (Save 15%)
+                    </button>
                 </div>
             </div>
 
             {/* Top Cards Grid */}
-            <div className="max-w-6xl mx-auto w-full px-6 grid md:grid-cols-3 gap-6 lg:gap-8 mb-16">
-                {/* Free Plan */}
-                <div className="bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-3xl p-8 flex flex-col hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all shadow-sm">
-                    <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white text-center">Free</h3>
-                    <div className="flex flex-col items-center justify-center mb-6 h-24">
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-4xl font-black text-slate-900 dark:text-white">$0</span>
-                            <span className="text-sm font-bold text-slate-500 dark:text-slate-400">USD</span>
+            <div className={`max-w-6xl mx-auto w-full px-6 grid gap-6 lg:gap-8 mb-16 ${billingCycle === 'monthly' ? 'md:grid-cols-3' : 'md:grid-cols-1 max-w-md'}`}>
+                {/* Free Plan - Only Montly */}
+                {billingCycle === 'monthly' && (
+                    <div className="bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-3xl p-8 flex flex-col hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all shadow-sm">
+                        <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white text-center">Free</h3>
+                        <div className="flex flex-col items-center justify-center mb-6 h-24">
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-4xl font-black text-slate-900 dark:text-white">$0</span>
+                                <span className="text-sm font-bold text-slate-500 dark:text-slate-400">USD</span>
+                            </div>
+                            <span className="text-sm font-medium text-slate-500 dark:text-gray-400">Per month</span>
                         </div>
-                        <span className="text-sm font-medium text-slate-500 dark:text-gray-400">Per month</span>
+                        <button
+                            onClick={onAuthRequest}
+                            className="w-full py-3.5 bg-white dark:bg-slate-800 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded-full font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                        >
+                            Sign up
+                        </button>
                     </div>
-                    <button
-                        onClick={onAuthRequest}
-                        className="w-full py-3.5 bg-white dark:bg-slate-800 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded-full font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
-                    >
-                        Sign up
-                    </button>
-                </div>
+                )}
 
-                {/* Premium Plan - Focused Column */}
+                {/* Premium Plan - Focused Column (Always Shown) */}
                 <div className="bg-white dark:bg-slate-800/40 border-2 border-blue-600 dark:border-blue-500 rounded-3xl p-8 flex flex-col relative shadow-xl shadow-blue-500/10">
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold flex items-center gap-1.5 whitespace-nowrap">
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                        Premium
+                        {billingCycle === 'annual' ? 'Premium Annual' : 'Premium'}
                     </div>
                     <h3 className="text-xl font-bold mb-4 text-blue-700 dark:text-blue-400 text-center mt-2">Premium</h3>
                     <div className="flex flex-col items-center justify-center mb-6 h-24">
@@ -91,23 +93,25 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
                     </button>
                 </div>
 
-                {/* Student Plan */}
-                <div className="bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-3xl p-8 flex flex-col hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all shadow-sm">
-                    <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white text-center">Student Plan</h3>
-                    <div className="flex flex-col items-center justify-center mb-6 h-24">
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-4xl font-black text-slate-900 dark:text-white">${studentPrice.toFixed(2)}</span>
-                            <span className="text-sm font-bold text-slate-500 dark:text-slate-400">USD</span>
+                {/* Student Plan - Only Monthly */}
+                {billingCycle === 'monthly' && (
+                    <div className="bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-3xl p-8 flex flex-col hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all shadow-sm">
+                        <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white text-center">Student Plan</h3>
+                        <div className="flex flex-col items-center justify-center mb-6 h-24">
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-4xl font-black text-slate-900 dark:text-white">${studentPrice.toFixed(2)}</span>
+                                <span className="text-sm font-bold text-slate-500 dark:text-slate-400">USD</span>
+                            </div>
+                            <span className="text-sm font-medium text-slate-500 dark:text-gray-400">Per month</span>
                         </div>
-                        <span className="text-sm font-medium text-slate-500 dark:text-gray-400">Per month</span>
+                        <button
+                            onClick={handleStudentClick}
+                            className="w-full py-3.5 bg-white dark:bg-slate-800 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded-full font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                        >
+                            Verify Student Email
+                        </button>
                     </div>
-                    <button
-                        onClick={handleStudentClick}
-                        className="w-full py-3.5 bg-white dark:bg-slate-800 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded-full font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
-                    >
-                        Verify Student Email
-                    </button>
-                </div>
+                )}
             </div>
 
             {/* "And Much More" Expander */}
