@@ -332,7 +332,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                 </main>
             ) : (
                 /* Pricing View with Details */
-                <PricingView onAuthRequest={() => setView('auth')} onBack={() => setView('home')} />
+                <PricingView onAuthRequest={() => setView('auth')} />
             )}
 
             {/* Common Section: Stats / Proof */}
