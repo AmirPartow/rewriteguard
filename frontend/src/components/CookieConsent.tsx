@@ -87,10 +87,10 @@ export default function CookieConsent() {
             {/* Cookie Banner */}
             {isVisible && !showPreferenceCenter && (
                 <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 md:p-6 lg:p-4 animate-fade-in-up">
-                    <div className="max-w-6xl mx-auto bg-slate-800/95 backdrop-blur-2xl text-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden p-8 md:p-10 border border-white/10">
+                    <div className="max-w-6xl mx-auto bg-white/95 dark:bg-slate-800/95 backdrop-blur-2xl text-slate-900 dark:text-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden p-8 md:p-10 border border-slate-200 dark:border-white/10">
                         <div className="flex flex-col gap-6">
-                            <h2 className="text-2xl md:text-3xl font-extrabold text-white text-left tracking-tight">RewriteGuard uses cookies</h2>
-                            <p className="text-gray-300 text-base md:text-[1.1rem] leading-relaxed text-left font-medium">
+                            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white text-left tracking-tight">RewriteGuard uses cookies</h2>
+                            <p className="text-slate-600 dark:text-gray-300 text-base md:text-[1.1rem] leading-relaxed text-left font-medium">
                                 We use cookies and similar technologies. Some are necessary to operate our service and can't be
                                 deactivated. Others, like analytics and ad cookies, are optional. We do not link mobile app data
                                 with third-party data for ad purposes or share app data with data brokers. If you consent and
@@ -105,13 +105,13 @@ export default function CookieConsent() {
                             <div className="flex flex-col sm:flex-row items-center justify-end gap-3 mt-4">
                                 <button
                                     onClick={() => setShowPreferenceCenter(true)}
-                                    className="w-full sm:w-auto px-10 py-3.5 border border-white/20 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all cursor-pointer"
+                                    className="w-full sm:w-auto px-10 py-3.5 border border-slate-300 dark:border-white/20 text-slate-700 dark:text-white rounded-full font-bold text-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-all cursor-pointer"
                                 >
                                     Customize
                                 </button>
                                 <button
                                     onClick={handleDeclineAll}
-                                    className="w-full sm:w-auto px-10 py-3.5 border border-white/20 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all cursor-pointer"
+                                    className="w-full sm:w-auto px-10 py-3.5 border border-slate-300 dark:border-white/20 text-slate-700 dark:text-white rounded-full font-bold text-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-all cursor-pointer"
                                 >
                                     Decline All
                                 </button>
@@ -130,16 +130,16 @@ export default function CookieConsent() {
             {/* Privacy Preference Center Modal */}
             {showPreferenceCenter && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-                    <div className="bg-slate-800 text-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden border border-white/10">
+                    <div className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden border border-slate-200 dark:border-white/10">
                         {/* Modal Header */}
-                        <div className="p-4 px-6 border-b border-white/5 flex justify-between items-center">
+                        <div className="p-4 px-6 border-b border-slate-200 dark:border-white/5 flex justify-between items-center">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
                                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                     </svg>
                                 </div>
-                                <span className="text-white font-bold text-xl leading-tight">RewriteGuard</span>
+                                <span className="font-bold text-xl leading-tight text-slate-900 dark:text-white">RewriteGuard</span>
                             </div>
                             <button
                                 onClick={() => {
@@ -157,9 +157,9 @@ export default function CookieConsent() {
                         {/* Modal Content */}
                         <div className="flex-1 overflow-y-auto p-6 space-y-8">
                             <section>
-                                <h3 className="text-2xl font-bold text-white mb-4 text-left">Privacy Preference Center</h3>
-                                <p className="text-gray-400 leading-relaxed text-sm text-left">
-                                    Our website uses different types of cookies. Optional cookies will only be enabled with your consent and you may withdraw this consent at any time. Below you can learn more about the types of cookies we use and select your cookie preferences. For more information on the cookies we use, see our Cookie Policy. <a href="/cookies-policy" className="text-blue-400 hover:underline font-medium">More information</a>
+                                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 text-left">Privacy Preference Center</h3>
+                                <p className="text-slate-600 dark:text-gray-400 leading-relaxed text-sm text-left">
+                                    Our website uses different types of cookies. Optional cookies will only be enabled with your consent and you may withdraw this consent at any time. Below you can learn more about the types of cookies we use and select your cookie preferences. For more information on the cookies we use, see our Cookie Policy. <a href="/cookies-policy" className="text-blue-500 dark:text-blue-400 hover:underline font-medium">More information</a>
                                 </p>
                                 <div className="flex justify-start">
                                     <button
@@ -172,7 +172,7 @@ export default function CookieConsent() {
                             </section>
 
                             <section className="space-y-6">
-                                <h4 className="text-lg font-bold text-white border-b border-white/5 pb-2 text-left">Manage Consent Preferences</h4>
+                                <h4 className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-200 dark:border-white/5 pb-2 text-left">Manage Consent Preferences</h4>
 
                                 {/* Essential Cookies */}
                                 <PreferenceItem
@@ -217,16 +217,16 @@ export default function CookieConsent() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-6 border-t border-white/5 bg-slate-800 flex flex-col items-center gap-4">
+                        <div className="p-6 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800 flex flex-col items-center gap-4">
                             <button
                                 onClick={handleSavePreferences}
                                 className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-bold text-xl hover:scale-[1.01] transition-all cursor-pointer shadow-lg shadow-blue-500/20"
                             >
                                 Save and Close
                             </button>
-                            <div className="flex items-center gap-1 opacity-50">
-                                <span className="text-xs font-medium text-gray-400">Powered by</span>
-                                <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-white underline decoration-blue-500 hover:text-blue-400 transition-colors">P5Solution</a>
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs font-medium text-slate-500 dark:text-gray-400">Powered by</span>
+                                <a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-slate-700 dark:text-white underline decoration-blue-500 hover:text-blue-400 transition-colors">P5Solution</a>
                             </div>
                         </div>
                     </div>
@@ -246,15 +246,15 @@ interface PreferenceItemProps {
 
 function PreferenceItem({ title, description, isActive, isAlwaysActive, onToggle }: PreferenceItemProps) {
     return (
-        <div className="space-y-3 pb-4 border-b border-white/5 last:border-0">
+        <div className="space-y-3 pb-4 border-b border-slate-200 dark:border-white/5 last:border-0">
             <div className="flex justify-between items-center text-base">
-                <span className="font-bold text-white">{title}</span>
+                <span className="font-bold text-slate-900 dark:text-white">{title}</span>
                 {isAlwaysActive ? (
-                    <span className="text-blue-400 font-bold uppercase tracking-widest text-[11px]">ALWAYS ACTIVE</span>
+                    <span className="text-blue-500 dark:text-blue-400 font-bold uppercase tracking-widest text-[11px]">ALWAYS ACTIVE</span>
                 ) : (
                     <button
                         onClick={onToggle}
-                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${isActive ? 'bg-blue-600' : 'bg-slate-700'
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${isActive ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'
                             }`}
                     >
                         <span
@@ -264,7 +264,7 @@ function PreferenceItem({ title, description, isActive, isAlwaysActive, onToggle
                     </button>
                 )}
             </div>
-            <p className="text-gray-400 text-sm leading-relaxed text-left">
+            <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed text-left">
                 {description}
             </p>
         </div>

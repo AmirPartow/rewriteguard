@@ -89,7 +89,10 @@ export default function AccountMenu({ onLoginClick, onContactClick, onHelpClick 
                         </div>
 
                         {/* Theme Toggle Section */}
-                        <div className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-colors">
+                        <div
+                            onClick={toggleTheme}
+                            className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-colors"
+                        >
                             <div className="flex items-center gap-4">
                                 <div className="w-6 h-6 flex items-center justify-center">
                                     <svg className={`w-6 h-6 ${theme === 'dark' ? 'text-slate-400' : 'text-amber-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +106,6 @@ export default function AccountMenu({ onLoginClick, onContactClick, onHelpClick 
                                 <span className="font-semibold text-[15px] text-slate-700 dark:text-slate-200">Dark mode</span>
                             </div>
                             <button
-                                onClick={toggleTheme}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${theme === 'dark' ? 'bg-blue-600' : 'bg-gray-200'}`}
                             >
                                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'}`} />
