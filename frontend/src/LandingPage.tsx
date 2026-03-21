@@ -128,7 +128,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                 <LogoHomeButton onClick={() => navigateTo('home')} />
                 <div className="flex items-center gap-6">
                     <div className="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-500 dark:text-gray-400">
-                <button onClick={() => navigateTo('home')} className={`hover:text-blue-600 dark:hover:text-white transition-colors ${view === 'home' ? 'text-blue-600 dark:text-white' : ''}`}>Features</button>
+                <button onClick={() => { navigateTo('home'); setTimeout(() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className={`hover:text-blue-600 dark:hover:text-white transition-colors ${view === 'home' ? 'text-blue-600 dark:text-white' : ''}`}>Features</button>
                 <button onClick={() => { navigateTo('home'); setTimeout(() => document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="hover:text-blue-600 dark:hover:text-white transition-colors">FAQ</button>
                 <button onClick={() => navigateTo('pricing')} className={`hover:text-blue-600 dark:hover:text-white transition-colors ${view === 'pricing' ? 'text-blue-600 dark:text-white' : ''}`}>Pricing</button>
                     </div>
