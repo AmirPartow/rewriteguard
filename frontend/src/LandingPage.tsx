@@ -66,18 +66,23 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
         window.scrollTo(0, 0);
     }, [view]);
 
+    const landingFooterProps = {
+        onShowPolicy, 
+        onPrivacyClick, 
+        onTermsClick, 
+        onLegalClick, 
+        onContactClick: () => navigateTo('contact'), 
+        onHelpClick: () => navigateTo('help'),
+        onPricingClick: () => navigateTo('pricing'),
+        onDetectorClick: () => onGuestEntry ? onGuestEntry() : navigateTo('auth'),
+        onParaphraserClick: () => onGuestEntry ? onGuestEntry() : navigateTo('auth')
+    };
+
     if (view === 'help') {
         return (
             <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a] animate-fade-in transition-colors">
                 <ContactSupport onBack={() => navigateTo('home')} mode="help" />
-                <Footer 
-                    onShowPolicy={onShowPolicy} 
-                    onPrivacyClick={onPrivacyClick} 
-                    onTermsClick={onTermsClick} 
-                    onLegalClick={onLegalClick} 
-                    onContactClick={() => navigateTo('contact')} 
-                    onHelpClick={() => navigateTo('help')}
-                />
+                <Footer {...landingFooterProps} />
             </div>
         );
     }
@@ -91,14 +96,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                 <div className="w-full flex-grow">
                     <ContactSupport onBack={() => navigateTo('home')} mode="contact" />
                 </div>
-                <Footer 
-                    onShowPolicy={onShowPolicy} 
-                    onPrivacyClick={onPrivacyClick} 
-                    onTermsClick={onTermsClick} 
-                    onLegalClick={onLegalClick} 
-                    onContactClick={() => navigateTo('contact')} 
-                    onHelpClick={() => navigateTo('help')}
-                />
+                <Footer {...landingFooterProps} />
             </div>
         );
     }
@@ -112,14 +110,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
                 <div className="w-full flex-grow flex items-center justify-center">
                     <AuthForm onPrivacyClick={onPrivacyClick} onTermsClick={onTermsClick} />
                 </div>
-                <Footer 
-                    onShowPolicy={onShowPolicy} 
-                    onPrivacyClick={onPrivacyClick} 
-                    onTermsClick={onTermsClick} 
-                    onLegalClick={onLegalClick} 
-                    onContactClick={() => navigateTo('contact')} 
-                    onHelpClick={() => navigateTo('help')}
-                />
+                <Footer {...landingFooterProps} />
             </div>
         );
     }
@@ -484,14 +475,7 @@ export default function LandingPage({ onShowPolicy, onPrivacyClick, onTermsClick
             </section>
 
             {/* Shared Footer */}
-            <Footer 
-               onShowPolicy={onShowPolicy} 
-               onPrivacyClick={onPrivacyClick} 
-               onTermsClick={onTermsClick} 
-               onLegalClick={onLegalClick} 
-               onContactClick={() => setView('contact')} 
-               onHelpClick={() => setView('help')}
-           />
+            <Footer {...landingFooterProps} />
         </div>
     );
 }

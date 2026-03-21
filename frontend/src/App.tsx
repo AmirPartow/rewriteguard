@@ -13,8 +13,9 @@ import TermsOfService from './TermsOfService';
 import LegalCenter from './LegalCenter';
 import Footer from './components/Footer';
 import ContactSupport from './ContactSupport';
+import PricingView from './components/PricingView';
 
-type ActivePage = 'dashboard' | 'detector' | 'paraphraser' | 'admin' | 'contact' | 'help';
+type ActivePage = 'dashboard' | 'detector' | 'paraphraser' | 'admin' | 'contact' | 'help' | 'pricing';
 
 function App() {
   const { isAuthenticated, isLoading, socialConfirm } = useAuth();
@@ -160,6 +161,42 @@ function App() {
           window.dispatchEvent(new Event('open-contact'));
         }
       }, 50);
+    },
+    onPricingClick: () => {
+      setShowCookiesPolicy(false);
+      setShowPrivacyPolicy(false);
+      setShowTermsOfService(false);
+      setShowLegalCenter(false);
+      setShowPublicHome(false);
+      window.history.pushState({}, '', '/');
+      window.scrollTo(0, 0);
+      setTimeout(() => {
+        setActivePage('pricing');
+      }, 50);
+    },
+    onDetectorClick: () => {
+      setShowCookiesPolicy(false);
+      setShowPrivacyPolicy(false);
+      setShowTermsOfService(false);
+      setShowLegalCenter(false);
+      setShowPublicHome(false);
+      window.history.pushState({}, '', '/');
+      window.scrollTo(0, 0);
+      setTimeout(() => {
+        setActivePage('detector');
+      }, 50);
+    },
+    onParaphraserClick: () => {
+      setShowCookiesPolicy(false);
+      setShowPrivacyPolicy(false);
+      setShowTermsOfService(false);
+      setShowLegalCenter(false);
+      setShowPublicHome(false);
+      window.history.pushState({}, '', '/');
+      window.scrollTo(0, 0);
+      setTimeout(() => {
+        setActivePage('paraphraser');
+      }, 50);
     }
   };
 
@@ -250,6 +287,7 @@ function App() {
             {activePage === 'dashboard' && <Dashboard />}
             {activePage === 'detector' && <Detector />}
             {activePage === 'paraphraser' && <Paraphraser initialText={paraphraserText} onTextConsumed={() => setParaphraserText('')} />}
+            {activePage === 'pricing' && <PricingView onAuthRequest={() => window.dispatchEvent(new Event('open-auth-from-guest'))} />}
             {activePage === 'admin' && <AdminPage />}
             {activePage === 'contact' && <ContactSupport onBack={() => navigateTo('dashboard')} mode="contact" />}
             {activePage === 'help' && <ContactSupport onBack={() => navigateTo('dashboard')} mode="help" />}

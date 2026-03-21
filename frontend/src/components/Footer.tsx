@@ -7,10 +7,24 @@ interface FooterProps {
     onLegalClick?: () => void;
     onContactClick?: () => void;
     onHelpClick?: () => void;
+    onPricingClick?: () => void;
+    onDetectorClick?: () => void;
+    onParaphraserClick?: () => void;
     className?: string;
 }
 
-export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onLegalClick, onContactClick, onHelpClick, className = "" }: FooterProps) {
+export default function Footer({ 
+    onShowPolicy, 
+    onPrivacyClick, 
+    onTermsClick, 
+    onLegalClick, 
+    onContactClick, 
+    onHelpClick, 
+    onPricingClick,
+    onDetectorClick,
+    onParaphraserClick,
+    className = "" 
+}: FooterProps) {
     const handlePolicyClick = (e: React.MouseEvent) => {
         if (onShowPolicy) {
             e.preventDefault();
@@ -53,6 +67,27 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
         }
     };
 
+    const handlePricingClick = (e: React.MouseEvent) => {
+        if (onPricingClick) {
+            e.preventDefault();
+            onPricingClick();
+        }
+    };
+
+    const handleDetectorClick = (e: React.MouseEvent) => {
+        if (onDetectorClick) {
+            e.preventDefault();
+            onDetectorClick();
+        }
+    };
+
+    const handleParaphraserClick = (e: React.MouseEvent) => {
+        if (onParaphraserClick) {
+            e.preventDefault();
+            onParaphraserClick();
+        }
+    };
+
     // Social Media Links (Mock data)
     const socialLinks = [
         {
@@ -89,11 +124,7 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
                         <div className="space-y-4">
                             <h4 className="text-[15px] font-bold text-slate-900 dark:text-white border-b border-gray-200 dark:border-white/10 pb-2">Premium</h4>
                             <ul className="space-y-2 text-[13px] text-gray-600 dark:text-gray-400 font-medium">
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">Pricing</a></li>
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">Plan Details</a></li>
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">For Teams</a></li>
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">Affiliates</a></li>
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">Request a Demo</a></li>
+                                <li><a href="/" onClick={handlePricingClick} className="hover:text-blue-400 transition-colors cursor-pointer">Pricing</a></li>
                             </ul>
                         </div>
 
@@ -101,11 +132,9 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
                         <div className="space-y-4">
                             <h4 className="text-[15px] font-bold text-slate-900 dark:text-white border-b border-gray-200 dark:border-white/10 pb-2">Tools</h4>
                             <ul className="space-y-2 text-[13px] text-gray-600 dark:text-gray-400 font-medium">
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">AI Content Detector</a></li>
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">AI Paraphraser</a></li>
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">Content Humanizer</a></li>
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">Citing & Originality</a></li>
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">Plagiarism Checker</a></li>
+                                <li><a href="/" onClick={handleDetectorClick} className="hover:text-blue-400 transition-colors cursor-pointer">AI Content Detector</a></li>
+                                <li><a href="/" onClick={handleParaphraserClick} className="hover:text-blue-400 transition-colors cursor-pointer">AI Paraphraser</a></li>
+                                <li><a href="/" onClick={handleParaphraserClick} className="hover:text-blue-400 transition-colors cursor-pointer">Content Humanizer</a></li>
                             </ul>
                         </div>
 
@@ -113,8 +142,6 @@ export default function Footer({ onShowPolicy, onPrivacyClick, onTermsClick, onL
                         <div className="space-y-4">
                             <h4 className="text-[15px] font-bold text-slate-900 dark:text-white border-b border-gray-200 dark:border-white/10 pb-2">Company</h4>
                             <ul className="space-y-2 text-[13px] text-gray-600 dark:text-gray-400 font-medium">
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">About Us</a></li>
-                                <li><a href="/" className="hover:text-blue-400 transition-colors">Trust Center</a></li>
                                 <li><a href="/" onClick={handleHelpClick} className="hover:text-blue-400 transition-colors cursor-pointer">Help Center</a></li>
                                 <li><a href="mailto:support@rewriteguard.com" onClick={handleContactClick} className="hover:text-blue-400 transition-colors cursor-pointer">Contact Us</a></li>
                             </ul>
