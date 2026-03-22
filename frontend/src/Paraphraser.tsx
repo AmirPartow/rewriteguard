@@ -153,10 +153,6 @@ function Paraphraser({ initialText, onTextConsumed }: ParaphraserProps) {
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-4 text-sm font-bold">
                         <span className="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-1 cursor-pointer transition-colors">English (US)</span>
-                        <span className="text-slate-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-gray-300 cursor-pointer transition-colors">French</span>
-                        <span className="text-slate-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-gray-300 cursor-pointer transition-colors">Spanish</span>
-                        <span className="text-slate-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-gray-300 cursor-pointer transition-colors">German</span>
-                        <span className="text-slate-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-gray-300 cursor-pointer transition-colors font-black">All ▾</span>
                     </div>
                 </div>
             </div>

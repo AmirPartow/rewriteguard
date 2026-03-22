@@ -61,6 +61,23 @@ function Detector() {
         }
     };
 
+    const handleShare = async () => {
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: 'RewriteGuard Detector',
+                    text: 'Check out this AI Analysis result!',
+                    url: window.location.href,
+                });
+            } else {
+                await navigator.clipboard.writeText(window.location.href);
+                alert('URL copied to clipboard!');
+            }
+        } catch (err) {
+            console.error('Share failed', err);
+        }
+    };
+
     const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
     const aiPercentage = result ? Math.round(result.probability * 100) : 0;
 
@@ -163,13 +180,12 @@ function Detector() {
                     {/* Top Result Header */}
                     <div className="flex flex-col items-center text-center mb-10">
                         <div className="flex items-center gap-2 text-slate-400 dark:text-gray-500 text-[10px] font-black uppercase tracking-[0.1em] mb-8 transition-colors">
-                            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                                <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M9 12l2 2 4-4" /></svg>
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M9 12l2 2 4-4" /></svg>
                             </div>
-                            RewriteGuard Model Version: v5.8.3
+                            RewriteGuard Model Version: v1.0.0
                             <div className="flex gap-4 ml-2">
-                                <span className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-gray-300 transition-colors lowercase font-bold cursor-pointer transition-colors"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg> Share</span>
-                                <span className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-gray-300 transition-colors lowercase font-bold cursor-pointer transition-colors"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg> Download</span>
+                                <span onClick={handleShare} className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-gray-300 transition-colors lowercase font-bold cursor-pointer transition-colors"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg> Share</span>
                             </div>
                         </div>
 
