@@ -143,7 +143,7 @@ export default function Footer({
                             <h4 className="text-[15px] font-bold text-slate-900 dark:text-white border-b border-gray-200 dark:border-white/10 pb-2">Company</h4>
                             <ul className="space-y-2 text-[13px] text-gray-600 dark:text-gray-400 font-medium">
                                 <li><a href="/" onClick={handleHelpClick} className="hover:text-blue-400 transition-colors cursor-pointer">Help Center</a></li>
-                                <li><a href="mailto:support@rewriteguard.com" onClick={handleContactClick} className="hover:text-blue-400 transition-colors cursor-pointer">Contact Us</a></li>
+                                <li><a href="mailto:rewritegaurd@p5solution.com" onClick={handleContactClick} className="hover:text-blue-400 transition-colors cursor-pointer">Contact Us</a></li>
                             </ul>
                         </div>
 

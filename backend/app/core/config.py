@@ -28,6 +28,15 @@ class Settings(BaseSettings):
     STRIPE_PREMIUM_PRICE_ID: str = ""  # Price ID for premium monthly subscription
     STRIPE_PREMIUM_ANNUAL_PRICE_ID: str = ""  # Price ID for premium annual subscription
 
+    # --- OAuth / SSO ---
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    FACEBOOK_APP_ID: str = ""
+    FACEBOOK_APP_SECRET: str = ""
+    APPLE_CLIENT_ID: str = ""
+    X_CLIENT_ID: str = ""
+    X_CLIENT_SECRET: str = ""
+
     # --- URLs ---
     FRONTEND_URL: str = "http://localhost:5173"
     CORS_ORIGINS: str = ""  # Additional CORS origins (comma-separated)

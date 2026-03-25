@@ -129,20 +129,39 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
 
     const handleSocialLogin = async (provider: string) => {
         clearError();
+        const env = import.meta as any;
         const CLIENT_IDS: Record<string, string> = {
-            google: (import.meta as any).env.VITE_GOOGLE_CLIENT_ID || '1072943021853-a0j1rrqej35dhdqkqaacn4qdlt76hk8j.apps.googleusercontent.com'
+            google: env.env.VITE_GOOGLE_CLIENT_ID || '1072943021853-a0j1rrqej35dhdqkqaacn4qdlt76hk8j.apps.googleusercontent.com',
+            facebook: env.env.VITE_FACEBOOK_APP_ID || '',
+            apple: env.env.VITE_APPLE_CLIENT_ID || '',
+            x: env.env.VITE_X_CLIENT_ID || '',
         };
 
         const REDIRECT_URI = `${window.location.origin}/auth-callback`;
         let authUrl = '';
+
         if (provider === 'google') {
             authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_IDS.google}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=openid%20email%20profile&state=${provider}`;
+        } else if (provider === 'facebook' && CLIENT_IDS.facebook) {
+            authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${CLIENT_IDS.facebook}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=email,public_profile&state=${provider}`;
+        } else if (provider === 'apple' && CLIENT_IDS.apple) {
+            authUrl = `https://appleid.apple.com/auth/authorize?client_id=${CLIENT_IDS.apple}&redirect_uri=${REDIRECT_URI}&response_type=code%20id_token&scope=name%20email&response_mode=fragment&state=${provider}`;
+        } else if (provider === 'x' && CLIENT_IDS.x) {
+            // X uses OAuth 2.0 with PKCE
+            const codeVerifier = crypto.randomUUID() + crypto.randomUUID();
+            sessionStorage.setItem('x_code_verifier', codeVerifier);
+            const encoder = new TextEncoder();
+            const data = encoder.encode(codeVerifier);
+            const digest = await crypto.subtle.digest('SHA-256', data);
+            const codeChallenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
+                .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            authUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${CLIENT_IDS.x}&redirect_uri=${REDIRECT_URI}&scope=tweet.read%20users.read&state=${provider}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
         }
 
         if (authUrl) {
             window.location.href = authUrl;
         } else {
-            console.warn('Social login provider not configured.');
+            console.warn(`Social login provider "${provider}" not configured.`);
         }
     };
 
@@ -222,6 +241,7 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
                 {/* Social Buttons (Above form in Picture 2) */}
                 {(mode === 'login' || mode === 'signup') && (
                     <div className="space-y-3 mb-8">
+                        {/* Google */}
                         <button onClick={() => handleSocialLogin('google')} className="w-full h-14 flex items-center justify-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl font-bold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-700 transition-all shadow-sm">
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -230,6 +250,30 @@ export default function AuthForm({ onPrivacyClick, onTermsClick }: AuthFormProps
                                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                             </svg>
                             Continue with Google
+                        </button>
+
+                        {/* Facebook */}
+                        <button onClick={() => handleSocialLogin('facebook')} className="w-full h-14 flex items-center justify-center gap-3 bg-[#1877F2] rounded-2xl font-bold text-white hover:bg-[#166FE5] transition-all shadow-sm">
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                            Continue with Facebook
+                        </button>
+
+                        {/* Apple */}
+                        <button onClick={() => handleSocialLogin('apple')} className="w-full h-14 flex items-center justify-center gap-3 bg-black dark:bg-white rounded-2xl font-bold text-white dark:text-black hover:opacity-90 transition-all shadow-sm">
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                            </svg>
+                            Continue with Apple
+                        </button>
+
+                        {/* X (Twitter) */}
+                        <button onClick={() => handleSocialLogin('x')} className="w-full h-14 flex items-center justify-center gap-3 bg-black dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl font-bold text-white hover:bg-gray-900 dark:hover:bg-slate-700 transition-all shadow-sm">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            Continue with X
                         </button>
                     </div>
                 )}

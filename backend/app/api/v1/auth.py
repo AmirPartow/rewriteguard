@@ -31,7 +31,7 @@ from app.auth.service import (
     SessionNotFoundError,
     PasswordNotSetError,
 )
-from app.auth.social import verify_google_code
+from app.auth.social import verify_google_code, verify_facebook_code, verify_apple_code, verify_x_code
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -137,6 +137,12 @@ async def social_confirm(request: SocialConfirmRequest) -> LoginResponse:
     
     if request.provider == "google":
         user_data = verify_google_code(request.code, request.redirect_uri)
+    elif request.provider == "facebook":
+        user_data = verify_facebook_code(request.code, request.redirect_uri)
+    elif request.provider == "apple":
+        user_data = verify_apple_code(request.code, request.redirect_uri)
+    elif request.provider == "x":
+        user_data = verify_x_code(request.code, request.redirect_uri)
 
     if not user_data:
         # Fallback to persistent test account while they setup keys in .env

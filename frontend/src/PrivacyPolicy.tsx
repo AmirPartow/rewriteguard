@@ -57,7 +57,7 @@ export default function PrivacyPolicy(props: any) {
                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-12 mb-4 border-b border-gray-200 dark:border-white/10 pb-2">Contact Us</h2>
                         <div className="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 p-6 rounded-2xl inline-block w-full md:w-auto shadow-lg">
                             <p className="font-bold text-slate-900 dark:text-white text-lg">RewriteGuard (<a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">P5Solution</a>)</p>
-                            <p className="mt-2 text-slate-600 dark:text-gray-300"><span className="font-medium text-slate-500 dark:text-gray-400">Email:</span> <a href="mailto:rewriteguard@gmail.com" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">rewriteguard@gmail.com</a></p>
+                            <p className="mt-2 text-slate-600 dark:text-gray-300"><span className="font-medium text-slate-500 dark:text-gray-400">Email:</span> <a href="mailto:rewritegaurd@p5solution.com" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">rewritegaurd@p5solution.com</a></p>
                             <p className="mt-2 text-slate-600 dark:text-gray-300"><span className="font-medium text-slate-500 dark:text-gray-400">Location:</span> North Vancouver, British Columbia, Canada</p>
                         </div>
                     </div>

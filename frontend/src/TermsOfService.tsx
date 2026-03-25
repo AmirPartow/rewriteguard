@@ -44,7 +44,7 @@ export default function TermsOfService(props: any) {
 
                             <ul className="list-none pl-0 space-y-2 !mb-10 text-sm bg-slate-100 dark:bg-black/20 p-6 rounded-2xl border border-gray-200 dark:border-white/5">
                                 <li><strong className="text-slate-900 dark:text-white">Website:</strong> <a href="https://www.rewriteguard.com" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">https://www.rewriteguard.com/</a></li>
-                                <li><strong className="text-slate-900 dark:text-white">Privacy contact:</strong> <a href="mailto:rewriteguard@gmail.com" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">rewriteguard@gmail.com</a></li>
+                                <li><strong className="text-slate-900 dark:text-white">Privacy contact:</strong> <a href="mailto:rewritegaurd@p5solution.com" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">rewritegaurd@p5solution.com</a></li>
                             </ul>
 
                             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-12 mb-4">1) Acceptance of Terms</h2>
@@ -68,7 +68,7 @@ export default function TermsOfService(props: any) {
                                 <li>be responsible for all activity under your account (including unauthorized use).</li>
                             </ul>
                             <p>
-                                If you think your account has been compromised, contact us immediately at <a href="mailto:rewriteguard@gmail.com" className="text-blue-400 hover:text-blue-300 transition-colors">rewriteguard@gmail.com</a>.
+                                If you think your account has been compromised, contact us immediately at <a href="mailto:rewritegaurd@p5solution.com" className="text-blue-400 hover:text-blue-300 transition-colors">rewritegaurd@p5solution.com</a>.
                             </p>
 
                             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-12 mb-4">4) Using the Service and Restrictions</h2>
@@ -123,7 +123,7 @@ export default function TermsOfService(props: any) {
                             </p>
                             <h3 className="text-lg font-bold text-slate-800 dark:text-white mt-6 mb-2">Cancellation</h3>
                             <p>
-                                You can cancel your subscription through your account settings (if available) or by contacting us at <a href="mailto:rewriteguard@gmail.com" className="text-blue-400 hover:text-blue-300 transition-colors">rewriteguard@gmail.com</a>. Unless stated otherwise, you will keep access until the end of your current billing period and then your subscription will not renew.
+                                You can cancel your subscription through your account settings (if available) or by contacting us at <a href="mailto:rewritegaurd@p5solution.com" className="text-blue-400 hover:text-blue-300 transition-colors">rewritegaurd@p5solution.com</a>. Unless stated otherwise, you will keep access until the end of your current billing period and then your subscription will not renew.
                             </p>
                             <h3 className="text-lg font-bold text-slate-800 dark:text-white mt-6 mb-2">Refunds</h3>
                             <p>Fees are non-refundable except:</p>
@@ -141,7 +141,7 @@ export default function TermsOfService(props: any) {
 
                             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-12 mb-4">8) Intellectual Property and Take-Down Requests</h2>
                             <p>You may not upload or share content that infringes intellectual property, privacy, publicity, or other rights.</p>
-                            <p>If you believe content on the Service infringes your rights, email <a href="mailto:rewriteguard@gmail.com" className="text-blue-400 hover:text-blue-300 transition-colors">rewriteguard@gmail.com</a> with:</p>
+                            <p>If you believe content on the Service infringes your rights, email <a href="mailto:rewritegaurd@p5solution.com" className="text-blue-400 hover:text-blue-300 transition-colors">rewritegaurd@p5solution.com</a> with:</p>
                             <ul className="list-disc pl-6 space-y-2">
                                 <li>the material you want removed,</li>
                                 <li>an explanation of your rights, and</li>
@@ -195,7 +195,7 @@ export default function TermsOfService(props: any) {
                                 <div className="bg-slate-100 dark:bg-black/20 border border-gray-200 dark:border-white/5 p-6 md:p-8 rounded-2xl max-w-sm w-full mx-auto shadow-2xl">
                                     <p className="font-bold text-slate-900 dark:text-white text-xl mb-4">RewriteGuard (<a href="https://www.p5solution.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">P5Solution</a>)</p>
                                     <p className="text-slate-500 dark:text-gray-400 mb-2">North Vancouver, British Columbia, Canada</p>
-                                    <p className="text-slate-600 dark:text-gray-300 mb-2"><span className="font-medium text-slate-500 dark:text-gray-400">Email:</span> <a href="mailto:rewriteguard@gmail.com" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">rewriteguard@gmail.com</a></p>
+                                    <p className="text-slate-600 dark:text-gray-300 mb-2"><span className="font-medium text-slate-500 dark:text-gray-400">Email:</span> <a href="mailto:rewritegaurd@p5solution.com" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">rewritegaurd@p5solution.com</a></p>
                                     <p className="text-slate-600 dark:text-gray-300"><span className="font-medium text-slate-500 dark:text-gray-400">Website:</span> <a href="https://www.rewriteguard.com" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">https://www.rewriteguard.com/</a></p>
                                 </div>
                             </div>
