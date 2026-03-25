@@ -1,19 +1,50 @@
 import { useState } from 'react';
+import { useAuth } from '../AuthContext';
+import { API } from '../config';
 
 interface PricingViewProps {
     onAuthRequest: () => void;
 }
 
 export default function PricingView({ onAuthRequest }: PricingViewProps) {
+    const { isAuthenticated, token } = useAuth();
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
     const [showComparison, setShowComparison] = useState(false);
+    const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
     const premiumPrice = billingCycle === 'annual' ? 4.35 : 6.98;
-    const studentPrice = 4.25;
 
-    const handleStudentClick = () => {
-        alert('Student email verification initiated. Please check your .edu email after signing up.');
-        onAuthRequest();
+    const handleUpgradeClick = async () => {
+        if (!isAuthenticated || !token) {
+            onAuthRequest();
+            return;
+        }
+
+        setIsCheckoutLoading(true);
+        try {
+            const res = await fetch(`${API.SUBSCRIPTIONS}/checkout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ billing_cycle: billingCycle === 'annual' ? 'annual' : 'monthly' }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.detail || 'Failed to start checkout');
+            }
+
+            const data = await res.json();
+            if (data.checkout_url) {
+                window.location.href = data.checkout_url;
+            }
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Failed to start checkout. Please try again.');
+        } finally {
+            setIsCheckoutLoading(false);
+        }
     };
 
     return (
@@ -47,9 +78,9 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
                 </div>
             </div>
 
-            {/* Top Cards Grid - Wider and taller cards */}
-            <div className={`max-w-7xl mx-auto w-full px-6 grid gap-8 lg:gap-10 mb-20 ${billingCycle === 'monthly' ? 'md:grid-cols-3' : 'md:grid-cols-1 max-w-lg'}`}>
-                {/* Free Plan - Only Montly */}
+            {/* Top Cards Grid */}
+            <div className={`max-w-5xl mx-auto w-full px-6 grid gap-8 lg:gap-10 mb-20 ${billingCycle === 'monthly' ? 'md:grid-cols-2 max-w-3xl' : 'md:grid-cols-1 max-w-lg'}`}>
+                {/* Free Plan - Only Monthly */}
                 {billingCycle === 'monthly' && (
                     <div className="bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-3xl p-8 flex flex-col hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all shadow-sm">
                         <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white text-center">Free</h3>
@@ -60,6 +91,11 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
                             </div>
                             <span className="text-sm font-medium text-slate-500 dark:text-gray-400">Per month</span>
                         </div>
+                        <ul className="space-y-2 mb-6 text-sm text-slate-600 dark:text-gray-400 font-medium">
+                            <li className="flex items-center gap-2"><svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>1,000 words/day</li>
+                            <li className="flex items-center gap-2"><svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>AI Detection</li>
+                            <li className="flex items-center gap-2"><svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>Standard paraphrasing</li>
+                        </ul>
                         <button
                             onClick={onAuthRequest}
                             className="w-full py-3.5 bg-white dark:bg-slate-800 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded-full font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
@@ -85,33 +121,20 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
                             Per month{billingCycle === 'annual' ? ', billed annually' : ''}
                         </span>
                     </div>
+                    <ul className="space-y-2 mb-6 text-sm text-slate-600 dark:text-gray-400 font-medium">
+                        <li className="flex items-center gap-2"><svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>10,000 words/day</li>
+                        <li className="flex items-center gap-2"><svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>AI Detection with priority</li>
+                        <li className="flex items-center gap-2"><svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>5 paraphrasing modes</li>
+                        <li className="flex items-center gap-2"><svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>Priority support</li>
+                    </ul>
                     <button
-                        onClick={onAuthRequest}
-                        className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-bold hover:brightness-110 transition-all shadow-md"
+                        onClick={handleUpgradeClick}
+                        disabled={isCheckoutLoading}
+                        className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-bold hover:brightness-110 transition-all shadow-md disabled:opacity-50"
                     >
-                        Upgrade
+                        {isCheckoutLoading ? 'Redirecting...' : isAuthenticated ? 'Upgrade Now' : 'Sign up to Upgrade'}
                     </button>
                 </div>
-
-                {/* Student Plan - Only Monthly */}
-                {billingCycle === 'monthly' && (
-                    <div className="bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-3xl p-8 flex flex-col hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all shadow-sm">
-                        <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white text-center">Student Plan</h3>
-                        <div className="flex flex-col items-center justify-center mb-6 h-24">
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-4xl font-black text-slate-900 dark:text-white">${studentPrice.toFixed(2)}</span>
-                                <span className="text-sm font-bold text-slate-500 dark:text-slate-400">USD</span>
-                            </div>
-                            <span className="text-sm font-medium text-slate-500 dark:text-gray-400">Per month</span>
-                        </div>
-                        <button
-                            onClick={handleStudentClick}
-                            className="w-full py-4 bg-white dark:bg-slate-800 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded-full font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-sm leading-tight shadow-sm"
-                        >
-                            Verify Student Email
-                        </button>
-                    </div>
-                )}
             </div>
 
             {/* "And Much More" Expander */}
@@ -129,39 +152,37 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
 
             {/* Detailed Comparison Table */}
             {showComparison && (
-                <div className="max-w-6xl mx-auto w-full px-6 mt-12 animate-fade-in-up">
+                <div className="max-w-4xl mx-auto w-full px-6 mt-12 animate-fade-in-up">
                     <div className="bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700/50 rounded-2xl overflow-hidden shadow-sm">
-                        
-                        {/* Table Header Wrapper for Mobile scrolling if needed */}
+
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse min-w-[600px]">
+                            <table className="w-full text-left border-collapse min-w-[500px]">
                                 <thead>
                                     <tr>
-                                        <th className="p-6 border-b border-gray-100 dark:border-slate-700/50 w-2/5"></th>
-                                        <th className="p-6 border-b border-gray-100 dark:border-slate-700/50 text-center font-bold text-slate-900 dark:text-white w-1/5">Free</th>
-                                        <th className="p-6 border-b border-gray-100 dark:border-slate-700/50 text-center font-bold text-blue-600 dark:text-blue-400 w-1/5">Premium</th>
-                                        <th className="p-6 border-b border-gray-100 dark:border-slate-700/50 text-center font-bold text-slate-900 dark:text-white w-1/5">Student Plan</th>
+                                        <th className="p-6 border-b border-gray-100 dark:border-slate-700/50 w-1/2"></th>
+                                        <th className="p-6 border-b border-gray-100 dark:border-slate-700/50 text-center font-bold text-slate-900 dark:text-white w-1/4">Free</th>
+                                        <th className="p-6 border-b border-gray-100 dark:border-slate-700/50 text-center font-bold text-blue-600 dark:text-blue-400 w-1/4">Premium</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr className="bg-gray-50/50 dark:bg-white/[0.02]">
-                                        <td colSpan={4} className="p-4 font-black text-slate-900 dark:text-blue-500 uppercase tracking-wider text-[11px]">Rewriting</td>
+                                        <td colSpan={3} className="p-4 font-black text-slate-900 dark:text-blue-500 uppercase tracking-wider text-[11px]">Rewriting</td>
                                     </tr>
-                                    <TableRow feature="Paraphrase your writing" free="Up to 1,000 words/day" premium="Unlimited" student="Unlimited" />
-                                    <TableRow feature="Paraphraser modes" free="Standard and Fluency" premium="5 unique modes" student="5 unique modes" />
-                                    <TableRow feature="Access Paraphraser History" free={false} premium={true} student={true} isBg />
+                                    <TableRow feature="Paraphrase your writing" free="Up to 1,000 words/day" premium="Up to 10,000 words/day" />
+                                    <TableRow feature="Paraphraser modes" free="Standard and Fluency" premium="5 unique modes" isBg />
+                                    <TableRow feature="Access Paraphraser History" free={false} premium={true} />
 
                                     <tr className="bg-gray-50/50 dark:bg-white/[0.02]">
-                                        <td colSpan={4} className="p-4 font-black text-slate-900 dark:text-blue-500 uppercase tracking-wider text-[11px] mt-4">Refining & Detection</td>
+                                        <td colSpan={3} className="p-4 font-black text-slate-900 dark:text-blue-500 uppercase tracking-wider text-[11px] mt-4">Refining & Detection</td>
                                     </tr>
-                                    <TableRow feature="Detect AI-generated content" free="Standard priority" premium="Highest priority limits" student="Highest priority limits" />
-                                    <TableRow feature="Detailed sentence-by-sentence highlights" free={true} premium={true} student={true} isBg />
-                                    
+                                    <TableRow feature="Detect AI-generated content" free="Standard priority" premium="Highest priority limits" />
+                                    <TableRow feature="Detailed sentence-by-sentence highlights" free={true} premium={true} isBg />
+
                                     <tr className="bg-gray-50/50 dark:bg-white/[0.02]">
-                                        <td colSpan={4} className="p-4 font-black text-slate-900 dark:text-blue-500 uppercase tracking-wider text-[11px] mt-4">Customer Support</td>
+                                        <td colSpan={3} className="p-4 font-black text-slate-900 dark:text-blue-500 uppercase tracking-wider text-[11px] mt-4">Customer Support</td>
                                     </tr>
-                                    <TableRow feature="Help center & Community" free={true} premium={true} student={true} />
-                                    <TableRow feature="Priority assistance" free={false} premium={true} student={true} isBg />
+                                    <TableRow feature="Help center & Community" free={true} premium={true} />
+                                    <TableRow feature="Priority assistance" free={false} premium={true} isBg />
                                 </tbody>
                             </table>
                         </div>
@@ -172,7 +193,7 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
     );
 }
 
-function TableRow({ feature, free, premium, student, isBg = false }: { feature: string, free: React.ReactNode, premium: React.ReactNode, student: React.ReactNode, isBg?: boolean }) {
+function TableRow({ feature, free, premium, isBg = false }: { feature: string, free: React.ReactNode, premium: React.ReactNode, isBg?: boolean }) {
     const renderCell = (value: React.ReactNode) => {
         if (value === true) {
             return <svg className="w-5 h-5 text-blue-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>;
@@ -193,7 +214,6 @@ function TableRow({ feature, free, premium, student, isBg = false }: { feature: 
             </td>
             <td className="p-4 text-center">{renderCell(free)}</td>
             <td className="p-4 text-center">{renderCell(premium)}</td>
-            <td className="p-4 text-center">{renderCell(student)}</td>
         </tr>
     );
 }

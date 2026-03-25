@@ -145,11 +145,18 @@ async def create_checkout(
     """
     user_id, email = await _get_current_user(authorization)
 
+    # Resolve billing_cycle to a price_id
+    price_id = request.price_id
+    if request.billing_cycle == "annual" and settings.STRIPE_PREMIUM_ANNUAL_PRICE_ID:
+        price_id = settings.STRIPE_PREMIUM_ANNUAL_PRICE_ID
+    elif request.billing_cycle == "monthly" and settings.STRIPE_PREMIUM_PRICE_ID:
+        price_id = settings.STRIPE_PREMIUM_PRICE_ID
+
     try:
         checkout_url, session_id = await create_checkout_session(
             user_id=user_id,
             email=email,
-            price_id=request.price_id,
+            price_id=price_id,
         )
         return CreateCheckoutSessionResponse(
             checkout_url=checkout_url,

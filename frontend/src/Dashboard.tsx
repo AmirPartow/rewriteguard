@@ -3,7 +3,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { API_BASE_URL } from './config';
+import { API_BASE_URL, API } from './config';
 
 interface UsageStats {
     user_id: number;
@@ -98,24 +98,64 @@ export default function Dashboard() {
         }
     };
 
+    const [checkoutMessage, setCheckoutMessage] = useState<{ type: 'success' | 'canceled'; text: string } | null>(null);
+    const [isManaging, setIsManaging] = useState(false);
+
     const handleUpgrade = async () => {
         if (!token) return;
 
         setIsUpgrading(true);
 
         try {
-            const response = await fetch(`${API_BASE}/quota/upgrade`, {
+            const response = await fetch(`${API.SUBSCRIPTIONS}/checkout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            });
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.detail || 'Failed to start checkout');
+            }
+
+            const data = await response.json();
+            if (data.checkout_url) {
+                window.location.href = data.checkout_url;
+            }
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Failed to start checkout');
+        } finally {
+            setIsUpgrading(false);
+        }
+    };
+
+    const handleManageSubscription = async () => {
+        if (!token) return;
+
+        setIsManaging(true);
+
+        try {
+            const response = await fetch(`${API.SUBSCRIPTIONS}/portal`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            if (response.ok) {
-                await fetchData(); // Refresh data
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.detail || 'Failed to open subscription portal');
             }
-        } catch {
-            // Silent fail
+
+            const data = await response.json();
+            if (data.portal_url) {
+                window.location.href = data.portal_url;
+            }
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Failed to open subscription management');
         } finally {
-            setIsUpgrading(false);
+            setIsManaging(false);
         }
     };
 
@@ -143,6 +183,17 @@ export default function Dashboard() {
 
     useEffect(() => {
         fetchData();
+
+        // Handle Stripe checkout redirect
+        const params = new URLSearchParams(window.location.search);
+        const checkout = params.get('checkout');
+        if (checkout === 'success') {
+            setCheckoutMessage({ type: 'success', text: 'Payment successful! Your Premium plan is now active.' });
+            window.history.replaceState({}, '', window.location.pathname);
+        } else if (checkout === 'canceled') {
+            setCheckoutMessage({ type: 'canceled', text: 'Checkout was canceled. You can upgrade anytime.' });
+            window.history.replaceState({}, '', window.location.pathname);
+        }
     }, [token]);
 
     if (isLoading) {
@@ -206,6 +257,24 @@ export default function Dashboard() {
                 </div>
             </div>
 
+            {/* Checkout Status Banner */}
+            {checkoutMessage && (
+                <div className={`rounded-2xl p-4 flex items-center justify-between transition-colors shadow-sm ${
+                    checkoutMessage.type === 'success'
+                        ? 'bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20'
+                        : 'bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20'
+                }`}>
+                    <span className={`font-bold text-sm ${
+                        checkoutMessage.type === 'success' ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'
+                    }`}>
+                        {checkoutMessage.type === 'success' ? '🎉' : '⚠️'} {checkoutMessage.text}
+                    </span>
+                    <button onClick={() => setCheckoutMessage(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+            )}
+
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard
@@ -245,11 +314,22 @@ export default function Dashboard() {
 
                     {/* Plan Badge */}
                     <div className="flex items-center justify-between mb-6">
-                        <div className={`px-4 py-2 rounded-xl text-sm font-black ${usage?.plan_type === 'premium'
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20'
-                            : 'bg-gray-100 dark:bg-slate-700 text-slate-600 dark:text-gray-300'
-                            } transition-all`}>
-                            {usage?.plan_type === 'premium' ? '⭐ Premium Plan' : '🆓 Free Plan'}
+                        <div className="flex items-center gap-3">
+                            <div className={`px-4 py-2 rounded-xl text-sm font-black ${usage?.plan_type === 'premium'
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20'
+                                : 'bg-gray-100 dark:bg-slate-700 text-slate-600 dark:text-gray-300'
+                                } transition-all`}>
+                                {usage?.plan_type === 'premium' ? '⭐ Premium Plan' : '🆓 Free Plan'}
+                            </div>
+                            {usage?.plan_type === 'premium' && (
+                                <button
+                                    onClick={handleManageSubscription}
+                                    disabled={isManaging}
+                                    className="px-3 py-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
+                                >
+                                    {isManaging ? 'Opening...' : 'Manage Subscription'}
+                                </button>
+                            )}
                         </div>
                         <span className="text-slate-500 dark:text-gray-400 text-sm font-bold transition-colors">
                             {usage?.daily_limit.toLocaleString()} words/day
@@ -363,7 +443,7 @@ export default function Dashboard() {
                                         disabled={isUpgrading}
                                         className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-black text-lg rounded-2xl shadow-xl shadow-amber-500/25 transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
                                     >
-                                        {isUpgrading ? 'Upgrading...' : 'Upgrade Now'}
+                                        {isUpgrading ? 'Redirecting to Checkout...' : 'Upgrade Now'}
                                     </button>
                                 )}
                             </div>

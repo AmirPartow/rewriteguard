@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 # ensures each gets full CPU and finishes in ~1s instead of all fighting for 25s.
 _ml_semaphore = asyncio.Semaphore(1)
 
+# Guest usage limit: max words per request without authentication
+GUEST_MAX_WORDS_PER_REQUEST = 200
+
 
 def count_words(text: str) -> int:
     """Count words in text."""
@@ -49,6 +52,7 @@ async def detect_text(
     Detects the likelihood of the text being AI-generated using sentence-level analysis.
 
     Returns per-sentence AI probability scores and the overall weighted score.
+    Requires authentication for full usage. Guests are limited to 200 words per request.
     """
     text_length = len(request.text)
     word_count = count_words(request.text)
@@ -57,9 +61,10 @@ async def detect_text(
         f"Received detection request | text_length={text_length} | words={word_count} | preview='{text_preview}'"
     )
 
-    # Check and track quota if authenticated
+    # Quota enforcement for ALL users
     user_id = await get_optional_user_id(authorization)
     if user_id is not None:
+        # Authenticated: enforce daily plan quota
         try:
             track_usage(user_id, word_count, "detect", enforce_limit=True)
         except QuotaExceededError as e:
@@ -73,7 +78,18 @@ async def detect_text(
                     "daily_limit": e.daily_limit,
                     "words_used": e.words_used,
                     "words_requested": e.words_requested,
-                    "upgrade_url": "/v1/quota/upgrade",
+                },
+            )
+    else:
+        # Guest: strict per-request word limit
+        if word_count > GUEST_MAX_WORDS_PER_REQUEST:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "error": "guest_limit",
+                    "message": f"Guest users are limited to {GUEST_MAX_WORDS_PER_REQUEST} words per request. Sign up for free to get 1,000 words/day.",
+                    "max_words": GUEST_MAX_WORDS_PER_REQUEST,
+                    "words_requested": word_count,
                 },
             )
 

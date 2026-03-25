@@ -25,7 +25,8 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: str = ""
     STRIPE_PUBLISHABLE_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
-    STRIPE_PREMIUM_PRICE_ID: str = ""  # Price ID for premium subscription
+    STRIPE_PREMIUM_PRICE_ID: str = ""  # Price ID for premium monthly subscription
+    STRIPE_PREMIUM_ANNUAL_PRICE_ID: str = ""  # Price ID for premium annual subscription
 
     # --- URLs ---
     FRONTEND_URL: str = "http://localhost:5173"

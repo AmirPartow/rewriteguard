@@ -14,6 +14,10 @@ class CreateCheckoutSessionRequest(BaseModel):
         default=None,
         description="Optional Stripe Price ID. Uses default premium price if not provided.",
     )
+    billing_cycle: Literal["monthly", "annual"] | None = Field(
+        default=None,
+        description="Billing cycle. If set, overrides price_id with the configured price for this cycle.",
+    )
 
 
 class CreateCheckoutSessionResponse(BaseModel):

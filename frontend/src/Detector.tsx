@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { API_BASE_URL } from './config';
 
 interface SentenceResult {
     text: string;
@@ -12,11 +14,15 @@ interface DetectResponse {
     sentences?: SentenceResult[];
 }
 
+const GUEST_WORD_LIMIT = 200;
+
 function Detector() {
+    const { token, isAuthenticated } = useAuth();
     const [text, setText] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<DetectResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [quotaError, setQuotaError] = useState<{ message: string; isGuest: boolean } | null>(null);
 
     // Listen for "grab-detector-text" event to send text to Paraphraser
     useEffect(() => {
@@ -32,20 +38,46 @@ function Detector() {
     const handleDetect = async () => {
         if (!text.trim()) return;
 
+        const wordCount = text.trim().split(/\s+/).length;
+
+        // Frontend guard: warn guests before they hit the API
+        if (!isAuthenticated && wordCount > GUEST_WORD_LIMIT) {
+            setQuotaError({
+                message: `Guest users are limited to ${GUEST_WORD_LIMIT} words. Sign up for free to get 1,000 words/day.`,
+                isGuest: true,
+            });
+            return;
+        }
+
         setLoading(true);
         setError(null);
         setResult(null);
+        setQuotaError(null);
 
         try {
-            const response = await fetch('/v1/detect', {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/v1/detect`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({ text }),
             });
 
             if (!response.ok) {
+                if (response.status === 429) {
+                    const data = await response.json().catch(() => ({}));
+                    const detail = data.detail || {};
+                    setQuotaError({
+                        message: detail.message || 'Usage limit reached.',
+                        isGuest: detail.error === 'guest_limit',
+                    });
+                    return;
+                }
                 if (response.status === 504) {
                     throw new Error('Analysis timed out. Please try shorter text.');
                 }
@@ -169,6 +201,26 @@ function Detector() {
                     <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-3 animate-shake">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                         {error}
+                    </div>
+                )}
+
+                {quotaError && (
+                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-sm flex items-center justify-between gap-4 animate-shake">
+                        <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400 font-bold">
+                            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            {quotaError.message}
+                        </div>
+                        <button
+                            onClick={() => {
+                                setQuotaError(null);
+                                if (quotaError.isGuest) {
+                                    window.dispatchEvent(new Event('open-auth-from-guest'));
+                                }
+                            }}
+                            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full text-xs font-bold hover:brightness-110 transition-all whitespace-nowrap"
+                        >
+                            {quotaError.isGuest ? 'Sign Up Free' : 'Upgrade Plan'}
+                        </button>
                     </div>
                 )}
             </div>
