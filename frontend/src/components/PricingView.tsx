@@ -8,8 +8,8 @@ export default function PricingView({ onAuthRequest }: PricingViewProps) {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
     const [showComparison, setShowComparison] = useState(false);
 
-    const premiumPrice = billingCycle === 'annual' ? 5.25 : 7.33;
-    const studentPrice = 5.25;
+    const premiumPrice = billingCycle === 'annual' ? 4.35 : 6.98;
+    const studentPrice = 4.25;
 
     const handleStudentClick = () => {
         alert('Student email verification initiated. Please check your .edu email after signing up.');
