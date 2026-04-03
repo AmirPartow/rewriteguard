@@ -1,0 +1,40 @@
+cfe406d ui updates to languages and versions
+576b48e fix: make features navlink scroll to features section
+0ebb641 update footer links and remove non-existent sections
+1e6d02e Update CTA button colors to brand blue/purple gradient. ��️✨💎
+56722a6 Add professional feature showcase, segmented audience tabs, and testimonials based on reference designs. 💎✨🚀
+28ba01e Add professional feature showcase, segmented audience tabs, and testimonials based on reference designs. 💎✨🚀
+6dfae85 Add professional feature showcase, segmented audience tabs, and testimonials based on reference designs. 💎✨🚀
+f28b73e Delete dashboard mockup as requested
+70c7a55 Restore file to stable state
+4d40555 Restore original Pricing component and add high-fidelity dashboard preview correctly
+875d1f4 Completely revert Pricing and LandingPage to the version before recent changes as requested
+1f1816d Fix build and deploy high-fidelity dashboard preview
+b889f1d Implement high-fidelity code-based Dashboard Preview on landing page
+569f6ca Fix browser back button behavior by implementing window.history.pushState for internal navigation
+de7d388 Remove Go Back button from footer as requested
+4e0b169 Fix: Polished PricingView design and improved footer max-width for better centering
+335366e Fix: Centered footer, restored scrollbars, and added Back button in footer (reverted pricing page position changes)
+06f9ef8 Fix: Centered footer, restored scrollbars, and added Back button in footer (reverted pricing page position changes)
+5803be0 Restore scrollbar visibility by removing display:none and scrollbar-width:none
+1556d95 Fix scroll, centering, and add back button to pricing
+071bdae Update pricing tabs order and visibility logic
+259f3ca Fix pricing layout, colors and logic
+e144500 Update pricing page to match Quillbot style
+59dd5a9 Update frontend
+1aa89bb Fix TailwindCSS v4 dark mode strategy and remove hardcoded dark body background
+fae499c Fix dark mode toggle click area and cookie consent colors
+727baff Hardcode Google Client ID fallback in AuthForm to prevent missing param error
+b246545 Remove Facebook and Apple logins, keep only Google
+16e4466 feat: Unified authentication system with social logins (Google, Apple, Facebook), email linking, and redesigned auth form
+76bc00c debug(auth): add verbose logging to social login to trace 500 errors
+737753b fix(db): final clean rewrite of database initialization to support social login migrations
+1afe9a0 fix(db): correct sessions table schema and add social auth columns for postgres/sqlite
+709fb19 fix(auth): restore and implement social login endpoints properly to fix 502/404 errors
+7ae5b8c Deployment update: latest changes pushed
+b7f51ed fix(local): point vite proxy to live AWS backend and update all icons
+946b720 fix: update the login form icon
+9897d81 fix: copy vercel.json into frontend folder to fix proxy rewrites
+0a995c3 Update P5 Group references to P5Solution with links
+0ad95ed chore: fix layout UI for detector and paraphraser tool
+b289dc7 chore: ensure all recent UI and backend accuracy tuning is committed
