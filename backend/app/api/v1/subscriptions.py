@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Header, Request, status
 from typing import Annotated
 import logging
 
-from app.auth.service import validate_session, SessionNotFoundError
+from app.auth.service import validate_clerk_token, SessionNotFoundError
 from app.stripe.schemas import (
     CreateCheckoutSessionRequest,
     CreateCheckoutSessionResponse,
@@ -49,7 +49,7 @@ async def _get_current_user(authorization: str | None) -> tuple[int, str]:
         )
 
     try:
-        user_info = await validate_session(parts[1])
+        user_info = await validate_clerk_token(parts[1])
         return user_info.id, user_info.email
     except SessionNotFoundError:
         raise HTTPException(

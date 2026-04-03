@@ -3,7 +3,7 @@ from typing import Annotated
 from app.schemas import DetectRequest
 from app.services.ml_service import get_detector, DebertaDetector
 from app.quota.service import track_usage, QuotaExceededError
-from app.auth.service import validate_session, SessionNotFoundError
+from app.auth.service import validate_clerk_token, SessionNotFoundError
 import logging
 import time
 import asyncio
@@ -36,7 +36,7 @@ async def get_optional_user_id(authorization: str | None) -> int | None:
         return None
 
     try:
-        user_info = await validate_session(parts[1])
+        user_info = await validate_clerk_token(parts[1])
         return user_info.id
     except SessionNotFoundError:
         return None

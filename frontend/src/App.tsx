@@ -18,7 +18,7 @@ import PricingView from './components/PricingView';
 type ActivePage = 'dashboard' | 'detector' | 'paraphraser' | 'admin' | 'contact' | 'help' | 'pricing';
 
 function App() {
-  const { isAuthenticated, isLoading, socialConfirm } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [activePage, setActivePage] = useState<ActivePage>('dashboard');
 
   const navigateTo = (page: ActivePage) => {
@@ -74,29 +74,6 @@ function App() {
         window.addEventListener('send-to-paraphraser', handleParaphraserText);
         window.addEventListener('go-public-home', handleGoPublicHome);
         handlePopState();
-
-        // Check for Auth Callback
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-
-        if (code && state && window.location.pathname === '/auth-callback') {
-            console.log(`Processing real social redirect from ${state}`);
-            
-            const confirm = async () => {
-                try {
-                    const redirectUri = `${window.location.origin}/auth-callback`;
-                    await socialConfirm(state, code, redirectUri);
-                    // On success, history will be clean
-                    window.history.replaceState({}, '', '/');
-                } catch (err) {
-                    console.error('Social login exchange failed', err);
-                    alert('Social login failed. Please check your developer keys in .env');
-                    window.history.replaceState({}, '', '/');
-                }
-            };
-            confirm();
-        }
 
         return () => {
             window.removeEventListener('popstate', handlePopState);

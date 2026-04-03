@@ -442,6 +442,180 @@ async def validate_session(token: str) -> UserInfo:
     )
 
 
+async def validate_clerk_token(token: str) -> UserInfo:
+    """
+    Validate a Clerk JWT token and return the corresponding local user.
+    Clerk JWTs are verified using the JWKS endpoint.
+
+    Falls back to regular session validation if the token is not a JWT.
+    """
+    import jwt as pyjwt
+    import os
+
+    # Quick check: Clerk JWTs start with 'ey' (base64-encoded JSON header)
+    if not token.startswith('ey'):
+        return await validate_session(token)
+
+    try:
+        # Decode without verification first to get the header
+        unverified = pyjwt.decode(token, options={"verify_signature": False})
+        # Check if it's a Clerk token (has 'sub' starting with 'user_')
+        sub = unverified.get('sub', '')
+        if not sub.startswith('user_'):
+            # Not a Clerk token, try regular session validation
+            return await validate_session(token)
+    except Exception:
+        return await validate_session(token)
+
+    # It's a Clerk JWT — verify it properly
+    clerk_secret = os.getenv('CLERK_SECRET_KEY', '')
+    clerk_issuer = os.getenv('CLERK_ISSUER', '')
+
+    if not clerk_secret:
+        raise SessionNotFoundError("Clerk not configured")
+
+    try:
+        # Fetch Clerk's JWKS for verification
+        import requests as http_requests
+        # Clerk JWKS URL is derived from the frontend API URL
+        # Format: https://<clerk-frontend-api>/.well-known/jwks.json
+        # The issuer from the JWT tells us the base URL
+        issuer = unverified.get('iss', clerk_issuer)
+        if not issuer:
+            raise SessionNotFoundError("Cannot determine Clerk issuer")
+
+        jwks_url = f"{issuer}/.well-known/jwks.json"
+        jwks_response = http_requests.get(jwks_url, timeout=5)
+        jwks_data = jwks_response.json()
+
+        # Find the matching key
+        header = pyjwt.get_unverified_header(token)
+        kid = header.get('kid')
+
+        public_key = None
+        for key_data in jwks_data.get('keys', []):
+            if key_data.get('kid') == kid:
+                public_key = pyjwt.algorithms.RSAAlgorithm.from_jwk(key_data)
+                break
+
+        if not public_key:
+            raise SessionNotFoundError("Clerk signing key not found")
+
+        # Verify the token
+        payload = pyjwt.decode(
+            token,
+            public_key,
+            algorithms=['RS256'],
+            options={"verify_aud": False},
+        )
+
+        clerk_user_id = payload['sub']
+        email = payload.get('email', '') or ''
+
+        # Look up local user by clerk_user_id or email
+        engine = _get_engine()
+        with engine.connect() as conn:
+            result = conn.execute(
+                text("SELECT id, email, full_name, is_active FROM users WHERE provider = 'clerk' AND provider_id = :clerk_id"),
+                {"clerk_id": clerk_user_id},
+            )
+            row = result.fetchone()
+
+            if not row and email:
+                result = conn.execute(
+                    text("SELECT id, email, full_name, is_active FROM users WHERE email = :email"),
+                    {"email": email.lower()},
+                )
+                row = result.fetchone()
+
+        if not row:
+            raise SessionNotFoundError("User not found — please sign in again")
+
+        user_id, user_email, full_name, is_active = row
+        if not is_active:
+            raise SessionNotFoundError("User account is deactivated")
+
+        return UserInfo(
+            id=user_id,
+            email=user_email,
+            full_name=full_name or "",
+            is_active=bool(is_active),
+        )
+
+    except pyjwt.ExpiredSignatureError:
+        raise SessionNotFoundError("Clerk session expired")
+    except pyjwt.InvalidTokenError as e:
+        logger.warning(f"Clerk JWT validation failed: {e}")
+        raise SessionNotFoundError("Invalid Clerk token")
+    except SessionNotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Clerk token validation error: {e}")
+        raise SessionNotFoundError("Authentication failed")
+
+
+async def clerk_sync_or_create_user(clerk_user_id: str, email: str, full_name: str = "") -> dict:
+    """
+    Sync a Clerk user with the local database.
+    Creates the user if they don't exist, or updates if they do.
+    Returns dict with user_id, email, full_name.
+    """
+    engine = _get_engine()
+    email = email.lower().strip()
+
+    with engine.connect() as conn:
+        # Check if user already exists by clerk_user_id
+        result = conn.execute(
+            text("SELECT id, email, full_name FROM users WHERE provider = 'clerk' AND provider_id = :clerk_id"),
+            {"clerk_id": clerk_user_id},
+        )
+        row = result.fetchone()
+
+        if row:
+            return {"user_id": row[0], "email": row[1], "full_name": row[2] or full_name}
+
+        # Check if user exists by email (existing account, link to Clerk)
+        result = conn.execute(
+            text("SELECT id, email, full_name FROM users WHERE email = :email"),
+            {"email": email},
+        )
+        row = result.fetchone()
+
+        if row:
+            # Link existing account to Clerk
+            conn.execute(
+                text("UPDATE users SET provider = 'clerk', provider_id = :clerk_id WHERE id = :user_id"),
+                {"clerk_id": clerk_user_id, "user_id": row[0]},
+            )
+            conn.commit()
+            return {"user_id": row[0], "email": row[1], "full_name": row[2] or full_name}
+
+        # Create new user
+        if _is_sqlite():
+            conn.execute(
+                text("""
+                    INSERT INTO users (email, full_name, password_hash, provider, provider_id, plan_type, daily_word_limit)
+                    VALUES (:email, :full_name, '', 'clerk', :clerk_id, 'free', 1000)
+                """),
+                {"email": email, "full_name": full_name, "clerk_id": clerk_user_id},
+            )
+            result = conn.execute(text("SELECT last_insert_rowid()"))
+        else:
+            result = conn.execute(
+                text("""
+                    INSERT INTO users (email, full_name, password_hash, provider, provider_id, plan_type, daily_word_limit)
+                    VALUES (:email, :full_name, '', 'clerk', :clerk_id, 'free', 1000)
+                    RETURNING id
+                """),
+                {"email": email, "full_name": full_name, "clerk_id": clerk_user_id},
+            )
+        new_id = result.fetchone()[0]
+        conn.commit()
+
+        logger.info(f"Created new user {new_id} from Clerk user {clerk_user_id}")
+        return {"user_id": new_id, "email": email, "full_name": full_name}
+
+
 async def invalidate_session(token: str) -> bool:
     """
     Invalidate a session (logout) by removing it from the database.

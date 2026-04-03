@@ -2,7 +2,7 @@
 FastAPI authentication routes for signup, login, and logout.
 """
 
-from fastapi import APIRouter, HTTPException, Header, status
+from fastapi import APIRouter, HTTPException, Header, Request, status
 from typing import Annotated
 import logging
 
@@ -24,6 +24,8 @@ from app.auth.service import (
     set_password_for_social_user,
     invalidate_session,
     validate_session,
+    validate_clerk_token,
+    clerk_sync_or_create_user,
     get_total_users,
     EmailAlreadyExistsError,
     InvalidCredentialsError,
@@ -236,13 +238,48 @@ async def get_current_user(
     token = parts[1]
 
     try:
-        user_info = await validate_session(token)
+        user_info = await validate_clerk_token(token)
         return user_info
     except SessionNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
         )
+
+
+@router.post("/clerk-sync")
+async def clerk_sync(
+    request: Request,
+    authorization: Annotated[str | None, Header()] = None,
+):
+    """
+    Sync a Clerk-authenticated user with the local database.
+    Called by the frontend after Clerk sign-in to ensure the user exists locally.
+    """
+    if not authorization:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization required")
+
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization format")
+
+    # Verify the Clerk JWT
+    try:
+        await validate_clerk_token(parts[1])
+    except SessionNotFoundError:
+        # User doesn't exist yet locally — that's ok, we'll create them below
+        pass
+
+    body = await request.json()
+    clerk_user_id = body.get("clerk_user_id", "")
+    email = body.get("email", "")
+    full_name = body.get("full_name", "")
+
+    if not clerk_user_id or not email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="clerk_user_id and email are required")
+
+    result = await clerk_sync_or_create_user(clerk_user_id, email, full_name)
+    return result
 
 
 @router.get("/users/count", response_model=dict)
